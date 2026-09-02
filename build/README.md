@@ -1,5 +1,8 @@
 # How the site is built
 
+**Live site:** https://hamgu1n.github.io/dnd-character-sheets/
+**Repo:** https://github.com/hamgu1n/dnd-character-sheets
+
 The player-facing pages (`index.html`, `dm.html`, `compare.html`, `characters/*.html`)
 are all **generated** from the templates in this folder plus the character JSON files
 in `../Character Sheets/`. Don't hand-edit the generated HTML files directly — your
