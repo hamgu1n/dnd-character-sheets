@@ -88,6 +88,14 @@ renderAll();''',
 }'''
 )
 
+# Pushed NPCs save to NPCs/, not Character Sheets/ - use a separate cached
+# folder-picker handle so this doesn't silently reuse (or clobber) whatever
+# folder the DM already picked for player saves.
+html = html.replace(
+    'const DIR_HANDLE_KEY = "characterSheetsDir"; // which cached folder-picker handle this page\'s saves use\nconst FOLDER_LABEL = "Character Sheets"; // just for the "Saved to ..." status text',
+    'const DIR_HANDLE_KEY = "npcsDir";\nconst FOLDER_LABEL = "NPCs";'
+)
+
 # close the appRoot wrapper div right before </body>
 html = html.replace("</body>", "</div>\n</body>")
 

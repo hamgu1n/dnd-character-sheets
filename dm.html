@@ -91,6 +91,13 @@
       </div>
       <div id="saveAllStatus" class="empty-note" hidden></div>
       <div class="char-grid" id="playerGrid"></div>
+      <button class="add-npc-btn" onclick="newCharacter()">+ New Character</button>
+    </div>
+
+    <div class="section" id="draftCharSection" hidden>
+      <h2>Character Drafts (this device only)</h2>
+      <div class="char-grid" id="draftCharGrid"></div>
+      <div class="empty-note">In-progress characters not saved yet. Open one, then tap "Save to Character Sheets folder" once it's ready — it'll appear above (as a real page, for everyone) after the usual rebuild + push.</div>
     </div>
 
     <div class="section" id="pushedNpcSection">
@@ -232,6 +239,17 @@ function newNpc(){
   location.href = "characters/npc.html?id=" + id;
 }
 
+function loadDraftCharacterList(){
+  try{
+    const raw = localStorage.getItem("dnd-new-character-list");
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){ return []; }
+}
+function newCharacter(){
+  const id = "char-" + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+  location.href = "characters/new-character.html?id=" + id;
+}
+
 /* ---------- drag-to-reorder (per-device only, via localStorage) ---------- */
 function applySavedOrder(items, storageKey, idFn){
   let saved = [];
@@ -321,6 +339,20 @@ function showDashboard(){
     }
     enableDragReorder(nGrid, "dnd-dm-order-local-npcs");
   }
+
+  const dcGrid = document.getElementById("draftCharGrid");
+  const draftChars = applySavedOrder(loadDraftCharacterList(), "dnd-dm-order-draft-chars", c => c.id);
+  document.getElementById("draftCharSection").hidden = draftChars.length === 0;
+  dcGrid.innerHTML = "";
+  for(const c of draftChars){
+    const a = document.createElement("a");
+    a.className = "char-card";
+    a.href = "characters/new-character.html?id=" + encodeURIComponent(c.id);
+    a.dataset.orderId = c.id;
+    a.innerHTML = `<div class="char-card-name">${c.name || "Unnamed character"}</div><div class="char-card-sub">Draft — not yet saved</div>`;
+    dcGrid.appendChild(a);
+  }
+  if(draftChars.length > 0) enableDragReorder(dcGrid, "dnd-dm-order-draft-chars");
 }
 
 if(isDM()) showDashboard();

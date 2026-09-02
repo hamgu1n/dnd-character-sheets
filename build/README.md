@@ -47,6 +47,19 @@ Note: character source files now live at `Character Sheets/<slug>.json` (e.g.
 generator picks up every `*.json` file in that folder automatically, so this
 also just works if you add a brand new player character's JSON there by hand.
 
+## Creating a new player character (DM Dashboard)
+
+**+ New Character** on the Players section opens a blank draft
+(`characters/new-character.html?id=...`) with the same Sheet/Play tabs and
+edit mode as a real character page. Fill it in (or tap **📥 Import JSON** and
+paste a character Claude generated for you), then tap **💾 Save to Character
+Sheets folder** — it computes the filename from the character's current name
+and writes into `Character Sheets/` directly, same as editing an existing
+player. Then the usual loop: `python3 gen_sheets.py`, commit, push.
+
+Unsaved drafts are listed under "Character Drafts (this device only)" on the
+DM Dashboard so in-progress work isn't lost if you navigate away before saving.
+
 ## NPCs/monsters
 
 There are two tiers, same idea as "local edits" vs. "pushed" for players:
@@ -85,3 +98,5 @@ retire a player.)
   the generic ad-hoc NPC/monster sheet (local drafts)
 - `npc_page_template.html` / `build_npc_page_template.py` — generates each
   `characters/npcs/<slug>.html` from `NPCs/*.json` (pushed NPCs)
+- `new_character_template.html` / `build_new_character_template.py` — generates
+  `characters/new-character.html`, the blank draft for creating a new player

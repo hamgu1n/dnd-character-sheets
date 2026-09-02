@@ -115,4 +115,12 @@ subprocess.run(["python3", os.path.join(os.path.dirname(__file__), "build_npc_te
 NPC_TEMPLATE = open(os.path.join(os.path.dirname(__file__), "npc_template.html")).read()
 with open(os.path.join(OUT_DIR, "npc.html"), "w") as f:
     f.write(NPC_TEMPLATE)
+
+# Build characters/new-character.html (blank draft for the DM to build a new
+# player character, then "Save to folder" turns it into a real one)
+subprocess.run(["python3", os.path.join(os.path.dirname(__file__), "build_new_character_template.py")], check=True)
+NEW_CHAR_TEMPLATE = open(os.path.join(os.path.dirname(__file__), "new_character_template.html")).read()
+with open(os.path.join(OUT_DIR, "new-character.html"), "w") as f:
+    f.write(NEW_CHAR_TEMPLATE)
+print("wrote characters/new-character.html")
 print("wrote characters/npc.html")

@@ -536,7 +536,8 @@ const TAB_KEY = "dnd-sheet-tab";
 const DM_KEY = "dnd-dm-auth";
 const SOURCE_FILENAME = "";
 const FS_SUPPORTED = typeof window.showDirectoryPicker === "function";
-const DIR_HANDLE_KEY = "characterSheetsDir";
+const DIR_HANDLE_KEY = "characterSheetsDir"; // which cached folder-picker handle this page's saves use
+const FOLDER_LABEL = "Character Sheets"; // just for the "Saved to ..." status text
 
 /* ---------- direct-to-disk saving (Chrome/Edge desktop only) ---------- */
 function idbGet(key){
@@ -589,7 +590,7 @@ async function saveToFolder(){
     await writable.close();
     toast(charData.name, "Saved to " + SOURCE_FILENAME);
     document.getElementById("folderStatus").hidden = false;
-    document.getElementById("folderStatus").textContent = "Last saved to Character Sheets/" + SOURCE_FILENAME + " just now.";
+    document.getElementById("folderStatus").textContent = "Last saved to " + FOLDER_LABEL + "/" + SOURCE_FILENAME + " just now.";
   }catch(err){
     if(err.name === "AbortError") return; // user cancelled the folder picker
     toast("Save failed", err.message || "Could not write the file");

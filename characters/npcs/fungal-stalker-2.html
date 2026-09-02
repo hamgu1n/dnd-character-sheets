@@ -488,7 +488,8 @@ const TAB_KEY = "dnd-sheet-tab";
 const DM_KEY = "dnd-dm-auth";
 const SOURCE_FILENAME = "fungal-stalker-2.json";
 const FS_SUPPORTED = typeof window.showDirectoryPicker === "function";
-const DIR_HANDLE_KEY = "characterSheetsDir";
+const DIR_HANDLE_KEY = "npcsDir";
+const FOLDER_LABEL = "NPCs";
 
 /* ---------- direct-to-disk saving (Chrome/Edge desktop only) ---------- */
 function idbGet(key){
@@ -541,7 +542,7 @@ async function saveToFolder(){
     await writable.close();
     toast(charData.name, "Saved to " + SOURCE_FILENAME);
     document.getElementById("folderStatus").hidden = false;
-    document.getElementById("folderStatus").textContent = "Last saved to Character Sheets/" + SOURCE_FILENAME + " just now.";
+    document.getElementById("folderStatus").textContent = "Last saved to " + FOLDER_LABEL + "/" + SOURCE_FILENAME + " just now.";
   }catch(err){
     if(err.name === "AbortError") return; // user cancelled the folder picker
     toast("Save failed", err.message || "Could not write the file");
