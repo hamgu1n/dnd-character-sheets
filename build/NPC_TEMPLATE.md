@@ -2,15 +2,39 @@
 
 Use this to have Claude generate an NPC or monster for you. Describe the
 NPC (name, species, role, rough stats, notable items/spells/abilities) and
-ask Claude to fill in this shape. Then:
+ask Claude to fill in this shape. There are two ways to use the result,
+depending on whether you want it on the actual site or just for yourself:
+
+## Option A — push it to the site (visible in DM mode, on any device)
+
+Save the JSON as a file in `NPCs/<something>.json`, then rebuild:
+
+```
+cd build
+python3 gen_sheets.py
+git add -A && git commit -m "Add NPC: <name>" && git push
+```
+
+It'll show up under **NPCs & Monsters (on the site)** on the DM Dashboard,
+as a real page at `characters/npcs/<slug>.html` — locked behind the DM
+passcode for anyone who opens it, same as everywhere else in this app.
+(Note: on GitHub Pages the underlying HTML is still technically fetchable
+by URL/view-source even though the rendered page is locked — same
+soft-gating tradeoff as the rest of this app; don't put anything in an NPC
+you wouldn't want a determined player to be able to dig up.)
+
+## Option B — quick local draft (this device only, no rebuild)
 
 1. In DM mode, open **+ New NPC / Monster** (creates a blank sheet).
 2. Tap **📥 Import JSON** near the top of the page.
 3. Paste the JSON Claude gave you and tap **Import**.
 
-The sheet fills in instantly — no rebuild or file editing needed, since NPCs
-live only in the DM's browser (see `README.md`). Only `name` is required;
-everything else is optional and defaults sensibly if left out.
+Fills in instantly, no rebuild needed — but it only lives in that browser's
+storage (see `README.md`). Good for something you're drafting/testing before
+deciding it's worth pushing.
+
+Only `name` is required; everything else is optional and defaults sensibly
+if left out.
 
 ## Template
 

@@ -91,11 +91,17 @@
       <div class="char-grid" id="playerGrid"></div>
     </div>
 
+    <div class="section" id="pushedNpcSection">
+      <h2>NPCs &amp; Monsters (on the site)</h2>
+      <div class="char-grid" id="pushedNpcGrid"></div>
+      <div class="empty-note" id="pushedNpcEmptyNote" hidden>None pushed yet — see <code>build/NPC_TEMPLATE.md</code> for how to add one with Claude.</div>
+    </div>
+
     <div class="section">
-      <h2>NPCs &amp; Monsters</h2>
+      <h2>NPC/Monster Drafts (this device only)</h2>
       <div class="char-grid" id="npcGrid"></div>
       <button class="add-npc-btn" onclick="newNpc()">+ New NPC / Monster</button>
-      <div class="empty-note">NPCs you create here are stored on this device only (not pushed to the public site).</div>
+      <div class="empty-note">Drafts you create here live only in this browser — not pushed to the site. Export the JSON (or hand it to Claude) and add it to <code>NPCs/</code> to make it a real page like the ones above.</div>
     </div>
   </div>
 
@@ -104,6 +110,7 @@
 const DM_KEY = "dnd-dm-auth";
 const DM_PASSCODE = "dmaccess1"; // change this to set your own DM passcode
 const CHARACTERS = [{"name": "Celia", "slug": "celia", "id": "mtevt777-goy527i", "fname": "celia.json", "sub": "Sea Elf Ranger 3 \u00b7 Hunter"}, {"name": "Gracie", "slug": "gracie", "id": "mtemka9d-0p83me8", "fname": "gracie.json", "sub": "Fairy Cleric 3 \u00b7 Arcana Domain"}, {"name": "Jackson", "slug": "jackson", "id": "mtex0q6l-dtovimk", "fname": "jackson.json", "sub": "Snow Leopard Cleric 3 \u00b7 Grave Domain"}, {"name": "Lynzie", "slug": "lynzie", "id": "mtf7t7xc-droy3l7", "fname": "lynzie.json", "sub": "Aracockra Rogue 3 \u00b7 Swashbuckler"}, {"name": "Mahaan", "slug": "mahaan", "id": "mter77wo-1pz0rex", "fname": "mahaan.json", "sub": "Ubar Paladin 3 \u00b7 Oath of the Ancients"}, {"name": "Patrick", "slug": "patrick", "id": "mti170n4-ag05evy", "fname": "patrick.json", "sub": "Dwarf Paladin 3 \u00b7 Oath of Conquest"}];
+const PUSHED_NPCS = [];
 
 function isDM(){
   try{ return localStorage.getItem(DM_KEY) === "1"; }catch(e){ return false; }
@@ -237,6 +244,17 @@ function showDashboard(){
     a.dataset.charId = c.id;
     a.innerHTML = `<div class="char-card-name">${c.name}</div><div class="char-card-sub">${c.sub||""}</div>`;
     pGrid.appendChild(a);
+  }
+
+  const pnGrid = document.getElementById("pushedNpcGrid");
+  pnGrid.innerHTML = "";
+  document.getElementById("pushedNpcEmptyNote").hidden = PUSHED_NPCS.length > 0;
+  for(const n of PUSHED_NPCS){
+    const a = document.createElement("a");
+    a.className = "char-card";
+    a.href = "characters/npcs/" + n.slug + ".html";
+    a.innerHTML = `<div class="char-card-name">${n.name}</div><div class="char-card-sub">${n.sub||"NPC / Monster"}</div>`;
+    pnGrid.appendChild(a);
   }
 
   const nGrid = document.getElementById("npcGrid");

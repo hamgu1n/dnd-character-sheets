@@ -47,21 +47,32 @@ Note: character source files now live at `Character Sheets/<slug>.json` (e.g.
 generator picks up every `*.json` file in that folder automatically, so this
 also just works if you add a brand new player character's JSON there by hand.
 
-## NPCs/monsters created in DM mode
+## NPCs/monsters
 
-These are **not** part of this build — they live only in the DM's own browser
-storage (see the note on the DM dashboard). There's nothing to "save" for them
-in this pipeline; they just persist in that browser until deleted.
+There are two tiers, same idea as "local edits" vs. "pushed" for players:
 
-**Creating one with Claude:** see `NPC_TEMPLATE.md` for the JSON shape. Describe
-the NPC to Claude, ask it to fill in that template, then on the NPC's page tap
+**Pushed NPCs** (`NPCs/*.json` → `characters/npcs/<slug>.html`) — *are* part
+of this build, generated exactly like a player page but DM-gated (locked
+screen unless `isDM()`) and never linked from `index.html`. They show up
+under "NPCs & Monsters (on the site)" on the DM Dashboard, work from any
+device once pushed, and support **💾 Save to Character Sheets folder** the
+same as a player page (writes back into `NPCs/`). See `NPC_TEMPLATE.md`.
+
+**Local drafts** (created via **+ New NPC / Monster**) — **not** part of this
+build, live only in that DM's own browser storage. Nothing to "save" in this
+pipeline for these; they just persist in that browser until deleted.
+
+**Creating either with Claude:** see `NPC_TEMPLATE.md` for the JSON shape and
+both workflows. For local drafts specifically: on the NPC's page tap
 **📥 Import JSON** and paste the result — it fills in the sheet instantly, no
 rebuild needed. (An import that fails validation — bad JSON, or no `name` — shows
 an error in the modal instead of silently doing nothing.)
 
-**Deleting one** requires: an initial confirm, then typing the NPC's exact name
-into a prompt, then a final confirm — deliberately hard to do by accident, since
-it's permanent and there's no undo.
+**Deleting a local draft** requires: an initial confirm, then typing the NPC's
+exact name into a prompt, then a final confirm — deliberately hard to do by
+accident, since it's permanent and there's no undo. (Pushed NPCs don't have an
+in-browser delete — remove the `NPCs/<file>.json` and rebuild, same as you'd
+retire a player.)
 
 ## Files in this folder
 
@@ -71,4 +82,6 @@ it's permanent and there's no undo.
 - `compare_template.html` — the DM's side-by-side compare tool
 - `dm_template.html` — the DM dashboard (passcode is set near the top of `gen_sheets.py`)
 - `npc_template.html` / `build_npc_template.py` — generates `characters/npc.html`,
-  the generic ad-hoc NPC/monster sheet
+  the generic ad-hoc NPC/monster sheet (local drafts)
+- `npc_page_template.html` / `build_npc_page_template.py` — generates each
+  `characters/npcs/<slug>.html` from `NPCs/*.json` (pushed NPCs)
