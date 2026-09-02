@@ -85,9 +85,12 @@
     <a class="comparebtn" href="compare.html">⇄ Compare players</a>
 
     <div class="section">
-      <div class="topbar" style="margin-bottom:10px;">
+      <div class="topbar" style="margin-bottom:10px;gap:8px;flex-wrap:wrap;">
         <h2 style="margin-bottom:0;">Players</h2>
-        <button class="save-all-btn" id="saveAllBtn" onclick="saveAllCharacters()" hidden>💾 Save all to folder</button>
+        <div style="display:flex;gap:8px;">
+          <button class="logout-btn" id="changeFolderBtn" onclick="chooseNewFolder()" hidden>🔁 Change folder</button>
+          <button class="save-all-btn" id="saveAllBtn" onclick="saveAllCharacters()" hidden>💾 Save all to folder</button>
+        </div>
       </div>
       <div id="saveAllStatus" class="empty-note" hidden></div>
       <div class="char-grid" id="playerGrid"></div>
@@ -167,6 +170,19 @@ async function getDirHandle(forcePick){
   handle = await window.showDirectoryPicker({id:"dnd-character-sheets", mode:"readwrite"});
   await idbSet(DIR_HANDLE_KEY, handle);
   return handle;
+}
+// Forces a fresh folder picker instead of reusing whatever's cached - use this
+// if saves keep landing in the wrong place (e.g. one folder level too high).
+async function chooseNewFolder(){
+  const statusEl = document.getElementById("saveAllStatus");
+  statusEl.hidden = false;
+  try{
+    const dir = await getDirHandle(true);
+    statusEl.textContent = "Folder set to “" + (dir.name || "the selected folder") + "” — future saves will use this location.";
+  }catch(err){
+    if(err.name === "AbortError"){ statusEl.hidden = true; return; }
+    statusEl.textContent = "Couldn't set folder: " + (err.message || "try again");
+  }
 }
 
 async function saveAllCharacters(){
@@ -294,6 +310,7 @@ function showDashboard(){
   document.getElementById("lockWrap").hidden = true;
   document.getElementById("dashboard").hidden = false;
   document.getElementById("saveAllBtn").hidden = !(FS_SUPPORTED && CHARACTERS.length > 0);
+  document.getElementById("changeFolderBtn").hidden = !FS_SUPPORTED;
 
   const pGrid = document.getElementById("playerGrid");
   pGrid.innerHTML = "";

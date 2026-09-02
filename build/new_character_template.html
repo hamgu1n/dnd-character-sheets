@@ -468,6 +468,7 @@
 </div>
 
 <button class="reset-btn save-folder-btn" id="saveToFolderBtn" onclick="saveToFolder()" hidden>💾 Save to Character Sheets folder</button>
+<button class="reset-btn" id="changeFolderBtn" onclick="chooseNewFolder()" hidden style="margin-top:6px;">🔁 Change folder (if saves keep landing in the wrong place)</button>
 <div class="folder-status" id="folderStatus" hidden></div>
 <button class="reset-btn" id="exportBtn" onclick="exportJson()" hidden>⬇ Export character JSON (fallback download)</button>
 <button class="reset-btn" id="discardEditsBtn" onclick="discardEdits()" hidden>Discard edits (revert to original import)</button>
@@ -601,6 +602,20 @@ async function saveToFolder(){
   }catch(err){
     if(err.name === "AbortError") return; // user cancelled the folder picker
     toast("Save failed", err.message || "Could not write the file");
+  }
+}
+// Forces a fresh folder picker instead of silently reusing whatever's cached -
+// use this if saves keep landing in the wrong place (e.g. a folder one level
+// too high/low). Overwrites the cached choice for this page's DIR_HANDLE_KEY.
+async function chooseNewFolder(){
+  if(!FS_SUPPORTED) return;
+  try{
+    const dir = await getDirHandle(true);
+    let confirmedName = dir.name || "the selected folder";
+    toast("Folder set to “" + confirmedName + "”", "Next save will use this location");
+  }catch(err){
+    if(err.name === "AbortError") return; // user cancelled the picker
+    toast("Couldn't set folder", err.message || "Try again");
   }
 }
 
@@ -945,6 +960,7 @@ function toggleEditMode(){
   document.getElementById("exportBtn").hidden = !editMode;
   document.getElementById("discardEditsBtn").hidden = !(editMode && hasEdits());
   document.getElementById("saveToFolderBtn").hidden = !(editMode && FS_SUPPORTED && SOURCE_FILENAME);
+  document.getElementById("changeFolderBtn").hidden = !(editMode && FS_SUPPORTED && SOURCE_FILENAME);
   renderAll();
 }
 
@@ -2123,6 +2139,7 @@ function renderAll(){
   document.getElementById("exportBtn").hidden = !editMode;
   document.getElementById("discardEditsBtn").hidden = !(editMode && hasEdits());
   document.getElementById("saveToFolderBtn").hidden = !(editMode && FS_SUPPORTED && SOURCE_FILENAME);
+  document.getElementById("changeFolderBtn").hidden = !(editMode && FS_SUPPORTED && SOURCE_FILENAME);
   renderHeader();
   renderInspiration();
   renderTopStats();
