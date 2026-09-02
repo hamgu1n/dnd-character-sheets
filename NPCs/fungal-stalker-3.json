@@ -1,0 +1,83 @@
+{
+  "name": "Fungal Stalker 3",
+  "species": "Plant",
+  "background": "CR 1/4 \u2014 mushroom biome pack hunter",
+  "classes": [
+    {
+      "id": "role",
+      "name": "Fungal Stalker",
+      "level": 1,
+      "hitDie": 6,
+      "subclass": ""
+    }
+  ],
+  "abilities": {
+    "str": 10,
+    "dex": 14,
+    "con": 12,
+    "int": 2,
+    "wis": 12,
+    "cha": 6
+  },
+  "proficientSaves": [],
+  "skillProficiencies": [
+    "stealth"
+  ],
+  "skillExpertise": [],
+  "hp": {
+    "max": 13,
+    "current": 13,
+    "temp": 0
+  },
+  "speed": 30,
+  "conditions": [],
+  "inspiration": false,
+  "spellSlots": {},
+  "spellsPrepared": [],
+  "currency": {
+    "cp": 0,
+    "sp": 0,
+    "ep": 0,
+    "gp": 0,
+    "pp": 0
+  },
+  "inventory": [
+    {
+      "id": "i1",
+      "name": "Barbed Tendril",
+      "kind": "weapon",
+      "quantity": 1,
+      "dmg": "1d8",
+      "dmgType": "Piercing",
+      "rangeType": "Melee",
+      "props": [
+        "Reach"
+      ],
+      "equipped": true,
+      "desc": "Reach 10 ft. Melee Weapon Attack: +4 to hit. Hit: 6 (1d8+2) piercing damage."
+    },
+    {
+      "id": "i2",
+      "name": "Fungal Hide",
+      "kind": "armor",
+      "quantity": 1,
+      "acBase": 10,
+      "equipped": true,
+      "desc": "Natural armor. Combines with Dexterity to reach AC 12."
+    }
+  ],
+  "notes": "A skittering, four-legged fungal growth that camouflages against giant mushroom stalks and lashes out with barbed, root-like tendrils. Not intelligent \u2014 just territorial and hungry. Also has climb speed 20 ft. Resists poison damage; immune to blinded and poisoned. Blindsight 30 ft. (blind beyond this). Suggested quantity: 3-4 for a 5-6 PC level 3 party.",
+  "customFeatures": [
+    {
+      "id": "f1",
+      "name": "Spore Camouflage",
+      "desc": "While within a mushroom-heavy area, the stalker has advantage on Dexterity (Stealth) checks to hide."
+    },
+    {
+      "id": "f2",
+      "name": "Choking Spores (Recharge 5-6)",
+      "desc": "Each creature within 10 feet of the stalker must succeed on a DC 11 Constitution saving throw or become poisoned until the end of its next turn."
+    }
+  ],
+  "id": "npc-fungal-stalker-3-b637709f"
+}

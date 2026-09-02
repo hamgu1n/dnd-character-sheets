@@ -1,0 +1,2086 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Fungal Stalker 3 — Character Sheet</title>
+<style>
+  :root{
+    --bg:#1b1712;
+    --panel:#242019;
+    --panel-2:#2c2620;
+    --border:#463c2e;
+    --text:#ece3d2;
+    --text-dim:#b7a98d;
+    --accent:#c9762c;
+    --accent-2:#8a2f2f;
+    --good:#5c9a5c;
+    --bad:#b4453e;
+    --prof:#c9762c;
+    --temp-hp:#4d9fd6;
+    --warn:#e0a940;
+    --divine:#e6c860;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-text-size-adjust:100%;}
+  h1,h2,h3{font-family:Georgia,"Times New Roman",serif;margin:0;}
+  a{color:var(--accent);}
+  [hidden]{display:none !important;}
+
+  /* --- app shell / tab navigation --- */
+  .page-wrap{padding:14px 12px 92px;max-width:520px;margin:0 auto;}
+  .tabnav{position:fixed;z-index:40;background:var(--panel);border-top:1px solid var(--border);
+    left:0;right:0;bottom:0;display:flex;padding-bottom:env(safe-area-inset-bottom);
+    box-shadow:0 -2px 10px rgba(0,0,0,.25);}
+  .tabnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+    padding:9px 0 7px;background:none;border:none;color:var(--text-dim);font-size:0.68rem;
+    font-family:inherit;font-weight:600;letter-spacing:.02em;}
+  .tabnav-btn .tabnav-icon{font-size:1.25rem;line-height:1;}
+  .tabnav-btn.active{color:var(--accent);}
+  @media (min-width:820px){
+    .tabnav{top:0;bottom:0;right:auto;width:180px;flex-direction:column;
+      align-items:stretch;justify-content:flex-start;padding:20px 0 0;gap:4px;
+      border-top:none;border-right:1px solid var(--border);box-shadow:none;}
+    .tabnav-btn{flex:none;flex-direction:row;justify-content:flex-start;gap:10px;
+      padding:12px 18px;font-size:0.85rem;border-radius:0 24px 24px 0;margin-right:18px;}
+    .tabnav-btn .tabnav-icon{font-size:1.1rem;}
+    .tabnav-btn.active{background:var(--panel-2);}
+    .page-wrap{margin-left:180px;margin-right:0;padding:28px 32px 40px;max-width:960px;}
+    .header{margin-bottom:20px;}
+    .header h1{font-size:2rem;}
+    #tabSheet, #tabPlay{columns:2;column-gap:16px;}
+    #identityPanel{column-span:all;}
+  }
+  @media (min-width:1300px){
+    .page-wrap{max-width:1180px;}
+    #tabSheet, #tabPlay{columns:3;}
+  }
+
+  .header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px;}
+  .header h1{font-size:1.6rem;color:var(--text);}
+  .header .sub{color:var(--text-dim);font-size:0.85rem;margin-top:2px;}
+  .header-btns{display:flex;flex-direction:column;gap:6px;align-items:flex-end;}
+  .insp-btn{background:var(--panel-2);border:1px solid var(--border);color:var(--text-dim);
+    border-radius:10px;padding:6px 10px;font-size:0.75rem;white-space:nowrap;}
+  .insp-btn.on{background:var(--accent);color:#1b1712;border-color:var(--accent);font-weight:600;}
+  .edit-toggle-btn{background:var(--panel-2);border:1px solid var(--border);color:var(--text);
+    border-radius:10px;padding:6px 10px;font-size:0.75rem;white-space:nowrap;font-weight:600;}
+  .edit-toggle-btn.on{background:var(--accent-2);color:#f4e9dc;border-color:var(--accent-2);}
+  .edit-banner{background:var(--accent-2);color:#f4e9dc;text-align:center;padding:7px 10px;
+    border-radius:8px;font-size:0.78rem;margin-bottom:12px;}
+  .dm-badge{display:inline-block;background:var(--accent-2);color:#f4e9dc;border-radius:6px;
+    padding:2px 8px;font-size:0.65rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+    margin-bottom:6px;}
+
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;
+    padding:12px;margin-bottom:12px;break-inside:avoid;}
+  .panel h2{font-size:0.75rem;letter-spacing:0.08em;text-transform:uppercase;
+    color:var(--accent);margin-bottom:8px;}
+
+  .statrow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center;}
+  .statbox{background:var(--panel-2);border:1px solid var(--border);border-radius:10px;padding:8px 4px;text-align:center;}
+  .feature-pool-box{width:100%;margin-bottom:8px;}
+  .feature-pool-box:last-child{margin-bottom:0;}
+  .statbox .label{font-size:0.65rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;}
+  .statbox .value{font-size:1.35rem;font-weight:700;margin-top:2px;}
+  .hp-controls{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:2px;}
+  .hp-controls button{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);
+    background:var(--panel);color:var(--text);font-size:1rem;line-height:1;}
+  .hp-input{width:44px;background:transparent;border:none;color:var(--text);font-size:1.25rem;
+    font-weight:700;text-align:center;font-family:inherit;transition:color .15s;}
+  #hpStatbox.has-temp{border-color:var(--temp-hp);box-shadow:0 0 0 1px var(--temp-hp);}
+  #hpStatbox.has-temp .hp-input{color:var(--temp-hp);}
+  .hp-temp-badge{background:var(--temp-hp);color:#0d2433;border-radius:8px;padding:1px 7px;
+    font-size:0.7rem;font-weight:700;}
+  .hp-max{color:var(--text-dim);font-size:0.85rem;}
+  .hp-max input{width:36px;background:var(--panel);border:1px solid var(--border);border-radius:5px;
+    color:var(--text);text-align:center;font-family:inherit;font-size:0.85rem;}
+  .temp-row{margin-top:4px;font-size:0.7rem;color:var(--text-dim);display:flex;align-items:center;justify-content:center;gap:5px;}
+  .temp-row #hpTempValue{width:20px;text-align:center;color:var(--text);font-weight:700;font-size:0.8rem;}
+  .temp-row button{width:20px;height:20px;border-radius:5px;border:1px solid var(--border);
+    background:var(--panel);color:var(--text);font-size:0.85rem;line-height:1;padding:0;}
+
+  .abilgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  .abilbox{background:var(--panel-2);border:1px solid var(--border);border-radius:10px;
+    padding:8px 4px;text-align:center;}
+  .abilbox .name{font-size:0.65rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;}
+  .abilbox .mod{font-size:1.3rem;font-weight:700;margin-top:2px;}
+  .abilbox .score{font-size:0.7rem;color:var(--text-dim);}
+
+  .list-row{display:flex;align-items:center;justify-content:space-between;padding:5px 2px;
+    border-bottom:1px solid var(--border);font-size:0.85rem;gap:8px;}
+  .list-row:last-child{border-bottom:none;}
+  .list-row .left{display:flex;align-items:center;gap:8px;}
+  .dot{width:9px;height:9px;border-radius:50%;border:1px solid var(--text-dim);flex-shrink:0;}
+  .dot.on{background:var(--prof);border-color:var(--prof);}
+  .dot.exp{background:var(--accent-2);border-color:var(--accent-2);}
+  .list-row .ability-tag{font-size:0.65rem;color:var(--text-dim);text-transform:uppercase;width:26px;}
+  .rollchip{background:var(--panel-2);border:1px solid var(--border);color:var(--text);
+    border-radius:8px;padding:4px 9px;font-size:0.85rem;font-weight:600;min-width:42px;text-align:center;flex-shrink:0;}
+  .chk-label{display:flex;align-items:center;gap:3px;font-size:0.7rem;color:var(--text-dim);}
+  .skill-effect-badge{font-size:0.6rem;font-weight:700;padding:2px 6px;border-radius:5px;
+    margin-right:6px;flex-shrink:0;letter-spacing:.03em;}
+  .skill-effect-badge.adv{background:rgba(92,154,92,.18);color:var(--good);border:1px solid var(--good);}
+  .skill-effect-badge.dis{background:rgba(180,69,62,.18);color:var(--bad);border:1px solid var(--bad);}
+
+  .atk-card{background:var(--panel-2);border:1px solid var(--border);border-radius:10px;
+    padding:10px;margin-bottom:8px;}
+  .atk-card:last-child{margin-bottom:0;}
+  .atk-name{font-weight:600;margin-bottom:6px;}
+  .atk-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .atk-actions .rollchip{flex:1;min-width:80px;}
+  .atk-actions .rollchip .sub{display:block;font-size:0.65rem;color:var(--text-dim);font-weight:400;}
+
+  .slot-row{display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid var(--border);}
+  .slot-row:last-child{border-bottom:none;}
+  .slot-row .lvl{font-size:0.75rem;color:var(--text-dim);width:52px;flex-shrink:0;}
+  .pips{display:flex;gap:5px;flex-wrap:wrap;}
+  .pip{width:20px;height:20px;border-radius:50%;border:2px solid var(--accent);background:transparent;}
+  .pip.used{background:var(--accent);}
+
+  .spell-row{display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:8px 4px;border-bottom:1px solid var(--border);cursor:pointer;background:none;
+    width:100%;text-align:left;font-family:inherit;color:var(--text);border-left:none;border-right:none;border-top:none;}
+  .spell-row:last-child{border-bottom:none;}
+  .spell-row:active{background:var(--panel-2);}
+  .spell-row-level{font-size:0.62rem;color:var(--text-dim);text-transform:uppercase;
+    background:var(--panel-2);border-radius:5px;padding:2px 5px;flex-shrink:0;}
+  .spell-row-name{font-size:0.88rem;}
+  .spell-row-text{flex:1;display:flex;flex-direction:column;gap:1px;min-width:0;text-align:left;}
+  .spell-row-top{display:flex;align-items:center;gap:6px;}
+  .spell-row-meta{font-size:0.68rem;color:var(--text-dim);}
+  .spell-row-meta.needs-desc-text{color:var(--warn);}
+  .info-icon{width:22px;height:22px;border-radius:50%;border:1px solid var(--text-dim);
+    background:none;color:var(--text-dim);font-size:0.72rem;font-weight:700;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;font-style:italic;font-family:Georgia,serif;}
+  .info-icon:active{border-color:var(--accent);color:var(--accent);}
+  .type-icon{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;}
+  .type-icon svg{width:100%;height:100%;display:block;}
+  .info-icon.needs-desc{border-color:var(--warn);color:var(--warn);background:rgba(224,169,64,.12);}
+  .info-icon.needs-desc:active{border-color:var(--warn);color:var(--warn);}
+  .spell-hint{font-size:0.7rem;color:var(--text-dim);margin-top:6px;}
+  .dm-needs-desc-hint{font-size:0.7rem;color:var(--warn);margin-top:6px;}
+  .channel-divinity-card{background:rgba(230,200,96,.08);border:1px solid var(--divine);
+    border-radius:10px;padding:12px;margin-bottom:14px;}
+  .channel-divinity-card h3{font-size:0.7rem;text-transform:uppercase;letter-spacing:.06em;
+    color:var(--divine);margin:0 0 12px;font-weight:700;}
+  .channel-divinity-card .spell-row{border-bottom-color:rgba(230,200,96,.25);}
+
+  .inv-item{display:flex;justify-content:space-between;align-items:center;padding:6px 2px;
+    border-bottom:1px solid var(--border);font-size:0.85rem;gap:8px;}
+  .inv-item:last-child{border-bottom:none;}
+  .inv-item .meta{color:var(--text-dim);font-size:0.72rem;}
+  .eq-toggle{background:var(--panel);border:1px solid var(--border);border-radius:6px;
+    padding:3px 8px;font-size:0.7rem;color:var(--text-dim);flex-shrink:0;}
+  .eq-toggle.on{background:var(--good);color:#132313;border-color:var(--good);font-weight:600;}
+
+  textarea{width:100%;min-height:110px;background:var(--panel-2);border:1px solid var(--border);
+    border-radius:10px;color:var(--text);font-family:inherit;font-size:0.9rem;padding:8px;resize:vertical;}
+
+  #rollToast{position:fixed;left:50%;bottom:82px;transform:translateX(-50%) translateY(20px);
+    background:var(--accent);color:#1b1712;padding:12px 20px;border-radius:14px;
+    font-weight:700;font-size:1.1rem;box-shadow:0 6px 18px rgba(0,0,0,.4);opacity:0;
+    transition:opacity .15s, transform .15s;pointer-events:none;text-align:center;z-index:70;max-width:80vw;}
+  #rollToast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  #rollToast .toastlabel{display:block;font-size:0.7rem;font-weight:500;opacity:.85;}
+  @media (min-width:820px){ #rollToast{bottom:24px;} }
+
+  .undo-bar{position:fixed;left:50%;bottom:82px;transform:translateX(-50%);
+    background:var(--panel);border:1px solid var(--border);color:var(--text);
+    padding:10px 10px 10px 16px;border-radius:12px;display:flex;align-items:center;gap:14px;
+    box-shadow:0 6px 18px rgba(0,0,0,.4);z-index:75;font-size:0.85rem;max-width:88vw;}
+  .undo-bar button{background:var(--accent);color:#1b1712;border:none;border-radius:8px;
+    padding:7px 14px;font-weight:700;font-size:0.8rem;flex-shrink:0;}
+  @media (min-width:820px){ .undo-bar{bottom:24px;} }
+
+  .footer-note{text-align:center;color:var(--text-dim);font-size:0.7rem;margin-top:18px;}
+  .reset-btn{display:block;width:100%;margin-top:8px;background:none;border:1px solid var(--border);
+    color:var(--text-dim);border-radius:8px;padding:8px 14px;font-size:0.75rem;}
+  .save-folder-btn{background:var(--accent);color:#1b1712;border-color:var(--accent);font-weight:700;font-size:0.8rem;}
+  .folder-status{text-align:center;font-size:0.7rem;color:var(--text-dim);margin-top:6px;}
+  .backlink{display:inline-block;margin-bottom:10px;color:var(--text-dim);font-size:0.8rem;text-decoration:none;}
+  .lock-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .lock-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;
+    padding:28px 24px;max-width:360px;text-align:center;}
+  .lock-card h1{font-family:Georgia,"Times New Roman",serif;}
+  .lock-card p{margin:10px 0 16px;}
+  .toplinks{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .comparelink{color:var(--text-dim);font-size:0.8rem;text-decoration:none;border:1px solid var(--border);
+    border-radius:8px;padding:4px 10px;}
+
+  /* --- conditions --- */
+  .cond-grid{display:flex;flex-wrap:wrap;gap:7px;}
+  .cond-item{display:flex;align-items:stretch;border-radius:20px;overflow:hidden;
+    border:1px solid var(--border);}
+  .cond-chip{background:var(--panel-2);border:none;color:var(--text-dim);
+    padding:6px 10px;font-size:0.78rem;font-family:inherit;}
+  .cond-chip.on{background:var(--accent-2);color:#f4e9dc;font-weight:600;}
+  .cond-info-btn{background:var(--panel-2);border:none;border-left:1px solid var(--border);
+    color:var(--text-dim);padding:6px 9px;font-size:0.7rem;font-weight:700;font-style:italic;
+    font-family:Georgia,"Times New Roman",serif;}
+  .cond-info-btn:active{color:var(--accent);}
+  .cond-item:has(.cond-chip.on) .cond-info-btn{background:var(--accent-2);color:#f4e9dc;border-left-color:#f4e9dc44;}
+
+  /* --- journal --- */
+  .journal-sub{margin-bottom:14px;}
+  .journal-sub:last-child{margin-bottom:0;}
+  .journal-sub h3{font-size:0.7rem;text-transform:uppercase;letter-spacing:.06em;
+    color:var(--text-dim);margin-bottom:6px;}
+  .journal-item-row{display:flex;gap:6px;align-items:flex-start;margin-bottom:6px;}
+  .journal-item-row textarea{min-height:44px;font-size:0.85rem;flex:1;}
+  .journal-item-row .remove-btn{flex-shrink:0;}
+
+  /* --- spell info modal --- */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;
+    align-items:flex-end;justify-content:center;z-index:80;}
+  @media (min-width:820px){ .modal-overlay{align-items:center;} }
+  .modal-card{background:var(--panel);border:1px solid var(--border);border-radius:16px 16px 0 0;
+    padding:18px;max-width:480px;width:100%;max-height:70vh;overflow-y:auto;}
+  @media (min-width:820px){ .modal-card{border-radius:16px;} }
+  .modal-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:10px;}
+  .modal-title{font-family:Georgia,"Times New Roman",serif;font-size:1.2rem;font-weight:700;}
+  .modal-level{color:var(--text-dim);font-size:0.72rem;text-transform:uppercase;letter-spacing:.05em;margin-top:2px;}
+  .modal-close{background:var(--panel-2);border:1px solid var(--border);color:var(--text);
+    border-radius:8px;width:30px;height:30px;font-size:0.9rem;flex-shrink:0;}
+  .modal-desc{font-size:0.9rem;line-height:1.55;color:var(--text);}
+  .modal-desc.empty{color:var(--text-dim);font-style:italic;}
+  .modal-desc p{margin:0 0 10px;}
+  .modal-desc p:last-child{margin-bottom:0;}
+  .modal-desc ul{margin:0 0 10px;padding-left:20px;}
+  .modal-desc ul:last-child{margin-bottom:0;}
+  .modal-desc li{margin-bottom:3px;}
+  .modal-desc strong{color:var(--accent);}
+  .modal-desc code{background:var(--panel-2);border-radius:4px;padding:1px 5px;font-size:0.85em;}
+
+  /* --- edit mode --- */
+  .edit-input{background:var(--panel);border:1px solid var(--border);border-radius:6px;
+    color:var(--text);padding:5px 7px;font-family:inherit;font-size:0.85rem;}
+  .edit-input.small{width:64px;text-align:center;}
+  .edit-input.wide{width:100%;}
+  .edit-input.score{width:100%;text-align:center;font-size:1.1rem;font-weight:700;}
+  select.edit-input{padding:5px 4px;}
+  textarea.edit-input{resize:vertical;min-height:60px;line-height:1.4;}
+  .edit-field{display:flex;flex-direction:column;gap:3px;margin-bottom:8px;}
+  .edit-field label{font-size:0.65rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;}
+  .edit-row{display:flex;gap:6px;align-items:flex-end;flex-wrap:wrap;margin-bottom:8px;}
+  .edit-row .edit-field{flex:1;min-width:70px;margin-bottom:0;}
+  .edit-card{background:var(--panel-2);border:1px solid var(--border);border-radius:10px;
+    padding:10px;margin-bottom:8px;}
+  .edit-card-top{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-bottom:4px;}
+  .edit-card-top .reorder-btns{display:flex;gap:4px;margin-right:auto;}
+  .edit-card-top .reorder-btns button{background:var(--panel);border:1px solid var(--border);
+    color:var(--text);border-radius:6px;width:26px;height:26px;font-size:0.85rem;line-height:1;}
+  .edit-card-top .reorder-btns button:disabled{opacity:.3;}
+  .remove-btn{background:var(--accent-2);color:#f4e9dc;border:none;border-radius:6px;
+    padding:5px 9px;font-size:0.7rem;flex-shrink:0;}
+  .add-btn{background:var(--panel-2);border:1px dashed var(--border);color:var(--text-dim);
+    border-radius:8px;padding:9px;width:100%;font-size:0.8rem;margin-top:2px;}
+  .checkline{display:flex;align-items:center;gap:6px;font-size:0.85rem;padding:3px 0;}
+  .checkline label{display:flex;align-items:center;gap:4px;font-size:0.7rem;color:var(--text-dim);}
+</style>
+</head>
+<body>
+
+<div id="lockScreen" class="lock-screen">
+  <div class="lock-card">
+    <h1 style="font-size:1.3rem;">DM Access Required</h1>
+    <p style="color:var(--text-dim);font-size:0.85rem;">NPC and monster sheets are hidden from players. Enter DM mode first.</p>
+    <a class="reset-btn" href="../../dm.html" style="display:inline-block;width:auto;padding:9px 18px;">Go to DM Dashboard</a>
+  </div>
+</div>
+
+<div id="appRoot" hidden>
+<nav class="tabnav" id="tabNav">
+  <button class="tabnav-btn" id="tabBtnSheet" onclick="setTab('sheet')"><span class="tabnav-icon">📜</span><span>Sheet</span></button>
+  <button class="tabnav-btn" id="tabBtnPlay" onclick="setTab('play')"><span class="tabnav-icon">⚔️</span><span>Play</span></button>
+</nav>
+
+<div class="page-wrap">
+
+<div class="toplinks">
+  <a class="backlink" href="../../dm.html" style="margin-bottom:0;">&larr; DM Dashboard</a>
+  <a id="compareLink" hidden></a>
+</div>
+
+<div id="editBanner" class="edit-banner" hidden>DM edit mode — changes save automatically on this device. Use "Export JSON" below to send corrected data back.</div>
+
+<div class="header">
+  <div>
+    <div class="dm-badge" id="dmBadge" hidden>DM Mode</div>
+    <h1 id="charName"></h1>
+    <div class="sub" id="charSub"></div>
+  </div>
+  <div class="header-btns">
+    <button class="edit-toggle-btn" id="editBtn" onclick="toggleEditMode()" hidden>✎ Edit</button>
+    <button class="insp-btn" id="inspBtn" onclick="toggleInspiration()">✦ Inspiration</button>
+  </div>
+</div>
+
+<!-- ============ SHEET TAB ============ -->
+<div id="tabSheet">
+
+  <div class="panel" id="identityPanel" hidden>
+    <h2>Identity</h2>
+    <div id="identityEdit"></div>
+  </div>
+
+  <div class="panel">
+    <div class="statrow">
+      <div class="statbox">
+        <div class="label">Armor Class</div>
+        <div class="value" id="acValue">—</div>
+      </div>
+      <div class="statbox">
+        <div class="label">Initiative</div>
+        <div class="value" id="initValue">—</div>
+      </div>
+      <div class="statbox">
+        <div class="label">Speed</div>
+        <div class="value" id="speedDisplay"></div>
+        <input class="edit-input small" id="speedEdit" type="number" hidden oninput="setSpeed(this.value)">
+      </div>
+      <div class="statbox">
+        <div class="label">Prof. Bonus</div>
+        <div class="value" id="profValue">—</div>
+      </div>
+    </div>
+    <div class="statrow" style="margin-top:8px;grid-template-columns:1fr;">
+      <div class="statbox">
+        <div class="label">Passive Perception</div>
+        <div class="value" id="passivePerc">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Ability Scores</h2>
+    <div class="abilgrid" id="abilGrid"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Saving Throws</h2>
+    <div id="savesList"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Skills</h2>
+    <div id="skillsList"></div>
+  </div>
+
+</div>
+
+<!-- ============ PLAY TAB ============ -->
+<div id="tabPlay" hidden>
+
+  <div class="panel">
+    <div class="statbox" id="hpStatbox">
+      <div class="label">Hit Points</div>
+      <div class="hp-controls">
+        <button onclick="adjustHp(-1)">−</button>
+        <input class="hp-input" id="hpCurrent" type="number" oninput="setHp(this.value)">
+        <span class="hp-max">/ <span id="hpMaxDisplay"></span><input id="hpMaxEdit" type="number" hidden oninput="setHpMax(this.value)"></span>
+        <button onclick="adjustHp(1)">+</button>
+        <span class="hp-temp-badge" id="hpTempBadge" hidden></span>
+      </div>
+      <div class="temp-row">Temp HP
+        <button onclick="adjustTemp(-1)">−</button>
+        <span id="hpTempValue">0</span>
+        <button onclick="adjustTemp(1)">+</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="attacksPanel">
+    <h2>Attacks</h2>
+    <div id="attacksList"></div>
+  </div>
+
+  <div class="panel" id="featuresPanel">
+    <h2>Feats &amp; Features</h2>
+    <div id="channelDivinitySection" class="channel-divinity-card" hidden>
+      <h3>Channel Divinity</h3>
+      <div id="channelDivinitySlots"></div>
+      <div id="channelDivinityList" style="margin-top:6px;"></div>
+    </div>
+    <div id="featuresList"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Spell Slots &amp; Conditions</h2>
+    <div id="spellSlots"></div>
+    <div class="cond-grid" id="conditionsGrid" style="margin-top:12px;"></div>
+  </div>
+
+  <div class="panel" id="spellsPanel">
+    <h2>Spells</h2>
+    <div id="spellsList"></div>
+    <div class="spell-hint" id="spellHint">Tap a spell to cast it (uses a slot). Tap the ⓘ for its description.</div>
+  </div>
+
+  <div class="panel">
+    <h2>Items</h2>
+    <div id="inventoryList"></div>
+    <div style="margin-top:8px;font-size:0.8rem;color:var(--text-dim);" id="currencyRow"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Journal</h2>
+    <div class="journal-sub">
+      <h3>Backstory &amp; Notes</h3>
+      <textarea id="notesArea" oninput="saveNotes(this.value)" placeholder="Backstory, notes, reminders..."></textarea>
+    </div>
+    <div class="journal-sub">
+      <h3>Session Log</h3>
+      <div id="journalEntries"></div>
+    </div>
+    <div class="journal-sub">
+      <h3>NPCs</h3>
+      <div id="journalNpcs"></div>
+    </div>
+    <div class="journal-sub">
+      <h3>Quests</h3>
+      <div id="journalQuests"></div>
+    </div>
+    <div class="journal-sub">
+      <h3>Goals</h3>
+      <div id="journalGoals"></div>
+    </div>
+  </div>
+
+</div>
+
+<button class="reset-btn save-folder-btn" id="saveToFolderBtn" onclick="saveToFolder()" hidden>💾 Save to Character Sheets folder</button>
+<div class="folder-status" id="folderStatus" hidden></div>
+<button class="reset-btn" id="exportBtn" onclick="exportJson()" hidden>⬇ Export character JSON (fallback download)</button>
+<button class="reset-btn" id="discardEditsBtn" onclick="discardEdits()" hidden>Discard edits (revert to original import)</button>
+<button class="reset-btn" onclick="resetProgress()">Reset tracked stats (HP, spell slots, notes…)</button>
+<div class="footer-note">Progress is saved on this device only. Character edits sync via "Save to folder" like a player sheet.</div>
+
+</div>
+
+<div id="rollToast"><span class="toastlabel" id="toastLabel"></span><span id="toastResult"></span></div>
+
+<div id="undoBar" class="undo-bar" hidden>
+  <span id="undoText"></span>
+  <button onclick="performUndo()">Undo</button>
+</div>
+
+<div class="modal-overlay" id="infoModal" hidden onclick="if(event.target===this) closeInfoModal()">
+  <div class="modal-card">
+    <div class="modal-top">
+      <div>
+        <div class="modal-title" id="infoModalTitle"></div>
+        <div class="modal-level" id="infoModalLevel"></div>
+      </div>
+      <button class="modal-close" onclick="closeInfoModal()">✕</button>
+    </div>
+    <div class="modal-desc" id="infoModalDesc"></div>
+  </div>
+</div>
+
+<script>
+const DATA = {"name": "Fungal Stalker 3", "species": "Plant", "background": "CR 1/4 \u2014 mushroom biome pack hunter", "classes": [{"id": "role", "name": "Fungal Stalker", "level": 1, "hitDie": 6, "subclass": ""}], "abilities": {"str": 10, "dex": 14, "con": 12, "int": 2, "wis": 12, "cha": 6}, "proficientSaves": [], "skillProficiencies": ["stealth"], "skillExpertise": [], "hp": {"max": 13, "current": 13, "temp": 0}, "speed": 30, "conditions": [], "inspiration": false, "spellSlots": {}, "spellsPrepared": [], "currency": {"cp": 0, "sp": 0, "ep": 0, "gp": 0, "pp": 0}, "inventory": [{"id": "i1", "name": "Barbed Tendril", "kind": "weapon", "quantity": 1, "dmg": "1d8", "dmgType": "Piercing", "rangeType": "Melee", "props": ["Reach"], "equipped": true, "desc": "Reach 10 ft. Melee Weapon Attack: +4 to hit. Hit: 6 (1d8+2) piercing damage."}, {"id": "i2", "name": "Fungal Hide", "kind": "armor", "quantity": 1, "acBase": 10, "equipped": true, "desc": "Natural armor. Combines with Dexterity to reach AC 12."}], "notes": "A skittering, four-legged fungal growth that camouflages against giant mushroom stalks and lashes out with barbed, root-like tendrils. Not intelligent \u2014 just territorial and hungry. Also has climb speed 20 ft. Resists poison damage; immune to blinded and poisoned. Blindsight 30 ft. (blind beyond this). Suggested quantity: 3-4 for a 5-6 PC level 3 party.", "customFeatures": [{"id": "f1", "name": "Spore Camouflage", "desc": "While within a mushroom-heavy area, the stalker has advantage on Dexterity (Stealth) checks to hide."}, {"id": "f2", "name": "Choking Spores (Recharge 5-6)", "desc": "Each creature within 10 feet of the stalker must succeed on a DC 11 Constitution saving throw or become poisoned until the end of its next turn."}], "id": "npc-fungal-stalker-3-b637709f"};
+const STORE_KEY = "dnd-sheet-" + DATA.id;
+const EDIT_KEY = "dnd-sheet-edits-" + DATA.id;
+const TAB_KEY = "dnd-sheet-tab";
+const DM_KEY = "dnd-dm-auth";
+const SOURCE_FILENAME = "fungal-stalker-3.json";
+const FS_SUPPORTED = typeof window.showDirectoryPicker === "function";
+const DIR_HANDLE_KEY = "characterSheetsDir";
+
+/* ---------- direct-to-disk saving (Chrome/Edge desktop only) ---------- */
+function idbGet(key){
+  return new Promise((resolve) => {
+    const req = indexedDB.open("dnd-sheet-fs", 1);
+    req.onupgradeneeded = () => req.result.createObjectStore("handles");
+    req.onsuccess = () => {
+      const tx = req.result.transaction("handles", "readonly");
+      const getReq = tx.objectStore("handles").get(key);
+      getReq.onsuccess = () => resolve(getReq.result || null);
+      getReq.onerror = () => resolve(null);
+    };
+    req.onerror = () => resolve(null);
+  });
+}
+function idbSet(key, value){
+  return new Promise((resolve) => {
+    const req = indexedDB.open("dnd-sheet-fs", 1);
+    req.onupgradeneeded = () => req.result.createObjectStore("handles");
+    req.onsuccess = () => {
+      const tx = req.result.transaction("handles", "readwrite");
+      tx.objectStore("handles").put(value, key);
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => resolve(false);
+    };
+    req.onerror = () => resolve(false);
+  });
+}
+async function getDirHandle(forcePick){
+  let handle = forcePick ? null : await idbGet(DIR_HANDLE_KEY);
+  if(handle){
+    try{
+      const perm = await handle.queryPermission({mode:"readwrite"});
+      if(perm === "granted") return handle;
+      const req = await handle.requestPermission({mode:"readwrite"});
+      if(req === "granted") return handle;
+    }catch(e){ /* stale handle (e.g. folder moved) - fall through to re-pick */ }
+  }
+  handle = await window.showDirectoryPicker({id:"dnd-character-sheets", mode:"readwrite"});
+  await idbSet(DIR_HANDLE_KEY, handle);
+  return handle;
+}
+async function saveToFolder(){
+  if(!FS_SUPPORTED || !SOURCE_FILENAME) return;
+  try{
+    const dir = await getDirHandle(false);
+    const fileHandle = await dir.getFileHandle(SOURCE_FILENAME, {create:true});
+    const writable = await fileHandle.createWritable();
+    await writable.write(JSON.stringify(charData, null, 2));
+    await writable.close();
+    toast(charData.name, "Saved to " + SOURCE_FILENAME);
+    document.getElementById("folderStatus").hidden = false;
+    document.getElementById("folderStatus").textContent = "Last saved to Character Sheets/" + SOURCE_FILENAME + " just now.";
+  }catch(err){
+    if(err.name === "AbortError") return; // user cancelled the folder picker
+    toast("Save failed", err.message || "Could not write the file");
+  }
+}
+
+function isDM(){
+  try{ return localStorage.getItem(DM_KEY) === "1"; }catch(e){ return false; }
+}
+
+const SKILLS = [
+  ["acrobatics","Acrobatics","dex"],
+  ["animalHandling","Animal Handling","wis"],
+  ["arcana","Arcana","int"],
+  ["athletics","Athletics","str"],
+  ["deception","Deception","cha"],
+  ["history","History","int"],
+  ["insight","Insight","wis"],
+  ["intimidation","Intimidation","cha"],
+  ["investigation","Investigation","int"],
+  ["medicine","Medicine","wis"],
+  ["nature","Nature","int"],
+  ["perception","Perception","wis"],
+  ["performance","Performance","cha"],
+  ["persuasion","Persuasion","cha"],
+  ["religion","Religion","int"],
+  ["sleightOfHand","Sleight of Hand","dex"],
+  ["stealth","Stealth","dex"],
+  ["survival","Survival","wis"],
+];
+const ABIL_NAMES = {str:"Strength",dex:"Dexterity",con:"Constitution",int:"Intelligence",wis:"Wisdom",cha:"Charisma"};
+const ITEM_KINDS = ["weapon","armor","shield","gear"];
+const CONDITIONS = ["Blinded","Charmed","Deafened","Frightened","Grappled","Incapacitated",
+  "Invisible","Paralyzed","Petrified","Poisoned","Prone","Restrained","Stunned","Unconscious"];
+const CONDITION_DESC = {
+  Blinded: "Can't see; automatically fails checks that require sight. Attack rolls against you have advantage, and your attack rolls have disadvantage.",
+  Charmed: "Can't attack the charmer or target them with harmful abilities/spells. The charmer has advantage on social checks against you.",
+  Deafened: "Can't hear; automatically fails checks that require hearing.",
+  Frightened: "Disadvantage on ability checks and attack rolls while the source of fear is within line of sight. Can't willingly move closer to it.",
+  Grappled: "Speed becomes 0. Ends if the grappler is incapacitated or you're moved out of the grappler's reach.",
+  Incapacitated: "Can't take actions or reactions.",
+  Invisible: "Impossible to see without magic/special senses. Heavily obscured for hiding purposes. Attack rolls against you have disadvantage, and your attack rolls have advantage.",
+  Paralyzed: "Incapacitated and can't move or speak. Auto-fails Str/Dex saves. Attacks against you have advantage, and any hit within 5 ft is a critical hit.",
+  Petrified: "Turned to stone (with all attached items). Incapacitated, can't move or speak, unaware of surroundings. Attacks against you have advantage. Auto-fails Str/Dex saves. Resistant to all damage. Immune to poison and disease.",
+  Poisoned: "Disadvantage on attack rolls and ability checks.",
+  Prone: "Can only crawl unless it stands up. Disadvantage on attack rolls. Melee attacks against you have advantage; ranged attacks against you have disadvantage.",
+  Restrained: "Speed becomes 0. Disadvantage on attack rolls and Dex saves. Attack rolls against you have advantage.",
+  Stunned: "Incapacitated, can't move, and can speak only falteringly. Auto-fails Str/Dex saves. Attacks against you have advantage.",
+  Unconscious: "Incapacitated, can't move or speak, unaware of surroundings, drops what it's holding, falls prone. Auto-fails Str/Dex saves. Attacks against you have advantage, and any hit within 5 ft is a critical hit.",
+};
+
+/* ---------- icons ---------- */
+const ICONS = {
+  // gear / armor category
+  shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5.5 3.4 9 8 11 4.6-2 8-5.5 8-11V5Z"/></svg>',
+  gear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8V6a3 3 0 0 1 6 0v2"/><path d="M4 8h10l1 12H3Z"/></svg>',
+  // weapon icons, chosen by damage type
+  sword: '<svg viewBox="0 0 256 256"><path fill="currentColor" d="M216 32h-64a8 8 0 0 0-6.34 3.12l-64 83.21l-9.66-9.64a16 16 0 0 0-22.64 0l-12.69 12.7a16 16 0 0 0 0 22.63l20 20l-28 28a16 16 0 0 0 0 22.63l12.69 12.68a16 16 0 0 0 22.62 0l28-28l20 20a16 16 0 0 0 22.64 0l12.69-12.7a16 16 0 0 0 0-22.63l-9.64-9.64l83.21-64A8 8 0 0 0 224 104V40a8 8 0 0 0-8-8ZM52.69 216L40 203.32l28-28L80.68 188Zm70.61-8L48 132.71L60.7 120l75.3 75.31ZM208 100.06l-81.74 62.88L115.32 152l50.34-50.34a8 8 0 0 0-11.32-11.31L104 140.68l-10.93-10.94L155.94 48H208Z"/></svg>',
+  bow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3c-2 3-2 15 0 18"/><path d="M6 3 20 12 6 21"/><path d="M4 12h14"/></svg>',
+  mace: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="17" cy="7" r="3.2"/><path d="M14.7 9.3 5 19"/><path d="M3.5 20.5 5 19l1.5 1.5-1.5 1.5z" fill="currentColor" stroke="none"/></svg>',
+  // 8 schools of magic
+  abjuration: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5.5 3.4 9 8 11 4.6-2 8-5.5 8-11V5Z"/><path d="M12 7v10M8 10.5h8"/></svg>',
+  conjuration: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4" stroke-dasharray="2.2 2.2"/></svg>',
+  divination: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>',
+  enchantment: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7.5-4.6-9.5-9C1 7.5 3 4 6.5 4c2 0 3.7 1.3 4.5 3 .8-1.7 2.5-3 4.5-3C19 4 21 7.5 19.5 11c-2 4.4-9.5 9-9.5 9Z"/></svg>',
+  evocation: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>',
+  illusion: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9c1.5-3 5-4 9-4s7.5 1 9 4c-1 1.5-1 6.5 0 8-1.5 3-5 4-9 4s-7.5-1-9-4c1-1.5 1-6.5 0-8Z"/><circle cx="8.5" cy="11.5" r="1" fill="currentColor" stroke="none"/><circle cx="15.5" cy="11.5" r="1" fill="currentColor" stroke="none"/><path d="M8.5 16c1.5 1 5.5 1 7 0"/></svg>',
+  necromancy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a7 7 0 0 0-7 7c0 3 1.6 4.6 2.2 6.2.2.5.3 1 .3 1.3v.5h9v-.5c0-.3.1-.8.3-1.3C17.4 14.6 19 13 19 10a7 7 0 0 0-7-7Z"/><circle cx="9.3" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="14.7" cy="10" r="1.1" fill="currentColor" stroke="none"/><path d="M10 13.2c1.2.9 2.8.9 4 0"/></svg>',
+  transmutation: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 8a8 8 0 0 0-14.9-3M4 4v4h4"/><path d="M4 16a8 8 0 0 0 14.9 3M20 20v-4h-4"/></svg>',
+  fire: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1.2 3-1.6 4.2-1.8 7A3.8 3.8 0 0 0 12 16a3.8 3.8 0 0 0 3.8-3.8c0-.9-.4-1.7-.9-2.3.4 1.8-.9 2.8-.9 2.8.3-1.9-1.4-3.3-1-5.6-1.4 1-2.8 2.4-2.8 5.1A3.8 3.8 0 0 1 6.4 8.4C6.4 5.6 8.3 3.7 12 2Z"/></svg>',
+  ice: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 2v20M4.5 6.5l15 11M19.5 6.5l-15 11"/><path d="M12 2 9.7 4.3M12 2l2.3 2.3M12 22l-2.3-2.3M12 22l2.3-2.3M4.5 6.5l3.2.6M4.5 6.5l.6 3.2M19.5 6.5l-3.2.6M19.5 6.5l-.6 3.2M4.5 17.5l.6-3.2M4.5 17.5l3.2-.6M19.5 17.5l-.6-3.2M19.5 17.5l-3.2-.6"/></svg>',
+  unknown: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9" stroke-dasharray="2 3"/></svg>',
+};
+const SPELL_TYPES = [
+  ["abjuration","Abjuration"], ["conjuration","Conjuration"], ["divination","Divination"],
+  ["enchantment","Enchantment"], ["evocation","Evocation"], ["illusion","Illusion"],
+  ["necromancy","Necromancy"], ["transmutation","Transmutation"], ["fire","Fire"], ["ice","Ice"],
+];
+const SPELL_TYPE_OPTIONS = [["","Auto (based on name)"], ...SPELL_TYPES];
+const TYPE_COLORS = {
+  abjuration:"#6fa8dc", conjuration:"#8f7fe0", divination:"#4fd1c5", enchantment:"#e685c0",
+  evocation:"#e0703c", illusion:"#c98ce6", necromancy:"#6b9e5e", transmutation:"#e6c860",
+  fire:"#e0703c", ice:"#7ec8e6",
+};
+const ITEM_ICON_OPTIONS = [
+  ["","Auto (based on name/type)"], ["sword","Sword"], ["bow","Bow"], ["mace","Mace"],
+  ["shield","Shield"], ["gear","Gear / Pouch"],
+];
+
+// Best-effort guess so a freshly-added spell gets a sensible icon before
+// the DM has picked a school - just from its name.
+function guessSpellIconFromName(name){
+  const n = (name || "").toLowerCase();
+  if(/fire|flame|burn|ignite|scorch|ember|blaze/.test(n)) return "fire";
+  if(/ice|frost|cold|freeze|frozen|winter|chill/.test(n)) return "ice";
+  return null;
+}
+
+// Weapons don't get a fixed icon by kind - pick bow/mace only when the
+// damage type/range explicitly says so; sword is the default otherwise.
+function weaponIconKey(item){
+  if((item.rangeType || "").toLowerCase() === "ranged") return "bow";
+  if((item.dmgType || "").toLowerCase() === "bludgeoning") return "mace";
+  return "sword";
+}
+function itemIconKey(item){
+  if(item.icon) return item.icon; // manual override from the edit-mode dropdown
+  if(item.kind === "weapon") return weaponIconKey(item);
+  if(item.kind === "armor" || item.kind === "shield") return "shield";
+  return "gear";
+}
+// The icon actually shown for a spell: explicit choice, else a name-based
+// guess (fire/ice), else the "unknown" placeholder.
+function spellIconKey(sp){
+  if(SPELL_TYPES.some(([k]) => k === sp.spellType)) return sp.spellType;
+  return guessSpellIconFromName(sp.name);
+}
+
+function typeIcon(key, size, color){
+  const span = document.createElement("span");
+  span.className = "type-icon";
+  span.style.width = span.style.height = (size || 18) + "px";
+  span.style.color = color || TYPE_COLORS[key] || "var(--text-dim)";
+  span.innerHTML = ICONS[key] || ICONS.gear;
+  return span;
+}
+
+const JOURNAL_CATS = [
+  ["entries","journalEntries","Log what happened this session..."],
+  ["npcs","journalNpcs","Name and notes on an NPC..."],
+  ["quests","journalQuests","A quest or objective..."],
+  ["goals","journalGoals","A personal goal..."],
+];
+
+let editMode = false;
+let charData = null;
+let activeTab = "play";
+
+function normalizeCharData(cd){
+  cd.spellsPrepared = (cd.spellsPrepared||[]).map(sp =>
+    typeof sp === "string" ? {name: sp, level: 1, desc: "", castingTime: "", range: ""}
+      : {level:1, desc:"", castingTime:"", range:"", ...sp});
+  cd.channelDivinity = cd.channelDivinity || {max: 0};
+  return cd;
+}
+function isPaladin(){
+  return (charData.classes||[]).some(c => (c.name||"").toLowerCase().includes("paladin"));
+}
+
+// Default inventory grouping when nothing's been manually reordered yet:
+// weapons, then general items/gear, then armor & shields.
+const KIND_SORT_ORDER = {weapon: 0, gear: 1, armor: 2, shield: 2};
+function sortInventoryDefault(cd){
+  cd.inventory = (cd.inventory || []).slice().sort((a, b) =>
+    (KIND_SORT_ORDER[a.kind] ?? 3) - (KIND_SORT_ORDER[b.kind] ?? 3));
+}
+
+function loadCharData(){
+  let cd, fromSavedEdits = false;
+  try{
+    const raw = localStorage.getItem(EDIT_KEY);
+    if(raw){ cd = JSON.parse(raw); fromSavedEdits = true; }
+  }catch(e){}
+  if(!cd) cd = JSON.parse(JSON.stringify(DATA));
+  cd = normalizeCharData(cd);
+  // Once the DM has saved any edits (including a manual reorder), that
+  // order is authoritative - only apply the default grouping before that.
+  if(!fromSavedEdits) sortInventoryDefault(cd);
+  return cd;
+}
+function saveCharData(){
+  try{ localStorage.setItem(EDIT_KEY, JSON.stringify(charData)); }catch(e){}
+}
+function hasEdits(){
+  try{ return !!localStorage.getItem(EDIT_KEY); }catch(e){ return false; }
+}
+function discardEdits(){
+  if(!confirm("Discard all edits made on this device and revert this sheet to the originally imported data?")) return;
+  try{ localStorage.removeItem(EDIT_KEY); }catch(e){}
+  charData = loadCharData();
+  renderAll();
+}
+function exportJson(){
+  const blob = new Blob([JSON.stringify(charData, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = (charData.name || "character").toLowerCase().replace(/[^a-z0-9]+/g,"-") + ".json";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+
+function setTab(tab){
+  activeTab = tab;
+  try{ localStorage.setItem(TAB_KEY, tab); }catch(e){}
+  document.getElementById("tabSheet").hidden = tab !== "sheet";
+  document.getElementById("tabPlay").hidden = tab !== "play";
+  document.getElementById("tabBtnSheet").classList.toggle("active", tab === "sheet");
+  document.getElementById("tabBtnPlay").classList.toggle("active", tab === "play");
+}
+
+function loadState(){
+  let s;
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw) s = JSON.parse(raw);
+  }catch(e){}
+  if(!s){
+    s = {
+      hpCurrent: DATA.hp.current,
+      hpTemp: DATA.hp.temp,
+      inspiration: DATA.inspiration || false,
+      notes: DATA.notes || "",
+      slotsUsed: {},
+      equipped: {},
+      conditions: DATA.conditions || [],
+      journal: {
+        entries: (DATA.journal && DATA.journal.entries) || [],
+        npcs: (DATA.journal && DATA.journal.npcs) || [],
+        quests: (DATA.journal && DATA.journal.quests) || [],
+        goals: (DATA.journal && DATA.journal.goals) || [],
+      },
+    };
+  }
+  s.conditions = s.conditions || [];
+  s.channelDivinityUsed = s.channelDivinityUsed || 0;
+  s.featurePools = s.featurePools || {};
+  s.journal = s.journal || {entries:[],npcs:[],quests:[],goals:[]};
+  for(const [cat] of JOURNAL_CATS) s.journal[cat] = s.journal[cat] || [];
+  return s;
+}
+let state = loadState();
+
+function saveState(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+}
+
+function mod(score){ return Math.floor((score-10)/2); }
+function fmtMod(m){ return (m>=0?"+":"") + m; }
+function profBonus(level){ return Math.floor((level-1)/4) + 2; }
+function getLevel(){ return (charData.classes||[]).reduce((a,c)=>a+(c.level||0),0) || 1; }
+function getProf(){ return profBonus(getLevel()); }
+function uid(prefix){ return prefix + "-" + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+function isEquipped(item){
+  if(item.id in state.equipped) return state.equipped[item.id];
+  return !!item.equipped;
+}
+
+// Skill checks that equipped weapons/armor currently grant advantage or
+// disadvantage on. An item with both cancels out to normal, same as the
+// standard 5e rule for stacking advantage and disadvantage.
+function computeSkillEffects(){
+  const effects = {};
+  for(const item of (charData.inventory || [])){
+    if(!isEquipped(item)) continue;
+    for(const eff of (item.skillEffects || [])){
+      if(!eff.skill || !eff.mode) continue;
+      const e = effects[eff.skill] || (effects[eff.skill] = {adv:false, dis:false, sources:[]});
+      if(eff.mode === "advantage") e.adv = true;
+      else if(eff.mode === "disadvantage") e.dis = true;
+      e.sources.push(item.name + " (" + eff.mode + ")");
+    }
+  }
+  return effects;
+}
+
+function computeAC(){
+  let base = 10, dexCap = null, shieldBonus = 0, usedArmor = false;
+  for(const item of charData.inventory){
+    if(!isEquipped(item)) continue;
+    if(item.kind === "armor"){
+      base = item.acBase;
+      dexCap = (item.dexMax !== undefined && item.dexMax !== null && item.dexMax !== "") ? item.dexMax : null;
+      usedArmor = true;
+    } else if(item.kind === "shield"){
+      shieldBonus += item.acBonus || 0;
+    }
+  }
+  let dexMod = mod(charData.abilities.dex);
+  if(usedArmor && dexCap !== null) dexMod = Math.min(dexMod, dexCap);
+  return base + dexMod + shieldBonus;
+}
+
+function toast(label, result){
+  const t = document.getElementById("rollToast");
+  document.getElementById("toastLabel").textContent = label;
+  document.getElementById("toastResult").textContent = result;
+  t.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>t.classList.remove("show"), 2200);
+}
+
+/* ---------- undo (for deletes across spells/feats/items/etc) ---------- */
+let pendingUndo = null;
+let undoTimer = null;
+function showUndo(label, undoFn){
+  pendingUndo = undoFn;
+  document.getElementById("undoText").textContent = label;
+  document.getElementById("undoBar").hidden = false;
+  clearTimeout(undoTimer);
+  undoTimer = setTimeout(hideUndo, 6000);
+}
+function hideUndo(){
+  document.getElementById("undoBar").hidden = true;
+  pendingUndo = null;
+}
+function performUndo(){
+  if(pendingUndo) pendingUndo();
+  hideUndo();
+}
+// Removes arr[idx], runs afterRemove() (your usual save+render), and shows an
+// Undo snackbar that puts the item back at the same spot if tapped.
+function removeWithUndo(arr, idx, label, afterRemove){
+  const removed = arr.splice(idx, 1)[0];
+  afterRemove();
+  showUndo("Removed " + label, () => {
+    arr.splice(idx, 0, removed);
+    afterRemove();
+  });
+}
+
+function moveInventoryItem(idx, dir){
+  const arr = charData.inventory;
+  const newIdx = idx + dir;
+  if(newIdx < 0 || newIdx >= arr.length) return;
+  [arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]];
+  saveCharData();
+  renderAll();
+}
+
+function toggleInspiration(){
+  state.inspiration = !state.inspiration;
+  saveState();
+  renderInspiration();
+}
+function renderInspiration(){
+  document.getElementById("inspBtn").classList.toggle("on", state.inspiration);
+}
+
+function toggleEditMode(){
+  if(!isDM()) return;
+  editMode = !editMode;
+  document.getElementById("editBtn").classList.toggle("on", editMode);
+  document.getElementById("editBanner").hidden = !editMode;
+  document.getElementById("exportBtn").hidden = !editMode;
+  document.getElementById("discardEditsBtn").hidden = !(editMode && hasEdits());
+  document.getElementById("saveToFolderBtn").hidden = !(editMode && FS_SUPPORTED && SOURCE_FILENAME);
+  renderAll();
+}
+
+function applyDmVisibility(){
+  const dm = isDM();
+  document.getElementById("editBtn").hidden = !dm;
+  document.getElementById("compareLink").hidden = !dm;
+  document.getElementById("dmBadge").hidden = !dm;
+  if(!dm && editMode){
+    editMode = false;
+  }
+}
+
+function adjustHp(delta){
+  let hp = parseInt(document.getElementById("hpCurrent").value) || 0;
+  hp = Math.max(0, Math.min(charData.hp.max, hp + delta));
+  document.getElementById("hpCurrent").value = hp;
+  state.hpCurrent = hp;
+  saveState();
+}
+function setHp(v){
+  let hp = parseInt(v);
+  if(isNaN(hp)) hp = 0;
+  hp = Math.max(0, Math.min(charData.hp.max, hp));
+  state.hpCurrent = hp;
+  saveState();
+}
+function refreshTempIndicator(){
+  const hasTemp = (state.hpTemp || 0) > 0;
+  document.getElementById("hpStatbox").classList.toggle("has-temp", hasTemp);
+  const tempBadge = document.getElementById("hpTempBadge");
+  tempBadge.hidden = !hasTemp;
+  tempBadge.textContent = hasTemp ? ("+" + state.hpTemp) : "";
+}
+function adjustTemp(delta){
+  let t = Math.max(0, (state.hpTemp || 0) + delta);
+  state.hpTemp = t;
+  saveState();
+  document.getElementById("hpTempValue").textContent = t;
+  refreshTempIndicator();
+}
+function setHpMax(v){
+  let m = parseInt(v);
+  if(isNaN(m) || m < 1) m = 1;
+  charData.hp.max = m;
+  saveCharData();
+  renderTopStats();
+}
+function setSpeed(v){
+  let s = parseInt(v);
+  if(isNaN(s) || s < 0) s = 0;
+  charData.speed = s;
+  saveCharData();
+  renderTopStats();
+}
+
+function toggleCondition(name){
+  const idx = state.conditions.indexOf(name);
+  if(idx === -1) state.conditions.push(name);
+  else state.conditions.splice(idx,1);
+  saveState();
+  renderConditions();
+}
+function openConditionInfo(name){
+  openInfoModal(name, "Condition", CONDITION_DESC[name] || "");
+}
+function renderConditions(){
+  const el = document.getElementById("conditionsGrid");
+  el.innerHTML = "";
+  for(const name of CONDITIONS){
+    const on = state.conditions.includes(name);
+    const item = document.createElement("div");
+    item.className = "cond-item";
+    const chip = document.createElement("button");
+    chip.className = "cond-chip" + (on ? " on" : "");
+    chip.textContent = name;
+    chip.onclick = () => toggleCondition(name);
+    const infoBtn = document.createElement("button");
+    infoBtn.className = "cond-info-btn";
+    infoBtn.textContent = "i";
+    infoBtn.onclick = () => openConditionInfo(name);
+    item.appendChild(chip);
+    item.appendChild(infoBtn);
+    el.appendChild(item);
+  }
+}
+
+function saveNotes(v){
+  state.notes = v;
+  saveState();
+}
+function renderNotes(){
+  document.getElementById("notesArea").value = state.notes || "";
+}
+
+function renderJournalList(cat, containerId, placeholder){
+  const el = document.getElementById(containerId);
+  el.innerHTML = "";
+  const items = state.journal[cat];
+  items.forEach((text, idx) => {
+    const row = document.createElement("div");
+    row.className = "journal-item-row";
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.placeholder = placeholder;
+    ta.onchange = (e) => { state.journal[cat][idx] = e.target.value; saveState(); };
+    const rm = document.createElement("button");
+    rm.className = "remove-btn";
+    rm.textContent = "✕";
+    rm.onclick = () => {
+      const preview = (text || "").trim().slice(0, 30) || "entry";
+      removeWithUndo(state.journal[cat], idx, preview, () => {
+        saveState();
+        renderJournalList(cat, containerId, placeholder);
+      });
+    };
+    row.appendChild(ta);
+    row.appendChild(rm);
+    el.appendChild(row);
+  });
+  const addBtn = document.createElement("button");
+  addBtn.className = "add-btn";
+  addBtn.textContent = "+ Add";
+  addBtn.onclick = () => { state.journal[cat].push(""); saveState(); renderJournalList(cat, containerId, placeholder); };
+  el.appendChild(addBtn);
+}
+function renderJournal(){
+  for(const [cat, containerId, placeholder] of JOURNAL_CATS){
+    renderJournalList(cat, containerId, placeholder);
+  }
+}
+
+function toggleEquip(id){
+  const item = charData.inventory.find(i=>i.id===id);
+  state.equipped[id] = !isEquipped(item);
+  saveState();
+  renderAll();
+}
+
+function toggleSlot(lvl, idx){
+  const key = "slot" + lvl;
+  const used = state.slotsUsed[key] || 0;
+  state.slotsUsed[key] = (idx < used) ? idx : idx+1;
+  saveState();
+  renderSpells();
+}
+
+function castSpell(sp){
+  const lvl = sp.level || 0;
+  if(lvl === 0){
+    toast(sp.name, "Cantrip cast");
+    return;
+  }
+  const info = charData.spellSlots[lvl];
+  if(!info || !info.max){
+    toast(sp.name, "No level " + lvl + " slots on this sheet");
+    return;
+  }
+  const used = state.slotsUsed["slot"+lvl] || 0;
+  if(used >= info.max){
+    toast(sp.name, "No level " + lvl + " slots left");
+    return;
+  }
+  state.slotsUsed["slot"+lvl] = used + 1;
+  saveState();
+  renderSpells();
+  toast(sp.name, "Used a level " + lvl + " slot");
+}
+
+function toggleChannelDivinityPip(idx){
+  const used = state.channelDivinityUsed || 0;
+  state.channelDivinityUsed = (idx < used) ? idx : idx + 1;
+  saveState();
+  renderFeatures();
+}
+function useChannelDivinity(f){
+  const max = (charData.channelDivinity && charData.channelDivinity.max) || 0;
+  const used = state.channelDivinityUsed || 0;
+  if(!max){
+    toast(f.name, "No Channel Divinity charges on this sheet");
+    return;
+  }
+  if(used >= max){
+    toast(f.name, "No Channel Divinity charges left");
+    return;
+  }
+  state.channelDivinityUsed = used + 1;
+  saveState();
+  renderFeatures();
+  toast(f.name, "Used a Channel Divinity charge");
+}
+
+// Generic per-feature resource pool (e.g. a Paladin's Lay on Hands healing
+// pool). Current value lives in play state, keyed by feature id, so it
+// tracks/resets like HP rather than being baked into the edited character data.
+function getFeaturePoolCurrent(f){
+  const v = state.featurePools[f.id];
+  return v !== undefined ? v : (f.poolMax || 0);
+}
+function setFeaturePoolValue(f, value){
+  const max = f.poolMax || 0;
+  let v = parseInt(value);
+  if(isNaN(v)) v = 0;
+  v = Math.max(0, Math.min(max, v));
+  state.featurePools[f.id] = v;
+  saveState();
+  return v;
+}
+function adjustFeaturePool(f, delta){
+  const cur = getFeaturePoolCurrent(f);
+  setFeaturePoolValue(f, cur + delta);
+  renderFeatures();
+}
+
+/* ---------- minimal markdown for descriptions ---------- */
+function escapeHtml(s){
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+function inlineMarkdown(s){
+  return s
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.+?)\*/g, "<em>$1</em>")
+    .replace(/_(.+?)_/g, "<em>$1</em>")
+    .replace(/`(.+?)`/g, "<code>$1</code>");
+}
+function renderMarkdown(text){
+  if(!text || !text.trim()) return "";
+  const escaped = escapeHtml(text).replace(/\r\n/g, "\n");
+  const blocks = escaped.split(/\n{2,}/);
+  return blocks.map(block => {
+    const lines = block.split("\n").filter(l => l.trim() !== "");
+    if(lines.length && lines.every(l => /^\s*[-*]\s+/.test(l))){
+      const items = lines.map(l => `<li>${inlineMarkdown(l.replace(/^\s*[-*]\s+/, ""))}</li>`).join("");
+      return `<ul>${items}</ul>`;
+    }
+    return `<p>${lines.map(inlineMarkdown).join("<br>")}</p>`;
+  }).join("");
+}
+
+// Cmd/Ctrl+B/I/E wrap the selection in **bold**/*italic*/`code`;
+// Cmd/Ctrl+Shift+8 toggles "- " bullets on the selected lines.
+function attachMarkdownShortcuts(ta){
+  if(!ta) return;
+  ta.addEventListener("keydown", (e) => {
+    if(!(e.metaKey || e.ctrlKey)) return;
+    let wrapper = null, isList = false;
+    const k = e.key.toLowerCase();
+    if(k === "b") wrapper = "**";
+    else if(k === "i") wrapper = "*";
+    else if(k === "e") wrapper = "`";
+    else if(k === "8" && e.shiftKey) isList = true;
+    else return;
+    e.preventDefault();
+
+    const val = ta.value;
+    const start = ta.selectionStart, end = ta.selectionEnd;
+
+    if(isList){
+      const lineStart = val.lastIndexOf("\n", start - 1) + 1;
+      let lineEnd = val.indexOf("\n", end);
+      if(lineEnd === -1) lineEnd = val.length;
+      const lines = val.slice(lineStart, lineEnd).split("\n");
+      const allBulleted = lines.every(l => /^\s*-\s/.test(l) || l.trim() === "");
+      const newLines = lines.map(l => l.trim() === "" ? l : (allBulleted ? l.replace(/^\s*-\s/, "") : "- " + l));
+      const newText = newLines.join("\n");
+      ta.value = val.slice(0, lineStart) + newText + val.slice(lineEnd);
+      ta.selectionStart = lineStart;
+      ta.selectionEnd = lineStart + newText.length;
+    } else {
+      const selected = val.slice(start, end);
+      const before = val.slice(Math.max(0, start - wrapper.length), start);
+      const after = val.slice(end, end + wrapper.length);
+      if(before === wrapper && after === wrapper){
+        ta.value = val.slice(0, start - wrapper.length) + selected + val.slice(end + wrapper.length);
+        ta.selectionStart = start - wrapper.length;
+        ta.selectionEnd = end - wrapper.length;
+      } else if(selected.length >= wrapper.length * 2 && selected.startsWith(wrapper) && selected.endsWith(wrapper)){
+        const inner = selected.slice(wrapper.length, selected.length - wrapper.length);
+        ta.value = val.slice(0, start) + inner + val.slice(end);
+        ta.selectionStart = start;
+        ta.selectionEnd = start + inner.length;
+      } else {
+        ta.value = val.slice(0, start) + wrapper + selected + wrapper + val.slice(end);
+        ta.selectionStart = start + wrapper.length;
+        ta.selectionEnd = start + wrapper.length + selected.length;
+      }
+    }
+    ta.focus();
+    ta.dispatchEvent(new Event("change", {bubbles:true}));
+  });
+}
+
+function openInfoModal(title, subtitle, desc){
+  document.getElementById("infoModalTitle").textContent = title;
+  document.getElementById("infoModalLevel").textContent = subtitle || "";
+  document.getElementById("infoModalLevel").hidden = !subtitle;
+  const descEl = document.getElementById("infoModalDesc");
+  const hasDesc = desc && desc.trim();
+  descEl.innerHTML = hasDesc ? renderMarkdown(desc) : "";
+  descEl.classList.toggle("empty", !hasDesc);
+  if(!hasDesc) descEl.textContent = "No description yet.";
+  document.getElementById("infoModal").hidden = false;
+}
+function closeInfoModal(){
+  document.getElementById("infoModal").hidden = true;
+}
+// A spell with no casting time / range explicitly set is assumed to be a
+// standard action at 60 feet - the DM-only flag still shows which ones are
+// just using that assumption rather than a confirmed value.
+function spellDisplayCastingTime(sp){ return sp.castingTime || "1 Action"; }
+function spellDisplayRange(sp){ return sp.range || "60 feet"; }
+
+function openSpellInfo(sp){
+  const bits = [sp.level ? ("Level " + sp.level) : "Cantrip"];
+  const school = SPELL_TYPES.find(([k]) => k === sp.spellType);
+  if(school) bits.push(school[1]);
+  bits.push(spellDisplayCastingTime(sp));
+  bits.push(spellDisplayRange(sp));
+  openInfoModal(sp.name, bits.join(" · "), sp.desc);
+}
+function openFeatureInfo(f){
+  openInfoModal(f.name, "Feature", f.desc === "No description." ? "" : f.desc);
+}
+function openItemInfo(item){
+  openInfoModal(item.name, item.kind ? (item.kind[0].toUpperCase()+item.kind.slice(1)) : "Item", item.desc);
+}
+function descIsMissing(desc){
+  return !desc || !desc.trim() || desc === "No description.";
+}
+
+function resetProgress(){
+  if(!confirm("Reset HP, temp HP, spell slots used, Channel Divinity charges, feature resource pools, conditions, inspiration, notes and journal back to the imported values? (This does not affect edited character data.)")) return;
+  localStorage.removeItem(STORE_KEY);
+  state = loadState();
+  renderAll();
+}
+
+/* ---------- Identity (name / species / class / background) ---------- */
+function renderHeader(){
+  document.title = charData.name + " — Character Sheet";
+  document.getElementById("charName").textContent = charData.name;
+  const classStr = (charData.classes||[]).map(c => c.name + " " + c.level + (c.subclass? " ("+c.subclass+")":"")).join(" / ");
+  document.getElementById("charSub").textContent = [charData.species, classStr, charData.background].filter(Boolean).join(" · ");
+
+  const panel = document.getElementById("identityPanel");
+  panel.hidden = !editMode;
+  if(!editMode) return;
+  const el = document.getElementById("identityEdit");
+  el.innerHTML = "";
+
+  function field(labelText, value, onChange, type){
+    const wrap = document.createElement("div");
+    wrap.className = "edit-field";
+    wrap.innerHTML = `<label>${labelText}</label>`;
+    const input = document.createElement("input");
+    input.className = "edit-input wide";
+    input.type = type || "text";
+    input.value = value == null ? "" : value;
+    input.onchange = (e) => onChange(e.target.value);
+    wrap.appendChild(input);
+    return wrap;
+  }
+
+  el.appendChild(field("Name", charData.name, v => { charData.name = v; saveCharData(); renderAll(); }));
+  el.appendChild(field("Species", charData.species, v => { charData.species = v; saveCharData(); renderHeader(); }));
+  el.appendChild(field("Background", charData.background, v => { charData.background = v; saveCharData(); renderHeader(); }));
+
+  const classesLabel = document.createElement("div");
+  classesLabel.className = "edit-field";
+  classesLabel.innerHTML = `<label>Classes</label>`;
+  el.appendChild(classesLabel);
+
+  (charData.classes||[]).forEach((c, idx) => {
+    const card = document.createElement("div");
+    card.className = "edit-card";
+    const top = document.createElement("div");
+    top.className = "edit-card-top";
+    if(charData.classes.length > 1){
+      const rm = document.createElement("button");
+      rm.className = "remove-btn";
+      rm.textContent = "Remove";
+      rm.onclick = () => { removeWithUndo(charData.classes, idx, c.name || "class", () => { saveCharData(); renderAll(); }); };
+      top.appendChild(rm);
+    }
+    card.appendChild(top);
+    const row = document.createElement("div");
+    row.className = "edit-row";
+    row.innerHTML = `
+      <div class="edit-field"><label>Class</label><input class="edit-input wide" data-f="name" value="${c.name||""}"></div>
+      <div class="edit-field"><label>Level</label><input class="edit-input small" type="number" min="1" max="20" data-f="level" value="${c.level||1}"></div>
+    `;
+    const sub = document.createElement("div");
+    sub.className = "edit-field";
+    sub.innerHTML = `<label>Subclass</label><input class="edit-input wide" data-f="subclass" value="${c.subclass||""}">`;
+    card.appendChild(row);
+    card.appendChild(sub);
+    card.querySelectorAll("[data-f]").forEach(inp => {
+      inp.onchange = () => {
+        const f = inp.dataset.f;
+        c[f] = f === "level" ? (parseInt(inp.value)||1) : inp.value;
+        saveCharData();
+        renderAll();
+      };
+    });
+    el.appendChild(card);
+  });
+
+  const addClassBtn = document.createElement("button");
+  addClassBtn.className = "add-btn";
+  addClassBtn.textContent = "+ Add class (multiclass)";
+  addClassBtn.onclick = () => {
+    charData.classes.push({id: uid("class"), name: "New Class", level: 1, hitDie: 8, subclass: ""});
+    saveCharData(); renderAll();
+  };
+  el.appendChild(addClassBtn);
+}
+
+function renderTopStats(){
+  document.getElementById("hpMaxDisplay").hidden = editMode;
+  document.getElementById("hpMaxDisplay").textContent = charData.hp.max;
+  document.getElementById("hpMaxEdit").hidden = !editMode;
+  document.getElementById("hpMaxEdit").value = charData.hp.max;
+  document.getElementById("hpCurrent").value = state.hpCurrent;
+  document.getElementById("hpTempValue").textContent = state.hpTemp || 0;
+  refreshTempIndicator();
+  document.getElementById("acValue").textContent = computeAC();
+  document.getElementById("initValue").textContent = fmtMod(mod(charData.abilities.dex));
+  document.getElementById("speedDisplay").hidden = editMode;
+  document.getElementById("speedDisplay").textContent = charData.speed + " ft";
+  document.getElementById("speedEdit").hidden = !editMode;
+  document.getElementById("speedEdit").value = charData.speed;
+  document.getElementById("profValue").textContent = fmtMod(getProf());
+  const wisMod = mod(charData.abilities.wis);
+  const percProf = (charData.skillProficiencies||[]).includes("perception");
+  const percExp = (charData.skillExpertise||[]).includes("perception");
+  const percBonus = wisMod + (percProf ? getProf() * (percExp?2:1) : 0);
+  document.getElementById("passivePerc").textContent = 10 + percBonus;
+}
+
+function renderAbilities(){
+  const grid = document.getElementById("abilGrid");
+  grid.innerHTML = "";
+  for(const key of ["str","dex","con","int","wis","cha"]){
+    const score = charData.abilities[key];
+    const box = document.createElement("div");
+    box.className = "abilbox";
+    if(editMode){
+      box.innerHTML = `<div class="name">${key}</div>
+        <input class="edit-input score" type="number" min="1" max="30" value="${score}">`;
+      box.querySelector("input").onchange = (e) => {
+        charData.abilities[key] = parseInt(e.target.value) || 10;
+        saveCharData();
+        renderAll();
+      };
+    } else {
+      const m = mod(score);
+      box.innerHTML = `<div class="name">${key}</div>
+        <div class="mod">${fmtMod(m)}</div>
+        <div class="score">${score}</div>`;
+    }
+    grid.appendChild(box);
+  }
+}
+
+function renderSaves(){
+  const el = document.getElementById("savesList");
+  el.innerHTML = "";
+  for(const key of ["str","dex","con","int","wis","cha"]){
+    const prof = (charData.proficientSaves||[]).includes(key);
+    const m = mod(charData.abilities[key]) + (prof ? getProf() : 0);
+    const row = document.createElement("div");
+    row.className = "list-row";
+    if(editMode){
+      row.innerHTML = `<div class="left">
+          <label class="chk-label"><input type="checkbox" ${prof?"checked":""}> Prof</label>
+          ${ABIL_NAMES[key]}
+        </div>
+        <div class="rollchip">${fmtMod(m)}</div>`;
+      row.querySelector("input[type=checkbox]").onchange = (e) => {
+        let arr = charData.proficientSaves || (charData.proficientSaves = []);
+        if(e.target.checked){ if(!arr.includes(key)) arr.push(key); }
+        else { charData.proficientSaves = arr.filter(k=>k!==key); }
+        saveCharData();
+        renderAll();
+      };
+    } else {
+      row.innerHTML = `<div class="left"><span class="dot ${prof?'on':''}"></span>${ABIL_NAMES[key]}</div>
+        <div class="rollchip">${fmtMod(m)}</div>`;
+    }
+    el.appendChild(row);
+  }
+}
+
+function renderSkills(){
+  const el = document.getElementById("skillsList");
+  el.innerHTML = "";
+  const skillEffects = computeSkillEffects();
+  for(const [key, label, abil] of SKILLS){
+    const prof = (charData.skillProficiencies||[]).includes(key);
+    const exp = (charData.skillExpertise||[]).includes(key);
+    const bonus = mod(charData.abilities[abil]) + (prof ? getProf() * (exp?2:1) : 0);
+    const row = document.createElement("div");
+    row.className = "list-row";
+    if(editMode){
+      row.innerHTML = `<div class="left">
+          <label class="chk-label"><input type="checkbox" class="prof-chk" ${prof?"checked":""}> Prof</label>
+          <label class="chk-label"><input type="checkbox" class="exp-chk" ${exp?"checked":""}> Exp</label>
+          ${label}<span class="ability-tag">${abil}</span>
+        </div>
+        <div class="rollchip">${fmtMod(bonus)}</div>`;
+      row.querySelector(".prof-chk").onchange = (e) => {
+        let arr = charData.skillProficiencies || (charData.skillProficiencies = []);
+        if(e.target.checked){ if(!arr.includes(key)) arr.push(key); }
+        else { charData.skillProficiencies = arr.filter(k=>k!==key); }
+        saveCharData();
+        renderAll();
+      };
+      row.querySelector(".exp-chk").onchange = (e) => {
+        let arr = charData.skillExpertise || (charData.skillExpertise = []);
+        if(e.target.checked){ if(!arr.includes(key)) arr.push(key); }
+        else { charData.skillExpertise = arr.filter(k=>k!==key); }
+        saveCharData();
+        renderAll();
+      };
+    } else {
+      row.innerHTML = `<div class="left"><span class="dot ${exp?'exp':(prof?'on':'')}"></span>${label}<span class="ability-tag">${abil}</span></div>`;
+      const right = document.createElement("div");
+      right.style.display = "flex";
+      right.style.alignItems = "center";
+      const e = skillEffects[key];
+      if(e && e.adv !== e.dis){
+        const badge = document.createElement("span");
+        badge.className = "skill-effect-badge " + (e.adv ? "adv" : "dis");
+        badge.textContent = e.adv ? "ADV" : "DIS";
+        badge.title = e.sources.join(", ");
+        right.appendChild(badge);
+      }
+      const chip = document.createElement("div");
+      chip.className = "rollchip";
+      chip.textContent = fmtMod(bonus);
+      right.appendChild(chip);
+      row.appendChild(right);
+    }
+    el.appendChild(row);
+  }
+}
+
+function strDexBonus(item){
+  const props = item.props || [];
+  const strMod = mod(charData.abilities.str);
+  const dexMod = mod(charData.abilities.dex);
+  if(item.rangeType === "Ranged") return dexMod;
+  if(props.includes("Finesse")) return Math.max(strMod, dexMod);
+  return strMod;
+}
+
+function renderAttacks(){
+  const panel = document.getElementById("attacksPanel");
+  const el = document.getElementById("attacksList");
+  const weapons = charData.inventory.filter(i => i.kind === "weapon");
+  if(weapons.length === 0 && !editMode){ panel.style.display = "none"; return; }
+  panel.style.display = "";
+  el.innerHTML = "";
+  if(editMode){
+    el.innerHTML = `<div style="color:var(--text-dim);font-size:0.8rem;">Edit weapons in the Items panel — attacks are generated from items with kind "weapon".</div>`;
+    return;
+  }
+  for(const w of weapons){
+    const abilMod = strDexBonus(w);
+    const atkBonus = abilMod + getProf();
+    const card = document.createElement("div");
+    card.className = "atk-card";
+    card.innerHTML = `<div class="atk-name">${w.name}${w.props&&w.props.length?` <span style="color:var(--text-dim);font-weight:400;font-size:0.75rem;">(${w.props.join(", ")})</span>`:""}</div>
+      <div class="atk-actions">
+        <div class="rollchip">${fmtMod(atkBonus)}<span class="sub">to hit</span></div>
+        <div class="rollchip">${w.dmg}${fmtMod(abilMod)}<span class="sub">${w.dmgType||""}</span></div>
+      </div>`;
+    el.appendChild(card);
+  }
+}
+
+function renderSpells(){
+  const panel = document.getElementById("spellsPanel");
+  const slotsEl = document.getElementById("spellSlots");
+  const listEl = document.getElementById("spellsList");
+  charData.spellSlots = charData.spellSlots || {};
+  charData.spellsPrepared = charData.spellsPrepared || [];
+  const hasSpells = charData.spellsPrepared.length > 0;
+  panel.style.display = (!hasSpells && !editMode) ? "none" : "";
+  document.getElementById("spellHint").hidden = editMode || !hasSpells;
+  slotsEl.innerHTML = "";
+
+  const levels = Object.keys(charData.spellSlots).sort((a,b)=>a-b);
+  for(const lvl of levels){
+    const info = charData.spellSlots[lvl];
+    const used = state.slotsUsed["slot"+lvl] || 0;
+    const row = document.createElement("div");
+    row.className = "slot-row";
+    if(editMode){
+      row.innerHTML = `<div class="lvl">Level ${lvl}</div>
+        <input class="edit-input small" type="number" min="0" max="20" value="${info.max}">
+        <span style="font-size:0.7rem;color:var(--text-dim);">max slots</span>`;
+      const rm = document.createElement("button");
+      rm.className = "remove-btn";
+      rm.textContent = "Remove";
+      rm.style.marginLeft = "auto";
+      rm.onclick = () => {
+        const removedInfo = charData.spellSlots[lvl];
+        delete charData.spellSlots[lvl];
+        saveCharData();
+        renderAll();
+        showUndo("Removed level " + lvl + " slots", () => {
+          charData.spellSlots[lvl] = removedInfo;
+          saveCharData();
+          renderAll();
+        });
+      };
+      row.querySelector("input").onchange = (e) => {
+        info.max = parseInt(e.target.value) || 0;
+        saveCharData();
+      };
+      row.appendChild(rm);
+    } else {
+      const pips = document.createElement("div");
+      pips.className = "pips";
+      for(let i=0;i<info.max;i++){
+        const p = document.createElement("div");
+        p.className = "pip" + (i < used ? " used" : "");
+        p.onclick = () => toggleSlot(lvl, i);
+        pips.appendChild(p);
+      }
+      row.innerHTML = `<div class="lvl">Level ${lvl}</div>`;
+      row.appendChild(pips);
+    }
+    slotsEl.appendChild(row);
+  }
+
+  if(editMode){
+    const addSlotBtn = document.createElement("button");
+    addSlotBtn.className = "add-btn";
+    addSlotBtn.textContent = "+ Add spell level";
+    addSlotBtn.onclick = () => {
+      for(let lvl=1; lvl<=9; lvl++){
+        if(!(lvl in charData.spellSlots)){ charData.spellSlots[lvl] = {max:1, used:0}; break; }
+      }
+      saveCharData(); renderAll();
+    };
+    slotsEl.appendChild(addSlotBtn);
+  } else if(levels.length === 0){
+    slotsEl.innerHTML = `<div style="color:var(--text-dim);font-size:0.8rem;">No spell slots.</div>`;
+  }
+
+  listEl.innerHTML = "";
+  if(editMode){
+    charData.spellsPrepared.forEach((sp, idx) => {
+      const card = document.createElement("div");
+      card.className = "edit-card";
+      card.innerHTML = `
+        <div class="edit-row">
+          <div class="edit-field" style="flex:2;"><label>Name</label><input class="edit-input wide" data-f="name" value="${sp.name||""}"></div>
+          <div class="edit-field"><label>Level (0=cantrip)</label><input class="edit-input small" type="number" min="0" max="9" data-f="level" value="${sp.level||0}"></div>
+        </div>
+        <div class="edit-field"><label>Type</label>
+          <select class="edit-input" data-f="spellType">
+            ${SPELL_TYPE_OPTIONS.map(([k,label])=>`<option value="${k}" ${(sp.spellType||"")===k?"selected":""}>${label}</option>`).join("")}
+          </select>
+        </div>
+        <div class="edit-row">
+          <div class="edit-field"><label>Casting time</label><input class="edit-input wide" data-f="castingTime" value="${sp.castingTime||""}" placeholder="1 action"></div>
+          <div class="edit-field"><label>Range</label><input class="edit-input wide" data-f="range" value="${sp.range||""}" placeholder="60 feet"></div>
+        </div>
+        <div class="edit-field"><label>Description</label><textarea class="edit-input wide" data-f="desc" rows="3">${escapeHtml(sp.desc||"")}</textarea></div>
+      `;
+      const rm = document.createElement("button");
+      rm.className = "remove-btn";
+      rm.textContent = "Remove";
+      rm.onclick = () => { removeWithUndo(charData.spellsPrepared, idx, sp.name || "spell", () => { saveCharData(); renderAll(); }); };
+      card.appendChild(rm);
+      card.querySelectorAll("[data-f]").forEach(inp => {
+        inp.onchange = () => {
+          const f = inp.dataset.f;
+          sp[f] = f === "level" ? (parseInt(inp.value)||0) : inp.value;
+          saveCharData();
+        };
+      });
+      attachMarkdownShortcuts(card.querySelector('[data-f="desc"]'));
+      listEl.appendChild(card);
+    });
+    const addBtn = document.createElement("button");
+    addBtn.className = "add-btn";
+    addBtn.textContent = "+ Add spell";
+    addBtn.onclick = () => { charData.spellsPrepared.push({name:"New Spell", level:1, desc:""}); saveCharData(); renderAll(); };
+    listEl.appendChild(addBtn);
+  } else if(hasSpells){
+    for(const sp of charData.spellsPrepared){
+      const row = document.createElement("button");
+      row.className = "spell-row";
+      const lvlLabel = sp.level ? ("L" + sp.level) : "Cantrip";
+      const iconKey = spellIconKey(sp);
+      row.appendChild(iconKey ? typeIcon(iconKey, 17) : typeIcon("unknown", 17, "var(--text-dim)"));
+
+      const textBlock = document.createElement("div");
+      textBlock.className = "spell-row-text";
+      const topLine = document.createElement("div");
+      topLine.className = "spell-row-top";
+      const lvlSpan = document.createElement("span");
+      lvlSpan.className = "spell-row-level";
+      lvlSpan.textContent = lvlLabel;
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "spell-row-name";
+      nameSpan.textContent = sp.name;
+      topLine.appendChild(lvlSpan);
+      topLine.appendChild(nameSpan);
+      textBlock.appendChild(topLine);
+      const metaLine = document.createElement("div");
+      metaLine.className = "spell-row-meta";
+      metaLine.textContent = spellDisplayCastingTime(sp) + " · " + spellDisplayRange(sp);
+      if(isDM() && (!sp.castingTime || !sp.range)) metaLine.classList.add("needs-desc-text");
+      textBlock.appendChild(metaLine);
+      row.appendChild(textBlock);
+
+      const infoBtn = document.createElement("span");
+      infoBtn.className = "info-icon" + (isDM() && descIsMissing(sp.desc) ? " needs-desc" : "");
+      infoBtn.textContent = "i";
+      infoBtn.onclick = (e) => { e.stopPropagation(); openSpellInfo(sp); };
+      row.appendChild(infoBtn);
+      row.onclick = () => castSpell(sp);
+      listEl.appendChild(row);
+    }
+  } else {
+    listEl.innerHTML = `<div style="color:var(--text-dim);font-size:0.85rem;">No spells prepared.</div>`;
+  }
+}
+
+function renderFeatures(){
+  const panel = document.getElementById("featuresPanel");
+  const el = document.getElementById("featuresList");
+  const cdSection = document.getElementById("channelDivinitySection");
+  const cdSlotsEl = document.getElementById("channelDivinitySlots");
+  const cdListEl = document.getElementById("channelDivinityList");
+  charData.customFeatures = charData.customFeatures || [];
+  const allFeats = charData.customFeatures;
+  const cdFeats = allFeats.filter(f => f.isChannelDivinity);
+  const normalFeats = allFeats.filter(f => !f.isChannelDivinity);
+  const cdMax = (charData.channelDivinity && charData.channelDivinity.max) || 0;
+  const showCdSection = editMode ? isPaladin() : (cdFeats.length > 0 || cdMax > 0);
+
+  if(allFeats.length === 0 && !editMode){ panel.style.display = "none"; return; }
+  panel.style.display = "";
+  el.innerHTML = "";
+  cdSection.hidden = !showCdSection;
+
+  if(editMode){
+    normalFeats.forEach((f) => {
+      const idx = allFeats.indexOf(f);
+      el.appendChild(buildFeatureEditCard(f, idx, allFeats));
+    });
+    const addBtn = document.createElement("button");
+    addBtn.className = "add-btn";
+    addBtn.textContent = "+ Add feature";
+    addBtn.onclick = () => {
+      let isCd = false;
+      if(isPaladin()){
+        isCd = confirm("Is this feature related to Channel Divinity?");
+      }
+      allFeats.push({id: uid("cf"), name: "New Feature", desc: "No description.", isChannelDivinity: isCd});
+      saveCharData();
+      renderAll();
+    };
+    el.appendChild(addBtn);
+
+    if(showCdSection){
+      cdSlotsEl.innerHTML = "";
+      const maxRow = document.createElement("div");
+      maxRow.className = "edit-row";
+      maxRow.innerHTML = `<div class="edit-field"><label>Channel Divinity charges</label>
+        <input class="edit-input small" type="number" min="0" max="10" value="${cdMax}"></div>`;
+      maxRow.querySelector("input").onchange = (e) => {
+        charData.channelDivinity = charData.channelDivinity || {};
+        charData.channelDivinity.max = parseInt(e.target.value) || 0;
+        saveCharData();
+        renderAll();
+      };
+      cdSlotsEl.appendChild(maxRow);
+      cdListEl.innerHTML = "";
+      cdFeats.forEach((f) => {
+        const idx = allFeats.indexOf(f);
+        cdListEl.appendChild(buildFeatureEditCard(f, idx, allFeats));
+      });
+    }
+  } else {
+    if(normalFeats.length === 0){
+      el.innerHTML = `<div style="color:var(--text-dim);font-size:0.85rem;">No features.</div>`;
+    }
+    for(const f of normalFeats){
+      el.appendChild(f.hasPool ? buildFeaturePoolRow(f) : buildFeatureViewRow(f, false));
+    }
+
+    if(showCdSection){
+      const used = state.channelDivinityUsed || 0;
+      cdSlotsEl.innerHTML = "";
+      const pips = document.createElement("div");
+      pips.className = "pips";
+      for(let i=0;i<cdMax;i++){
+        const p = document.createElement("div");
+        p.className = "pip" + (i < used ? " used" : "");
+        p.onclick = () => toggleChannelDivinityPip(i);
+        pips.appendChild(p);
+      }
+      if(cdMax === 0){
+        pips.innerHTML = `<div style="color:var(--text-dim);font-size:0.8rem;">No charges set on this sheet.</div>`;
+      }
+      cdSlotsEl.appendChild(pips);
+      cdListEl.innerHTML = "";
+      if(cdFeats.length === 0){
+        cdListEl.innerHTML = `<div style="color:var(--text-dim);font-size:0.85rem;">No Channel Divinity options yet.</div>`;
+      }
+      for(const f of cdFeats){
+        cdListEl.appendChild(buildFeatureViewRow(f, true));
+      }
+    }
+  }
+}
+
+function buildFeatureEditCard(f, idx, allFeats){
+  const card = document.createElement("div");
+  card.className = "edit-card";
+  card.innerHTML = `
+    <div class="edit-field"><label>Name</label><input class="edit-input wide" data-f="name" value="${f.name||""}"></div>
+    <div class="edit-field"><label>Description</label><textarea class="edit-input wide" data-f="desc" rows="3">${escapeHtml((f.desc && f.desc !== "No description.") ? f.desc : "")}</textarea></div>
+  `;
+  if(isPaladin()){
+    const cdField = document.createElement("label");
+    cdField.className = "chk-label";
+    cdField.style.marginBottom = "8px";
+    cdField.innerHTML = `<input type="checkbox" ${f.isChannelDivinity?"checked":""}> Channel Divinity option`;
+    cdField.querySelector("input").onchange = (e) => {
+      f.isChannelDivinity = e.target.checked;
+      saveCharData();
+      renderAll();
+    };
+    card.appendChild(cdField);
+  }
+
+  const poolField = document.createElement("label");
+  poolField.className = "chk-label";
+  poolField.style.marginBottom = "8px";
+  poolField.innerHTML = `<input type="checkbox" ${f.hasPool?"checked":""}> Has a resource pool (e.g. Lay on Hands)`;
+  poolField.querySelector("input").onchange = (e) => {
+    f.hasPool = e.target.checked;
+    if(f.hasPool && !f.poolMax) f.poolMax = 5;
+    saveCharData();
+    renderAll();
+  };
+  card.appendChild(poolField);
+  if(f.hasPool){
+    const maxRow = document.createElement("div");
+    maxRow.className = "edit-field";
+    maxRow.innerHTML = `<label>Pool max</label><input class="edit-input small" type="number" min="0" value="${f.poolMax||0}">`;
+    maxRow.querySelector("input").onchange = (e) => {
+      f.poolMax = parseInt(e.target.value) || 0;
+      saveCharData();
+      renderAll();
+    };
+    card.appendChild(maxRow);
+  }
+
+  const rm = document.createElement("button");
+  rm.className = "remove-btn";
+  rm.textContent = "Remove feature";
+  rm.onclick = () => { removeWithUndo(allFeats, idx, f.name || "feature", () => { saveCharData(); renderAll(); }); };
+  card.appendChild(rm);
+  card.querySelectorAll("[data-f]").forEach(inp => {
+    inp.onchange = () => {
+      const field = inp.dataset.f;
+      f[field] = inp.value || "No description.";
+      if(field === "name" && !f.hasPool && f.name.trim().toLowerCase() === "lay on hands"){
+        f.hasPool = true;
+        const paladinLevel = (charData.classes||[])
+          .filter(c => (c.name||"").toLowerCase().includes("paladin"))
+          .reduce((a,c) => a + (c.level||0), 0);
+        f.poolMax = Math.max(5, paladinLevel * 5);
+      }
+      saveCharData();
+      if(field === "name") renderAll();
+    };
+  });
+  attachMarkdownShortcuts(card.querySelector('[data-f="desc"]'));
+  return card;
+}
+
+function buildFeatureViewRow(f, clickable){
+  const row = document.createElement("div");
+  row.className = "spell-row";
+  row.style.cursor = clickable ? "pointer" : "default";
+  row.innerHTML = `<span class="spell-row-name">${f.name}</span>`;
+  const infoBtn = document.createElement("span");
+  infoBtn.className = "info-icon" + (isDM() && descIsMissing(f.desc) ? " needs-desc" : "");
+  infoBtn.textContent = "i";
+  infoBtn.onclick = (e) => { e.stopPropagation(); openFeatureInfo(f); };
+  row.appendChild(infoBtn);
+  if(clickable) row.onclick = () => useChannelDivinity(f);
+  return row;
+}
+
+function buildFeaturePoolRow(f){
+  const box = document.createElement("div");
+  box.className = "statbox feature-pool-box";
+  const cur = getFeaturePoolCurrent(f);
+  const infoNeedsDesc = isDM() && descIsMissing(f.desc);
+  box.innerHTML = `
+    <div class="label" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+      ${f.name}
+      <span class="info-icon${infoNeedsDesc ? " needs-desc" : ""}" style="width:18px;height:18px;font-size:0.62rem;">i</span>
+    </div>
+    <div class="hp-controls">
+      <button>−</button>
+      <input class="hp-input" type="number" value="${cur}" style="font-size:1.1rem;">
+      <span class="hp-max">/ ${f.poolMax||0}</span>
+      <button>+</button>
+    </div>
+  `;
+  const [minusBtn, plusBtn] = box.querySelectorAll(".hp-controls button");
+  minusBtn.onclick = () => adjustFeaturePool(f, -1);
+  plusBtn.onclick = () => adjustFeaturePool(f, 1);
+  box.querySelector(".hp-input").oninput = (e) => setFeaturePoolValue(f, e.target.value);
+  box.querySelector(".info-icon").onclick = () => openFeatureInfo(f);
+  return box;
+}
+
+function renderInventory(){
+  const el = document.getElementById("inventoryList");
+  el.innerHTML = "";
+  charData.inventory = charData.inventory || [];
+
+  if(editMode){
+    charData.inventory.forEach((item, idx) => {
+      const card = document.createElement("div");
+      card.className = "edit-card";
+      const top = document.createElement("div");
+      top.className = "edit-card-top";
+      const reorderBtns = document.createElement("div");
+      reorderBtns.className = "reorder-btns";
+      const upBtn = document.createElement("button");
+      upBtn.textContent = "↑";
+      upBtn.disabled = idx === 0;
+      upBtn.onclick = () => moveInventoryItem(idx, -1);
+      const downBtn = document.createElement("button");
+      downBtn.textContent = "↓";
+      downBtn.disabled = idx === charData.inventory.length - 1;
+      downBtn.onclick = () => moveInventoryItem(idx, 1);
+      reorderBtns.appendChild(upBtn);
+      reorderBtns.appendChild(downBtn);
+      top.appendChild(reorderBtns);
+      const rm = document.createElement("button");
+      rm.className = "remove-btn";
+      rm.textContent = "Remove";
+      rm.onclick = () => { removeWithUndo(charData.inventory, idx, item.name || "item", () => { saveCharData(); renderAll(); }); };
+      top.appendChild(rm);
+      card.appendChild(top);
+
+      const row1 = document.createElement("div");
+      row1.className = "edit-row";
+      row1.innerHTML = `
+        <div class="edit-field" style="flex:2;"><label>Name</label><input class="edit-input wide" data-f="name" value="${item.name||""}"></div>
+        <div class="edit-field"><label>Kind</label>
+          <select class="edit-input" data-f="kind">
+            ${ITEM_KINDS.map(k=>`<option value="${k}" ${item.kind===k?"selected":""}>${k}</option>`).join("")}
+          </select>
+        </div>
+        <div class="edit-field"><label>Icon</label>
+          <select class="edit-input" data-f="icon">
+            ${ITEM_ICON_OPTIONS.map(([k,label])=>`<option value="${k}" ${(item.icon||"")===k?"selected":""}>${label}</option>`).join("")}
+          </select>
+        </div>
+      `;
+      const row2 = document.createElement("div");
+      row2.className = "edit-row";
+      row2.innerHTML = `
+        <div class="edit-field"><label>Qty</label><input class="edit-input small" type="number" min="1" data-f="quantity" value="${item.quantity||1}"></div>
+        <div class="edit-field"><label>Weight</label><input class="edit-input small" type="number" min="0" data-f="weight" value="${item.weight||0}"></div>
+        <div class="edit-field"><label style="visibility:hidden;">Eq</label>
+          <label class="chk-label"><input type="checkbox" data-f="equipped" ${item.equipped?"checked":""}> Equipped</label>
+        </div>
+      `;
+      card.appendChild(row1);
+      card.appendChild(row2);
+
+      if(item.kind === "weapon"){
+        const row3 = document.createElement("div");
+        row3.className = "edit-row";
+        row3.innerHTML = `
+          <div class="edit-field"><label>Damage dice</label><input class="edit-input small" data-f="dmg" value="${item.dmg||""}" placeholder="1d8"></div>
+          <div class="edit-field"><label>Damage type</label><input class="edit-input" data-f="dmgType" value="${item.dmgType||""}" placeholder="Slashing"></div>
+          <div class="edit-field"><label>Range</label>
+            <select class="edit-input" data-f="rangeType">
+              <option value="Melee" ${item.rangeType==="Melee"?"selected":""}>Melee</option>
+              <option value="Ranged" ${item.rangeType==="Ranged"?"selected":""}>Ranged</option>
+            </select>
+          </div>
+        `;
+        card.appendChild(row3);
+        const row4 = document.createElement("div");
+        row4.className = "edit-field";
+        row4.innerHTML = `<label>Properties (comma separated)</label><input class="edit-input wide" data-f="props" value="${(item.props||[]).join(", ")}">`;
+        card.appendChild(row4);
+      } else if(item.kind === "armor"){
+        const row3 = document.createElement("div");
+        row3.className = "edit-row";
+        row3.innerHTML = `
+          <div class="edit-field"><label>Base AC</label><input class="edit-input small" type="number" data-f="acBase" value="${item.acBase!=null?item.acBase:""}"></div>
+          <div class="edit-field"><label>Dex cap (blank = none)</label><input class="edit-input small" type="number" data-f="dexMax" value="${item.dexMax!=null?item.dexMax:""}"></div>
+        `;
+        card.appendChild(row3);
+      } else if(item.kind === "shield"){
+        const row3 = document.createElement("div");
+        row3.className = "edit-field";
+        row3.innerHTML = `<label>AC Bonus</label><input class="edit-input small" type="number" data-f="acBonus" value="${item.acBonus!=null?item.acBonus:""}">`;
+        card.appendChild(row3);
+      }
+
+      const descRow = document.createElement("div");
+      descRow.className = "edit-field";
+      descRow.innerHTML = `<label>Description</label><textarea class="edit-input wide" data-f="desc" rows="3" placeholder="What it does, flavor text, magic properties...">${escapeHtml(item.desc||"")}</textarea>`;
+      card.appendChild(descRow);
+
+      if(item.kind === "weapon" || item.kind === "armor" || item.kind === "shield"){
+        item.skillEffects = item.skillEffects || [];
+        const effWrap = document.createElement("div");
+        effWrap.className = "edit-field";
+        effWrap.innerHTML = `<label>Skill effects while equipped</label>`;
+        item.skillEffects.forEach((eff, eidx) => {
+          const effRow = document.createElement("div");
+          effRow.className = "edit-row";
+          effRow.innerHTML = `
+            <div class="edit-field"><select class="edit-input eff-skill">
+              ${SKILLS.map(([k,label])=>`<option value="${k}" ${eff.skill===k?"selected":""}>${label}</option>`).join("")}
+            </select></div>
+            <div class="edit-field"><select class="edit-input eff-mode">
+              <option value="advantage" ${eff.mode==="advantage"?"selected":""}>Advantage</option>
+              <option value="disadvantage" ${eff.mode==="disadvantage"?"selected":""}>Disadvantage</option>
+            </select></div>
+          `;
+          const rmEff = document.createElement("button");
+          rmEff.className = "remove-btn";
+          rmEff.textContent = "✕";
+          rmEff.onclick = () => { removeWithUndo(item.skillEffects, eidx, "skill effect", () => { saveCharData(); renderAll(); }); };
+          effRow.appendChild(rmEff);
+          effRow.querySelector(".eff-skill").onchange = (e) => { eff.skill = e.target.value; saveCharData(); renderAll(); };
+          effRow.querySelector(".eff-mode").onchange = (e) => { eff.mode = e.target.value; saveCharData(); renderAll(); };
+          effWrap.appendChild(effRow);
+        });
+        const addEffBtn = document.createElement("button");
+        addEffBtn.className = "add-btn";
+        addEffBtn.textContent = "+ Add skill effect";
+        addEffBtn.onclick = () => {
+          item.skillEffects.push({skill: SKILLS[0][0], mode: "advantage"});
+          saveCharData();
+          renderAll();
+        };
+        effWrap.appendChild(addEffBtn);
+        card.appendChild(effWrap);
+      }
+
+      card.querySelectorAll("[data-f]").forEach(inp => {
+        inp.onchange = () => {
+          const f = inp.dataset.f;
+          if(f === "equipped") item[f] = inp.checked;
+          else if(f === "props") item[f] = inp.value.split(",").map(s=>s.trim()).filter(Boolean);
+          else if(["quantity","weight","acBase","dexMax","acBonus"].includes(f)){
+            item[f] = inp.value === "" ? null : parseInt(inp.value);
+          }
+          else item[f] = inp.value;
+          saveCharData();
+          if(f === "kind") renderAll(); else renderTopStats();
+        };
+      });
+      attachMarkdownShortcuts(card.querySelector('[data-f="desc"]'));
+      el.appendChild(card);
+    });
+    const addBtn = document.createElement("button");
+    addBtn.className = "add-btn";
+    addBtn.textContent = "+ Add item";
+    addBtn.onclick = () => {
+      charData.inventory.push({id: uid("item"), name: "New Item", quantity: 1, kind: "gear"});
+      saveCharData(); renderAll();
+    };
+    el.appendChild(addBtn);
+  } else {
+    if(charData.inventory.length === 0){
+      el.innerHTML = `<div style="color:var(--text-dim);font-size:0.85rem;">No items.</div>`;
+    }
+    for(const item of charData.inventory){
+      const row = document.createElement("div");
+      row.className = "inv-item";
+      const metaBits = [];
+      if(item.kind) metaBits.push(item.kind);
+      if(item.weight) metaBits.push(item.weight + " lb");
+      if(item.quantity && item.quantity > 1) metaBits.push("x" + item.quantity);
+      const canEquip = item.kind === "armor" || item.kind === "shield" || item.kind === "weapon";
+      const leftWrap = document.createElement("div");
+      leftWrap.style.display = "flex";
+      leftWrap.style.alignItems = "center";
+      leftWrap.style.gap = "8px";
+      leftWrap.appendChild(typeIcon(itemIconKey(item), 18, "var(--text-dim)"));
+      const nameBlock = document.createElement("div");
+      nameBlock.innerHTML = `<div>${item.name}</div><div class="meta">${metaBits.join(" · ")}</div>`;
+      leftWrap.appendChild(nameBlock);
+      row.appendChild(leftWrap);
+      const rightWrap = document.createElement("div");
+      rightWrap.style.display = "flex";
+      rightWrap.style.alignItems = "center";
+      rightWrap.style.gap = "6px";
+      rightWrap.style.flexShrink = "0";
+      const infoBtn = document.createElement("span");
+      infoBtn.className = "info-icon" + (isDM() && descIsMissing(item.desc) ? " needs-desc" : "");
+      infoBtn.textContent = "i";
+      infoBtn.onclick = () => openItemInfo(item);
+      rightWrap.appendChild(infoBtn);
+      if(canEquip){
+        const btn = document.createElement("button");
+        const eq = isEquipped(item);
+        btn.className = "eq-toggle" + (eq ? " on" : "");
+        btn.textContent = eq ? "Equipped" : "Equip";
+        btn.onclick = () => toggleEquip(item.id);
+        rightWrap.appendChild(btn);
+      }
+      row.appendChild(rightWrap);
+      el.appendChild(row);
+    }
+  }
+
+  const c = charData.currency = charData.currency || {cp:0,sp:0,ep:0,gp:0,pp:0};
+  const currencyRow = document.getElementById("currencyRow");
+  if(editMode){
+    currencyRow.innerHTML = "";
+    const row = document.createElement("div");
+    row.className = "edit-row";
+    ["pp","gp","ep","sp","cp"].forEach(denom => {
+      const f = document.createElement("div");
+      f.className = "edit-field";
+      f.innerHTML = `<label>${denom}</label><input class="edit-input small" type="number" min="0" value="${c[denom]||0}">`;
+      f.querySelector("input").onchange = (e) => { c[denom] = parseInt(e.target.value)||0; saveCharData(); };
+      row.appendChild(f);
+    });
+    currencyRow.appendChild(row);
+  } else {
+    const parts = [];
+    if(c.pp) parts.push(c.pp + " pp");
+    if(c.gp) parts.push(c.gp + " gp");
+    if(c.ep) parts.push(c.ep + " ep");
+    if(c.sp) parts.push(c.sp + " sp");
+    if(c.cp) parts.push(c.cp + " cp");
+    currencyRow.textContent = parts.length ? "Currency: " + parts.join(", ") : "";
+  }
+}
+
+function renderAll(){
+  applyDmVisibility();
+  document.getElementById("exportBtn").hidden = !editMode;
+  document.getElementById("discardEditsBtn").hidden = !(editMode && hasEdits());
+  document.getElementById("saveToFolderBtn").hidden = !(editMode && FS_SUPPORTED && SOURCE_FILENAME);
+  renderHeader();
+  renderInspiration();
+  renderTopStats();
+  renderAbilities();
+  renderSaves();
+  renderSkills();
+  renderAttacks();
+  renderSpells();
+  renderFeatures();
+  renderInventory();
+  renderConditions();
+  renderNotes();
+  renderJournal();
+}
+
+if(!isDM()){
+  document.getElementById("lockScreen").hidden = false;
+  document.getElementById("appRoot").hidden = true;
+} else {
+  document.getElementById("lockScreen").hidden = true;
+  document.getElementById("appRoot").hidden = false;
+  charData = loadCharData();
+  try{ activeTab = localStorage.getItem(TAB_KEY) || "play"; }catch(e){}
+  setTab(activeTab);
+  renderAll();
+}
+</script>
+</div>
+</body>
+</html>
