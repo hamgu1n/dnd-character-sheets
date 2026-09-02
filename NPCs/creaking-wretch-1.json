@@ -1,0 +1,95 @@
+{
+  "name": "Creaking Wretch 1",
+  "species": "Undead",
+  "background": "CR 2 \u2014 animated petrified tree, a trapped soul",
+  "classes": [
+    {
+      "id": "role",
+      "name": "Creaking Wretch",
+      "level": 3,
+      "hitDie": 8,
+      "subclass": ""
+    }
+  ],
+  "abilities": {
+    "str": 14,
+    "dex": 10,
+    "con": 12,
+    "int": 8,
+    "wis": 13,
+    "cha": 10
+  },
+  "proficientSaves": [],
+  "skillProficiencies": [],
+  "skillExpertise": [],
+  "hp": {
+    "max": 27,
+    "current": 27,
+    "temp": 0
+  },
+  "speed": 20,
+  "conditions": [],
+  "inspiration": false,
+  "spellSlots": {},
+  "spellsPrepared": [],
+  "currency": {
+    "cp": 0,
+    "sp": 0,
+    "ep": 0,
+    "gp": 0,
+    "pp": 0
+  },
+  "inventory": [
+    {
+      "id": "i1",
+      "name": "Grasping Branch",
+      "kind": "weapon",
+      "quantity": 1,
+      "dmg": "2d6",
+      "dmgType": "Bludgeoning",
+      "rangeType": "Melee",
+      "props": [
+        "Reach",
+        "Grapple"
+      ],
+      "equipped": true,
+      "desc": "Reach 10 ft. Melee Weapon Attack: +4 to hit. Hit: 9 (2d6+2) bludgeoning damage, and the target is grappled (escape DC 12) if Medium or smaller."
+    },
+    {
+      "id": "i2",
+      "name": "Splintering Crush",
+      "kind": "weapon",
+      "quantity": 1,
+      "dmg": "2d6",
+      "dmgType": "Bludgeoning",
+      "rangeType": "Melee",
+      "props": [],
+      "equipped": false,
+      "desc": "Only usable against a target the Wretch has grappled. Melee Weapon Attack: +4 to hit. Hit: 11 (2d6+4) bludgeoning damage."
+    },
+    {
+      "id": "i3",
+      "name": "Petrified Bark",
+      "kind": "armor",
+      "quantity": 1,
+      "acBase": 13,
+      "dexMax": 0,
+      "equipped": true,
+      "desc": "Natural armor, fixed AC 13."
+    }
+  ],
+  "notes": "A petrified tree animated by a soul that never found rest, its bark cracked open in places to reveal a faint, cold light where a face might once have been. It doesn't speak \u2014 it only remembers being trapped, and wants company in that grief. Resists bludgeoning/piercing/slashing from nonmagical attacks; immune to necrotic and poison damage; immune to exhaustion and poisoned condition. Darkvision 60 ft. Understands the languages it knew in life but can't speak. Suggested quantity: 2-3 for a 5-6 PC level 3 party.",
+  "customFeatures": [
+    {
+      "id": "f1",
+      "name": "False Stillness",
+      "desc": "While motionless, a creaking wretch is indistinguishable from a dead, petrified tree. A creature must succeed on a DC 13 Wisdom (Perception) check to notice it before it acts."
+    },
+    {
+      "id": "f2",
+      "name": "Sunless Dread",
+      "desc": "Any creature that starts its turn within 10 feet of a creaking wretch must succeed on a DC 11 Wisdom save or have disadvantage on attack rolls until the start of its next turn, overwhelmed by grief and cold dread bleeding off the trapped soul."
+    }
+  ],
+  "id": "npc-creaking-wretch-1-47c42337"
+}
