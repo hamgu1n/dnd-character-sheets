@@ -65,7 +65,7 @@
   <div class="toprow">
     <div>
       <h1>Compare Characters</h1>
-      <div class="sub">View up to 4 character sheets side by side — handy for the DM on a laptop or tablet.</div>
+      <div class="sub">View up to 4 players and/or NPCs side by side — handy for the DM on a laptop or tablet.</div>
     </div>
   </div>
   <div class="file-warning" id="fileWarning">
@@ -76,10 +76,14 @@
   <div class="frames" id="frames"></div>
 </div>
 <script>
-const CHARACTERS = [{"name": "Celia", "slug": "celia"}, {"name": "Cache", "slug": "cache"}, {"name": "Jackson", "slug": "jackson"}, {"name": "Lynzie", "slug": "lynzie"}, {"name": "Mahaan", "slug": "mahaan"}, {"name": "Patrick", "slug": "patrick"}, {"name": "Tevin Bryk", "slug": "tevin-bryk"}];
+const ENTITIES = [{"name": "Celia", "slug": "celia", "kind": "player"}, {"name": "Cache", "slug": "cache", "kind": "player"}, {"name": "Jackson", "slug": "jackson", "kind": "player"}, {"name": "Lynzie", "slug": "lynzie", "kind": "player"}, {"name": "Mahaan", "slug": "mahaan", "kind": "player"}, {"name": "Patrick", "slug": "patrick", "kind": "player"}, {"name": "Tevin Bryk", "slug": "tevin-bryk", "kind": "player"}, {"name": "Creaking Wretch 1", "slug": "creaking-wretch-1", "kind": "npc"}, {"name": "Creaking Wretch 2", "slug": "creaking-wretch-2", "kind": "npc"}, {"name": "Creaking Wretch 3", "slug": "creaking-wretch-3", "kind": "npc"}, {"name": "Fungal Stalker 1", "slug": "fungal-stalker-1", "kind": "npc"}, {"name": "Fungal Stalker 2", "slug": "fungal-stalker-2", "kind": "npc"}, {"name": "Fungal Stalker 3", "slug": "fungal-stalker-3", "kind": "npc"}, {"name": "The Hollow Warden", "slug": "the-hollow-warden", "kind": "npc"}]; // players and pushed NPCs, each {name, slug, kind}
 const KEY = "dnd-compare-selection";
 const DM_KEY = "dnd-dm-auth";
 const MAX_SLOTS = 4;
+
+function entityKey(e){ return e.kind + ":" + e.slug; }
+function findEntity(key){ return ENTITIES.find(e => entityKey(e) === key); }
+function entityHref(e){ return e.kind === "npc" ? "characters/npcs/" + e.slug + ".html" : "characters/" + e.slug + ".html"; }
 
 function isDM(){
   try{ return localStorage.getItem(DM_KEY) === "1"; }catch(e){ return false; }
@@ -101,32 +105,47 @@ function init(){
       const raw = localStorage.getItem(KEY);
       if(raw){
         const parsed = JSON.parse(raw);
-        // migrate the old {a,b} shape from the 2-slot version of this page
-        if(Array.isArray(parsed)) return parsed.slice(0, MAX_SLOTS);
+        if(Array.isArray(parsed)){
+          // migrate older versions of this page: plain slugs (players-only,
+          // pre-NPC-support) or the original {a,b} shape
+          return parsed.slice(0, MAX_SLOTS).map(v => {
+            if(typeof v !== "string") return null;
+            if(v.includes(":")) return v; // already "kind:slug"
+            const asPlayer = ENTITIES.find(e => e.kind === "player" && e.slug === v);
+            return asPlayer ? entityKey(asPlayer) : null;
+          }).filter(Boolean);
+        }
         if(parsed && typeof parsed === "object"){
-          return [parsed.a, parsed.b].filter(Boolean);
+          return [parsed.a, parsed.b]
+            .filter(Boolean)
+            .map(slug => ENTITIES.find(e => e.kind === "player" && e.slug === slug))
+            .filter(Boolean)
+            .map(entityKey);
         }
       }
     }catch(e){}
-    return CHARACTERS.slice(0, 2).map(c => c.slug);
+    return ENTITIES.slice(0, 2).map(entityKey);
   }
   function saveSlots(){
     try{ localStorage.setItem(KEY, JSON.stringify(slots)); }catch(e){}
   }
 
   let slots = loadSlots();
-  if(slots.length === 0) slots = CHARACTERS[0] ? [CHARACTERS[0].slug] : [];
+  if(slots.length === 0) slots = ENTITIES[0] ? [entityKey(ENTITIES[0])] : [];
 
   function render(){
     pickersEl.innerHTML = "";
     framesEl.innerHTML = "";
 
-    slots.forEach((slug, idx) => {
+    const players = ENTITIES.filter(e => e.kind === "player");
+    const npcEntities = ENTITIES.filter(e => e.kind === "npc");
+
+    slots.forEach((key, idx) => {
       const picker = document.createElement("div");
       picker.className = "picker";
       const top = document.createElement("div");
       top.className = "picker-top";
-      top.innerHTML = `<label>Player ${idx + 1}</label>`;
+      top.innerHTML = `<label>Slot ${idx + 1}</label>`;
       if(slots.length > 1){
         const rm = document.createElement("button");
         rm.className = "picker-remove";
@@ -137,33 +156,42 @@ function init(){
       picker.appendChild(top);
 
       const select = document.createElement("select");
-      for(const c of CHARACTERS){
-        const opt = document.createElement("option");
-        opt.value = c.slug; opt.textContent = c.name;
-        if(c.slug === slug) opt.selected = true;
-        select.appendChild(opt);
+      function addGroup(label, items){
+        if(items.length === 0) return;
+        const group = document.createElement("optgroup");
+        group.label = label;
+        for(const e of items){
+          const opt = document.createElement("option");
+          opt.value = entityKey(e); opt.textContent = e.name;
+          if(entityKey(e) === key) opt.selected = true;
+          group.appendChild(opt);
+        }
+        select.appendChild(group);
       }
+      addGroup("Players", players);
+      addGroup("NPCs & Monsters", npcEntities);
       select.onchange = () => { slots[idx] = select.value; saveSlots(); render(); };
       picker.appendChild(select);
       pickersEl.appendChild(picker);
 
-      const c = CHARACTERS.find(ch => ch.slug === slug);
+      const e = findEntity(key);
       const col = document.createElement("div");
       col.className = "frame-col";
-      col.innerHTML = `<div class="frame-title">${c ? c.name : "—"}</div>`;
+      const title = e ? e.name + (e.kind === "npc" ? " (NPC)" : "") : "—";
+      col.innerHTML = `<div class="frame-title">${title}</div>`;
       const iframe = document.createElement("iframe");
-      iframe.src = c ? "characters/" + c.slug + ".html" : "";
+      iframe.src = e ? entityHref(e) : "";
       col.appendChild(iframe);
       framesEl.appendChild(col);
     });
 
     const addBtn = document.createElement("button");
     addBtn.className = "add-slot-btn";
-    addBtn.textContent = "+ Add player";
-    addBtn.disabled = slots.length >= MAX_SLOTS || slots.length >= CHARACTERS.length;
+    addBtn.textContent = "+ Add";
+    addBtn.disabled = slots.length >= MAX_SLOTS || slots.length >= ENTITIES.length;
     addBtn.onclick = () => {
-      const unused = CHARACTERS.find(c => !slots.includes(c.slug));
-      slots.push(unused ? unused.slug : (CHARACTERS[0] ? CHARACTERS[0].slug : ""));
+      const unused = ENTITIES.find(e => !slots.includes(entityKey(e)));
+      slots.push(unused ? entityKey(unused) : (ENTITIES[0] ? entityKey(ENTITIES[0]) : ""));
       saveSlots();
       render();
     };

@@ -82,10 +82,14 @@ with open(os.path.join(PROJECT_ROOT, "index.html"), "w") as f:
     f.write(index_html)
 print("wrote index.html")
 
-# Build compare.html
-char_list_json = json.dumps([{"name": c["name"], "slug": c["slug"]} for c in characters])
+# Build compare.html - players and pushed NPCs share the same picker so the
+# DM can mix any combination (e.g. 2 players + 2 monsters) across the 4 slots.
+compare_list = (
+    [{"name": c["name"], "slug": c["slug"], "kind": "player"} for c in characters] +
+    [{"name": n["name"], "slug": n["slug"], "kind": "npc"} for n in npcs]
+)
 COMPARE_TEMPLATE = open(os.path.join(os.path.dirname(__file__), "compare_template.html")).read()
-compare_html = COMPARE_TEMPLATE.replace("__CHAR_LIST__", char_list_json)
+compare_html = COMPARE_TEMPLATE.replace("__CHAR_LIST__", json.dumps(compare_list))
 with open(os.path.join(PROJECT_ROOT, "compare.html"), "w") as f:
     f.write(compare_html)
 print("wrote compare.html")
