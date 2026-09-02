@@ -590,6 +590,12 @@ async function saveToFolder(){
     await writable.write(JSON.stringify(charData, null, 2));
     await writable.close();
     toast(charData.name, "Saved to " + SOURCE_FILENAME);
+    try{
+      const raw = localStorage.getItem("dnd-new-character-list");
+      let list = raw ? JSON.parse(raw) : [];
+      list = list.filter(n => n.id !== DATA.id);
+      localStorage.setItem("dnd-new-character-list", JSON.stringify(list));
+    }catch(e){}
     document.getElementById("folderStatus").hidden = false;
     document.getElementById("folderStatus").textContent = "Last saved to " + FOLDER_LABEL + "/" + SOURCE_FILENAME + " just now.";
   }catch(err){

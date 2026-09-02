@@ -232,6 +232,20 @@ html = html.replace(
     const fileHandle = await dir.getFileHandle(SOURCE_FILENAME, {create:true});'''
 )
 
+# Once actually saved, this stops being a "draft" - remove it from the local
+# drafts registry immediately so reopening this same URL later won't have it
+# show up a second time once it's also pushed as a real character.
+html = html.replace(
+    '    toast(charData.name, "Saved to " + SOURCE_FILENAME);',
+    '''    toast(charData.name, "Saved to " + SOURCE_FILENAME);
+    try{
+      const raw = localStorage.getItem("dnd-new-character-list");
+      let list = raw ? JSON.parse(raw) : [];
+      list = list.filter(n => n.id !== DATA.id);
+      localStorage.setItem("dnd-new-character-list", JSON.stringify(list));
+    }catch(e){}'''
+)
+
 # close the appRoot wrapper div right before </body>
 html = html.replace("</body>", "</div>\n</body>")
 

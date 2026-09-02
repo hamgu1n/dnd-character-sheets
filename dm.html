@@ -341,7 +341,15 @@ function showDashboard(){
   }
 
   const dcGrid = document.getElementById("draftCharGrid");
-  const draftChars = applySavedOrder(loadDraftCharacterList(), "dnd-dm-order-draft-chars", c => c.id);
+  // Once a draft's been saved + pushed, it exists for real under the same id -
+  // stop listing it as a draft (and stop it re-registering itself if reopened).
+  const promotedIds = new Set(CHARACTERS.map(c => c.id));
+  const rawDrafts = loadDraftCharacterList();
+  const activeDrafts = rawDrafts.filter(d => !promotedIds.has(d.id));
+  if(activeDrafts.length !== rawDrafts.length){
+    try{ localStorage.setItem("dnd-new-character-list", JSON.stringify(activeDrafts)); }catch(e){}
+  }
+  const draftChars = applySavedOrder(activeDrafts, "dnd-dm-order-draft-chars", c => c.id);
   document.getElementById("draftCharSection").hidden = draftChars.length === 0;
   dcGrid.innerHTML = "";
   for(const c of draftChars){

@@ -66,7 +66,8 @@
           "mode": "disadvantage"
         }
       ],
-      "acBase": 18
+      "acBase": 18,
+      "desc": "Plate consists of shaped, interlocking metal plates to cover the entire body. A suit of plate includes gauntlets, heavy leather boots, a visored helmet, and thick layers of padding underneath the armor. Buckles and straps distribute the weight over the body."
     },
     {
       "id": "item-mtknca5cs92ol",
@@ -76,7 +77,8 @@
       "icon": "shield",
       "skillEffects": [],
       "acBase": 2,
-      "equipped": true
+      "equipped": true,
+      "desc": "A shield is made from wood or metal and is carried in one hand. Wielding a shield increases your Armor Class by 2. You can benefit from only one shield at a time."
     },
     {
       "id": "item-mtkncmtdhlg8t",
@@ -86,7 +88,11 @@
       "icon": "sword",
       "skillEffects": [],
       "dmg": "2d6",
-      "equipped": true
+      "equipped": true,
+      "desc": "Arm of Justice is less a sword than a verdict given form — a slab of blackened steel nearly as tall as the one who wields it, its blade broad enough to eclipse a shield and thick enough to turn parries into shattered bones. The crossguard is cast in the shape of two clasped hands, worn smooth where countless palms have rested before a swing, and the fuller running down its length is etched with a line of old judicial script, half-illegible now, that once listed the crimes it was forged to answer.\n\nIt's not a fast weapon. It doesn't need to be. Every swing carries the weight of finality — the kind of blow meant to end an argument, not start one. Those who've faced it rarely need to be told twice what it's called.",
+      "props": [
+        "Two-Handed"
+      ]
     }
   ],
   "notes": "",
@@ -100,32 +106,32 @@
   "customFeatures": [
     {
       "id": "cf-mtkn60qef8wyx",
-      "name": "Fighting Style",
-      "desc": "No description.",
+      "name": "Fighting Style (Heavy)",
+      "desc": "You adopt a particular style of fighting as your specialty. Choose a fighting style from the list of optional features. You can't take the same Fighting Style option more than once, even if you get to choose again.",
       "isChannelDivinity": false
     },
     {
       "id": "cf-mtkn6c8alvc5l",
       "name": "Second Wind",
-      "desc": "No description.",
+      "desc": "You have a limited well of stamina that you can draw on to protect yourself from harm. On your turn, you can use a bonus action to regain hit points equal to 1d10 + your fighter level.\n\nOnce you use this feature, you must finish a short or long rest before you can use it again.",
       "isChannelDivinity": false
     },
     {
       "id": "cf-mtkn6gr9k477b",
       "name": "Action Surge",
-      "desc": "No description.",
+      "desc": "Starting at 2nd level, you can push yourself beyond your normal limits for a moment. On your turn, you can take one additional action on top of your regular action and a possible bonus action.\n\nOnce you use this feature, you must finish a short or long rest before you can use it again. Starting at 17th level, you can use it twice before a rest, but only once on the same turn.",
       "isChannelDivinity": false
     },
     {
       "id": "cf-mtkn6n23l89ri",
       "name": "Art of War",
-      "desc": "Prof in investigation and cannot roll an 8 on investigation",
+      "desc": "You have spent time studying not only the strategy and tactics of war but also the theory of politics. You gain proficiency in one of the following skills: History, Insight, Investigation, or Persuasion. Moreover, whenever you make an ability check with that skill, you treat a d20 roll of 7 or lower as an 8.",
       "isChannelDivinity": false
     },
     {
       "id": "cf-mtkn7y2966wrv",
       "name": "Tactical Orders",
-      "desc": "No description.",
+      "desc": "When you take the Attack action on your turn, you can issue one of the Orders from the list below in place of one attack. You can issue an Order to a willing creature within 30 feet, other than yourself, that can hear and understand you: \n\n**Attack Order **\nThe next time the target of this Order takes the Attack action before the start of your next turn, it can make one additional weapon attack as part of its Attack action. \n\n\n**Defensive Order **\nThe target of this Order can use its reaction to immediately take the Dodge action. \n\n\n**Maneuvering Order **\nThe target of this Order can use its reaction to move up to its speed without provoking opportunity attacks. \n\n\n**Support Order **\nThe target of this Order can use its reaction to immediately take the Help, Hide, Search, or Use an Object action.",
       "isChannelDivinity": false
     }
   ],
