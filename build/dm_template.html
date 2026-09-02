@@ -42,6 +42,8 @@
   .char-card.flash-saved{background-color:rgba(92,154,92,.28) !important;border-color:#5c9a5c !important;}
   .char-card.flash-skipped{background-color:rgba(224,169,64,.22) !important;border-color:#e0a940 !important;}
   .char-card.flash-failed{background-color:rgba(180,69,62,.28) !important;border-color:#b4453e !important;}
+  .char-card{cursor:grab;}
+  .char-card.dragging{opacity:.4;cursor:grabbing;}
 
   .char-grid{display:grid;grid-template-columns:1fr;gap:10px;}
   .char-card{display:block;background:var(--panel);border:1px solid var(--border);
@@ -230,6 +232,46 @@ function newNpc(){
   location.href = "characters/npc.html?id=" + id;
 }
 
+/* ---------- drag-to-reorder (per-device only, via localStorage) ---------- */
+function applySavedOrder(items, storageKey, idFn){
+  let saved = [];
+  try{ saved = JSON.parse(localStorage.getItem(storageKey) || "[]"); }catch(e){}
+  if(!saved.length) return items;
+  const byId = new Map(items.map(it => [idFn(it), it]));
+  const ordered = [];
+  for(const id of saved){
+    if(byId.has(id)){ ordered.push(byId.get(id)); byId.delete(id); }
+  }
+  for(const it of items){ if(byId.has(idFn(it))) ordered.push(it); } // anything new, appended in original order
+  return ordered;
+}
+function saveGridOrder(gridEl, storageKey){
+  const ids = [...gridEl.querySelectorAll(".char-card")].map(c => c.dataset.orderId);
+  try{ localStorage.setItem(storageKey, JSON.stringify(ids)); }catch(e){}
+}
+function enableDragReorder(gridEl, storageKey){
+  let dragEl = null;
+  gridEl.querySelectorAll(".char-card").forEach(card => {
+    card.draggable = true;
+    card.addEventListener("dragstart", () => {
+      dragEl = card;
+      card.classList.add("dragging");
+    });
+    card.addEventListener("dragend", () => {
+      card.classList.remove("dragging");
+      dragEl = null;
+      saveGridOrder(gridEl, storageKey);
+    });
+    card.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      if(!dragEl || dragEl === card) return;
+      const rect = card.getBoundingClientRect();
+      const before = e.clientY < rect.top + rect.height / 2;
+      gridEl.insertBefore(dragEl, before ? card : card.nextSibling);
+    });
+  });
+}
+
 function showDashboard(){
   document.getElementById("lockWrap").hidden = true;
   document.getElementById("dashboard").hidden = false;
@@ -237,28 +279,34 @@ function showDashboard(){
 
   const pGrid = document.getElementById("playerGrid");
   pGrid.innerHTML = "";
-  for(const c of CHARACTERS){
+  const orderedPlayers = applySavedOrder(CHARACTERS, "dnd-dm-order-players", c => c.id);
+  for(const c of orderedPlayers){
     const a = document.createElement("a");
     a.className = "char-card";
     a.href = "characters/" + c.slug + ".html";
     a.dataset.charId = c.id;
+    a.dataset.orderId = c.id;
     a.innerHTML = `<div class="char-card-name">${c.name}</div><div class="char-card-sub">${c.sub||""}</div>`;
     pGrid.appendChild(a);
   }
+  enableDragReorder(pGrid, "dnd-dm-order-players");
 
   const pnGrid = document.getElementById("pushedNpcGrid");
   pnGrid.innerHTML = "";
   document.getElementById("pushedNpcEmptyNote").hidden = PUSHED_NPCS.length > 0;
-  for(const n of PUSHED_NPCS){
+  const orderedPushedNpcs = applySavedOrder(PUSHED_NPCS, "dnd-dm-order-pushed-npcs", n => n.id);
+  for(const n of orderedPushedNpcs){
     const a = document.createElement("a");
     a.className = "char-card";
     a.href = "characters/npcs/" + n.slug + ".html";
+    a.dataset.orderId = n.id;
     a.innerHTML = `<div class="char-card-name">${n.name}</div><div class="char-card-sub">${n.sub||"NPC / Monster"}</div>`;
     pnGrid.appendChild(a);
   }
+  enableDragReorder(pnGrid, "dnd-dm-order-pushed-npcs");
 
   const nGrid = document.getElementById("npcGrid");
-  const npcs = loadNpcList();
+  const npcs = applySavedOrder(loadNpcList(), "dnd-dm-order-local-npcs", n => n.id);
   nGrid.innerHTML = "";
   if(npcs.length === 0){
     nGrid.innerHTML = `<div class="empty-note">No NPCs or monsters yet — add one below.</div>`;
@@ -267,9 +315,11 @@ function showDashboard(){
       const a = document.createElement("a");
       a.className = "char-card";
       a.href = "characters/npc.html?id=" + encodeURIComponent(n.id);
+      a.dataset.orderId = n.id;
       a.innerHTML = `<div class="char-card-name">${n.name || "Unnamed NPC"}</div><div class="char-card-sub">NPC / Monster</div>`;
       nGrid.appendChild(a);
     }
+    enableDragReorder(nGrid, "dnd-dm-order-local-npcs");
   }
 }
 
