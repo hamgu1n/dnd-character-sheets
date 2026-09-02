@@ -1,0 +1,111 @@
+{
+  "name": "The Hollow Warden",
+  "species": "Undead (Large)",
+  "background": "CR 7 boss \u2014 a hollow formed from merged lost souls, bound to a petrified tree vessel",
+  "classes": [
+    {
+      "id": "role",
+      "name": "Hollow Warden",
+      "level": 6,
+      "hitDie": 10,
+      "subclass": ""
+    }
+  ],
+  "abilities": {
+    "str": 18,
+    "dex": 10,
+    "con": 15,
+    "int": 12,
+    "wis": 16,
+    "cha": 14
+  },
+  "proficientSaves": [
+    "con",
+    "wis"
+  ],
+  "skillProficiencies": [],
+  "skillExpertise": [],
+  "hp": {
+    "max": 105,
+    "current": 105,
+    "temp": 0
+  },
+  "speed": 30,
+  "conditions": [],
+  "inspiration": false,
+  "spellSlots": {},
+  "spellsPrepared": [],
+  "currency": {
+    "cp": 0,
+    "sp": 0,
+    "ep": 0,
+    "gp": 0,
+    "pp": 0
+  },
+  "inventory": [
+    {
+      "id": "i1",
+      "name": "Grasping Bough",
+      "kind": "weapon",
+      "quantity": 1,
+      "dmg": "2d8",
+      "dmgType": "Bludgeoning",
+      "rangeType": "Melee",
+      "props": [
+        "Reach",
+        "Grapple"
+      ],
+      "equipped": true,
+      "desc": "Reach 15 ft. Melee Weapon Attack: +7 to hit. Hit: 13 (2d8+4) bludgeoning damage, and the target is grappled (escape DC 15) if Large or smaller. Multiattack: two Grasping Bough attacks per turn. Only usable while veseled."
+    },
+    {
+      "id": "i2",
+      "name": "Warden's Bark",
+      "kind": "armor",
+      "quantity": 1,
+      "acBase": 15,
+      "dexMax": 0,
+      "equipped": true,
+      "desc": "Natural armor while veseled, fixed AC 15. AC drops to 12 while unveseled."
+    }
+  ],
+  "notes": "Once a warden of these woods in life, it fused with the largest petrified tree in the grove after death and grew into something ancient and enormous. It remembers duty more than grief now \u2014 it believes it is still protecting the forest, and sees the party as trespassers to be rooted in place forever, joining its garden of the trapped. A hollow forms when lost souls find one another and merge; it cannot exist outside a vessel, and without one it dissipates within minutes, destroying every merged soul. Resists bludgeoning/piercing/slashing from nonmagical attacks while veseled; immune to necrotic and poison damage; immune to exhaustion, frightened, and poisoned. Darkvision 60 ft. Speaks Common in a dry, hollow rasp layered with the murmur of many voices. DM tips: open the fight veseled using Grasping Bough and Wail of the Buried; telegraph Soul Surge before using it; the 1-minute dissipation timer is a built-in failsafe if the party strands the Warden outside a vessel; consider seeding this lore earlier so possession doesn't feel like a first-time gotcha.",
+  "customFeatures": [
+    {
+      "id": "f1",
+      "name": "Legendary Resistance (1/Day)",
+      "desc": "If the Warden fails a saving throw, it can choose to succeed instead."
+    },
+    {
+      "id": "f2",
+      "name": "Vessel Bound",
+      "desc": "The Warden is a mass of merged souls with no body of its own \u2014 it requires a vessel (normally its host petrified tree) to persist. While it occupies a vessel, it uses that vessel's physical form and gains its resistances. If the Warden is ever without a vessel for more than 1 minute (10 rounds), it dissipates entirely and all souls composing it are destroyed, ending the encounter instantly."
+    },
+    {
+      "id": "f3",
+      "name": "Regeneration",
+      "desc": "While veseled, the Warden regains 10 hit points at the start of its turn if it has at least 1 hit point."
+    },
+    {
+      "id": "f4",
+      "name": "Wail of the Buried (Recharge 5-6)",
+      "desc": "Each creature within 20 feet must make a DC 14 Wisdom saving throw, taking 18 (4d8) psychic damage and becoming frightened until the end of its next turn on a failure, or half damage and no fright on a success."
+    },
+    {
+      "id": "f5",
+      "name": "Soul Surge (Possession)",
+      "desc": "The Warden abandons its current vessel in a burst of shadow and attempts to possess a creature it can see within 30 feet that is grappled by it or was grappled by it in the last round. The target must succeed on a DC 15 Wisdom saving throw or become possessed (see the Possessed feature below). The Warden's vessel goes dormant and inert for the duration \u2014 it can be attacked (AC 15, treated as an object with the Warden's remaining HP) but takes no actions and grants no benefit to the Warden while it's away. Once the Warden leaves a vessel, it must return to a vessel or possess a creature within 1 minute or dissipate permanently."
+    },
+    {
+      "id": "f6",
+      "name": "Legendary Actions (3/round)",
+      "desc": "Can't use the same option twice in a row; unavailable while possessing a creature. Splintering Reach: the Warden makes one Grasping Bough attack. Creeping Roots (Costs 2 Actions): the ground within 15 feet of the Warden's vessel erupts with grasping roots \u2014 each creature there must succeed on a DC 14 Dexterity save or be restrained until it uses an action to break free (DC 14 Strength check)."
+    },
+    {
+      "id": "f7",
+      "name": "Possessed (condition inflicted by Soul Surge)",
+      "desc": "While possessed, the Warden controls the target's body directly, using the possessed creature's own statblock rather than its own action economy; the Warden gets no separate turn or legendary actions while possessing. At the start of each of the possessed creature's turns, its soul takes a cumulative point of erosion \u2014 after 3 rounds of possession, the soul is fully engulfed and consumed and the character dies, becoming fuel for the Warden (DM may increase the Warden's max HP by 10-15 per soul consumed this way). At the end of each of its turns while possessed, the possessed creature can attempt a DC 15 Wisdom saving throw to expel the Warden early; an ally who spends their action trying to reach the possessed creature (roleplay, an Insight check, a relevant class feature, etc.) grants advantage on that save. If the possessed creature drops to 0 HP, the Warden is immediately ejected and the creature falls unconscious as normal rather than dying from the possession. While possessing a creature, the Warden's original vessel is dormant and can be destroyed by the party, forcing the Warden to find a new vessel or dissipate."
+    }
+  ],
+  "id": "npc-hollow-warden-7aad88f3"
+}
