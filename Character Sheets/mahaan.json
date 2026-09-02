@@ -165,6 +165,14 @@
       "id": "cf-mtjhz3m1k1i0k",
       "name": "Fighting Style (Dueling)",
       "desc": "When you are wielding a melee weapon in one hand and no other weapons, you gain a +2 bonus to damage rolls with that weapon."
+    },
+    {
+      "id": "cf-mtklwloq37a6d",
+      "name": "Lay on Hands",
+      "desc": "As an action, you can touch a creature and draw power from the pool to restore a number of hit points to that creature, up to the maximum amount remaining in your pool.",
+      "isChannelDivinity": false,
+      "hasPool": true,
+      "poolMax": 15
     }
   ],
   "channelDivinity": {

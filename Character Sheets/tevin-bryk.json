@@ -1,0 +1,135 @@
+{
+  "id": "char-mtkmgh7zo44r5",
+  "name": "Tevin Bryk",
+  "species": "",
+  "classes": [
+    {
+      "id": "class1",
+      "name": "Fighter",
+      "level": 3,
+      "hitDie": 8,
+      "subclass": "Commander"
+    }
+  ],
+  "abilities": {
+    "str": 18,
+    "dex": 12,
+    "con": 14,
+    "int": 10,
+    "wis": 8,
+    "cha": 6
+  },
+  "proficientSaves": [
+    "str",
+    "dex"
+  ],
+  "skillProficiencies": [
+    "insight",
+    "survival",
+    "perception",
+    "athletics",
+    "investigation"
+  ],
+  "skillExpertise": [],
+  "hp": {
+    "max": 28,
+    "current": 10,
+    "temp": 0
+  },
+  "speed": 30,
+  "conditions": [],
+  "exhaustion": 0,
+  "deathSaves": {
+    "successes": 0,
+    "failures": 0
+  },
+  "inspiration": false,
+  "spellSlots": {},
+  "spellsPrepared": [],
+  "currency": {
+    "cp": 0,
+    "sp": 0,
+    "ep": 0,
+    "gp": 0,
+    "pp": 0
+  },
+  "inventory": [
+    {
+      "id": "item-mtkn8m7rnvc2n",
+      "name": "Plate Armor",
+      "quantity": 1,
+      "kind": "armor",
+      "equipped": true,
+      "skillEffects": [
+        {
+          "skill": "stealth",
+          "mode": "disadvantage"
+        }
+      ],
+      "acBase": 18
+    },
+    {
+      "id": "item-mtknca5cs92ol",
+      "name": "Shield",
+      "quantity": 1,
+      "kind": "armor",
+      "icon": "shield",
+      "skillEffects": [],
+      "acBase": 2,
+      "equipped": true
+    },
+    {
+      "id": "item-mtkncmtdhlg8t",
+      "name": "Arm of Justice",
+      "quantity": 1,
+      "kind": "weapon",
+      "icon": "sword",
+      "skillEffects": [],
+      "dmg": "2d6",
+      "equipped": true
+    }
+  ],
+  "notes": "",
+  "journal": {
+    "entries": [],
+    "npcs": [],
+    "quests": [],
+    "goals": []
+  },
+  "background": "",
+  "customFeatures": [
+    {
+      "id": "cf-mtkn60qef8wyx",
+      "name": "Fighting Style",
+      "desc": "No description.",
+      "isChannelDivinity": false
+    },
+    {
+      "id": "cf-mtkn6c8alvc5l",
+      "name": "Second Wind",
+      "desc": "No description.",
+      "isChannelDivinity": false
+    },
+    {
+      "id": "cf-mtkn6gr9k477b",
+      "name": "Action Surge",
+      "desc": "No description.",
+      "isChannelDivinity": false
+    },
+    {
+      "id": "cf-mtkn6n23l89ri",
+      "name": "Art of War",
+      "desc": "Prof in investigation and cannot roll an 8 on investigation",
+      "isChannelDivinity": false
+    },
+    {
+      "id": "cf-mtkn7y2966wrv",
+      "name": "Tactical Orders",
+      "desc": "No description.",
+      "isChannelDivinity": false
+    }
+  ],
+  "channelDivinity": {
+    "max": 0
+  }
+}
