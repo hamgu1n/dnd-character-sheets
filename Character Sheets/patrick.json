@@ -15,12 +15,12 @@
     }
   ],
   "abilities": {
-    "str": 12,
+    "str": 16,
     "dex": 10,
     "con": 16,
     "int": 6,
     "wis": 8,
-    "cha": 16
+    "cha": 12
   },
   "proficientSaves": [
     "wis",
@@ -54,10 +54,37 @@
     }
   },
   "spellsPrepared": [
-    "Compelled Duel",
-    "Armor of Agathys",
-    "Command",
-    "Shield of Faith"
+    {
+      "level": 1,
+      "desc": "You attempt to compel a creature into a duel. One creature that you can see within range must make a Wisdom saving throw. On a failed save, the creature is drawn to you, compelled by your divine demand. For the duration, it has disadvantage on attack rolls against creatures other than you, and must make a Wisdom saving throw each time it attempts to move to a space that is more than 30 feet away from you; if it succeeds on this saving throw, this spell doesn’t restrict the target’s movement for that turn.\n\nThe spell ends if you attack any other creature, if you cast a spell that targets a hostile creature other than the target, if a creature friendly to you damages the target or casts a harmful spell on it, or if you end your turn more than 30 feet away from the target.",
+      "castingTime": "1 action",
+      "range": "30 feet",
+      "name": "Compelled Duel",
+      "spellType": "enchantment"
+    },
+    {
+      "level": 1,
+      "desc": "",
+      "castingTime": "",
+      "range": "",
+      "name": "Armor of Agathys"
+    },
+    {
+      "level": 1,
+      "desc": "You speak a one-word command to a creature you can see within range. The target must succeed on a Wisdom saving throw or follow the command on its next turn. The spell has no effect if the target is undead, if it doesn’t understand your language, or if your command is directly harmful to it. Some typical commands and their effects follow. You might issue a command other than one described here. If you do so, the GM determines how the target behaves. If the target can’t follow your command, the spell ends. Approach. The target moves toward you by the shortest and most direct route, ending its turn if it moves within 5 feet of you. Drop. The target drops whatever it is holding and then ends its turn. Flee. The target spends its turn moving away from you by the fastest available means. Grovel. The target falls prone and then ends its turn. Halt. The target doesn’t move and takes no actions. A flying creature stays aloft, provided that it is able to do so. If it must move to stay aloft, it flies the minimum distance needed to remain in the air.",
+      "castingTime": "1 action",
+      "range": "Sight",
+      "name": "Command",
+      "spellType": "enchantment"
+    },
+    {
+      "level": 1,
+      "desc": "A shimmering field appears and surrounds a creature of your choice within range, granting it a +2 bonus to AC for the duration.",
+      "castingTime": "1 bonus",
+      "range": "60 feet",
+      "name": "Shield of Faith",
+      "spellType": "abjuration"
+    }
   ],
   "currency": {
     "cp": 0,
@@ -75,7 +102,14 @@
       "acBase": 18,
       "dexMax": 0,
       "weight": 65,
-      "equipped": true
+      "equipped": true,
+      "skillEffects": [
+        {
+          "skill": "stealth",
+          "mode": "disadvantage"
+        }
+      ],
+      "desc": "Plate consists of shaped, interlocking metal plates to cover the entire body. A suit of plate includes gauntlets, heavy leather boots, a visored helmet, and thick layers of padding underneath the armor. Buckles and straps distribute the weight over the body."
     },
     {
       "id": "mti1d3gye3q2",
@@ -84,34 +118,60 @@
       "kind": "shield",
       "acBonus": 2,
       "weight": 6,
-      "equipped": true
+      "equipped": true,
+      "skillEffects": [],
+      "desc": "A shield is made from wood or metal and is carried in one hand. Wielding a shield increases your Armor Class by 2. You can benefit from only one shield at a time. "
     },
     {
       "id": "mti1gfdodl0z",
-      "name": "Duckfoot (d6)",
+      "name": "Duckfoot",
       "quantity": 1,
-      "kind": "gear"
+      "kind": "weapon",
+      "equipped": true,
+      "dmg": "1d6",
+      "rangeType": "Ranged",
+      "dmgType": "Piercing",
+      "props": [
+        "Ammunition",
+        "Special"
+      ],
+      "skillEffects": [],
+      "weight": 3,
+      "icon": "bow",
+      "desc": "A single draw-grip splayed into four short, stubby limbs like a duck's webbed foot, each notched to loose its own arrow in the same instant. It handles like a bow rather than a firearm — same draw, same ammunition type, same range — but a single pull sends a spread of shafts fanning outward instead of one true shot.\n\n**Special: ** Spread Shot. When you attack with this weapon, choose up to four creatures within range and within 10 feet of each other. Make a separate ranged attack roll against each target using its own arrow. Each creature hit takes 1d6 piercing damage.\n\n**Special: **Bomb Nocking. As part of loading this weapon, you can nock one or more of its arrows with a bomb (alchemist's fire, a firebomb, or similar thrown ordnance repurposed into arrow form, at your DM's discretion) instead of a normal arrowhead. A creature hit by a bomb-nocked arrow takes an extra 1d6 damage of the bomb's type (typically fire), in addition to the shot's normal piercing damage. Bombs used this way are consumed on use and must be crafted or purchased as ammunition, separate from ordinary arrows."
     },
     {
       "id": "mti1hlvlz5f5",
-      "name": "Bombs (3 max)",
-      "quantity": 1,
-      "kind": "gear"
+      "name": "Bombs",
+      "quantity": 3,
+      "kind": "weapon",
+      "equipped": true,
+      "dmg": "1d8",
+      "dmgType": "Fire",
+      "props": [
+        "Thrown",
+        "Consumable",
+        "Splash"
+      ],
+      "rangeType": "Ranged",
+      "skillEffects": [],
+      "desc": "A sealed clay or glass vessel packed with alchemical fire-oil and a friction fuse, shattering on impact and igniting anything flammable nearby. Popular with duckfoot bow users, saboteurs, and anyone who'd rather not get close.\n\n**Special: **Splash. On a hit, the target takes 1d8 fire damage. Every other creature within 5 feet of the target must succeed on a Dexterity saving throw (DC 13, or your spell/weapon save DC if a class feature grants one) or take 1d4 fire damage from the splash.\n\n**Special: **Miss. On a miss, the bomb lands in a random direction 5 feet from the target (DM's choice or a d8 for direction) and still triggers its splash effect against any creatures caught there.",
+      "icon": "gear"
     },
     {
       "id": "mti1j6mb85by",
-      "name": "Maul",
+      "name": "Mace",
       "quantity": 1,
       "kind": "weapon",
-      "dmg": "2d6",
+      "dmg": "1d6",
       "dmgType": "Bludgeoning",
-      "props": [
-        "Heavy",
-        "Two-Handed"
-      ],
+      "props": [],
       "rangeType": "Melee",
-      "weight": 10,
-      "equipped": true
+      "weight": 4,
+      "equipped": true,
+      "skillEffects": [],
+      "desc": "A heavy metal head mounted on a sturdy shaft, built to crush through armor rather than cut around it. Simple to wield and brutally effective against anything wearing plate or chain, a mace trades finesse for raw, punishing weight.",
+      "icon": "mace"
     }
   ],
   "notes": "",
@@ -127,8 +187,30 @@
   "customFeatures": [
     {
       "name": "Conquering Presence",
-      "desc": "No description.",
-      "id": "cf-mti17tledhbg"
+      "desc": "You can use your Channel Divinity to exude a terrifying presence. As an action, you force each creature of your choice that you can see within 30 feet of you to make a Wisdom saving throw. On a failed save, a creature becomes frightened of you for 1 minute. The frightened creature can repeat this saving throw at the end of each of its turns, ending the effect on itself on a success.",
+      "id": "cf-mti17tledhbg",
+      "isChannelDivinity": true
+    },
+    {
+      "id": "cf-mtjgtj3x1cprp",
+      "name": "Fighting Style (Interception)",
+      "desc": "When a creature you can see hits a target, other than you, within 5 feet of you with an attack, you can use your reaction to reduce the damage the target takes by 1d10 + your proficiency bonus (to a minimum of 0 damage). You must be wielding a shield or a simple or martial weapon to use this reaction."
+    },
+    {
+      "id": "cf-mtjgvubpkffqe",
+      "name": "Lay on Hands",
+      "desc": "As an action, you can touch a creature and draw power from the pool to restore a number of hit points to that creature, up to the maximum amount remaining in your pool.",
+      "hasPool": true,
+      "poolMax": 15
+    },
+    {
+      "id": "cf-mtjgwhqq2m8ln",
+      "name": "Guided Strike",
+      "desc": "You can use your Channel Divinity to strike with supernatural accuracy. When you make an attack roll, you can use your Channel Divinity to gain a +10 bonus to the roll. You make this choice after you see the roll, but before the DM says whether the attack hits or misses.",
+      "isChannelDivinity": true
     }
-  ]
+  ],
+  "channelDivinity": {
+    "max": 1
+  }
 }

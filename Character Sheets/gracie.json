@@ -72,5 +72,9 @@
     "goals": []
   },
   "speciesId": "hb-fairy",
-  "spellcastingAbility": "wis"
+  "spellcastingAbility": "wis",
+  "channelDivinity": {
+    "max": 0
+  },
+  "customFeatures": []
 }

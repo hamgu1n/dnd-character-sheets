@@ -1,0 +1,160 @@
+{
+  "id": "mtevt777-goy527i",
+  "schemaVersion": 1,
+  "name": "Celia",
+  "createdAt": 1788038254771,
+  "updatedAt": 1788044730815,
+  "species": "Sea Elf",
+  "classes": [
+    {
+      "id": "ranger",
+      "name": "Ranger",
+      "level": 3,
+      "hitDie": 10,
+      "subclass": "Hunter"
+    }
+  ],
+  "abilities": {
+    "str": 8,
+    "dex": 18,
+    "con": 12,
+    "int": 10,
+    "wis": 15,
+    "cha": 7
+  },
+  "proficientSaves": [
+    "str",
+    "dex"
+  ],
+  "skillProficiencies": [
+    "animalHandling",
+    "nature",
+    "survival",
+    "perception",
+    "arcana"
+  ],
+  "skillExpertise": [],
+  "hp": {
+    "max": 25,
+    "current": 25,
+    "temp": 8
+  },
+  "hitDiceUsed": {},
+  "speed": 30,
+  "conditions": [],
+  "exhaustion": 0,
+  "deathSaves": {
+    "successes": 0,
+    "failures": 0
+  },
+  "inspiration": false,
+  "spellSlots": {
+    "1": {
+      "max": 3,
+      "used": 0
+    }
+  },
+  "spellsPrepared": [
+    {
+      "level": 1,
+      "desc": "You choose a creature you can see within range and mystically mark it as your quarry. Until the spell ends, you deal an extra 1d6 damage to the target whenever you hit it with a weapon attack, and you have advantage on any Wisdom (Perception) or Wisdom (Survival) check you make to find it. If the target drops to 0 hit points before this spell ends, you can use a bonus action on a subsequent turn of yours to mark a new creature.",
+      "castingTime": "1 bonus action",
+      "range": "90 feet",
+      "name": "Hunter's Mark",
+      "spellType": "divination"
+    },
+    {
+      "level": 1,
+      "desc": "A creature you touch regains a number of hit points equal to 1d8 + your spellcasting ability modifier. This spell has no effect on undead or constructs.",
+      "castingTime": "",
+      "range": "Touch",
+      "name": "Cure Wounds",
+      "spellType": "evocation"
+    },
+    {
+      "level": 1,
+      "desc": "The next time you hit a creature with a weapon attack before this spell ends, a writhing mass of thorny vines appears at the point of impact, and the target must succeed on a Strength saving throw or be restrained by the magical vines until the spell ends. A Large or larger creature has advantage on this saving throw. If the target succeeds on the save, the vines shrivel away.\n\nWhile restrained by this spell, the target takes 1d6 piercing damage at the start of each of its turns. A creature restrained by the vines or one that can touch the creature can use its action to make a Strength check against your spell save DC. On a success, the target is freed.",
+      "castingTime": "1 bonus aciotn",
+      "range": "Self",
+      "name": "Ensnaring Strike",
+      "spellType": "conjuration"
+    }
+  ],
+  "currency": {
+    "cp": 0,
+    "sp": 0,
+    "ep": 0,
+    "gp": 0,
+    "pp": 0
+  },
+  "inventory": [
+    {
+      "id": "mtevz47g20a8",
+      "name": "Lost Wave Dagger I",
+      "quantity": 1,
+      "kind": "weapon",
+      "dmg": "1d4",
+      "dmgType": "Piercing",
+      "props": [
+        "Finesse",
+        "Light",
+        "Thrown"
+      ],
+      "rangeType": "Melee",
+      "weight": 1,
+      "equipped": true,
+      "skillEffects": [],
+      "desc": "A slender dagger of sea-glass-blue steel, its blade etched with a single curling wave that seems to shift and ripple faintly when tilted in the light. Engraved along the bottom of the handle, worn smooth by countless hands before its current owner, is a lone numeral: I. It is always found alongside its twin.\n\n**Special:** Wave Return. Immediately after you throw this dagger and it hits or misses, it rides a surge of phantom seawater back to your hand — you don't need to go retrieve it. \n\n**Paired Tide: ** Instead of letting it return to you, you can choose to teleport to it in a burst of water, appearing in the space it landed in (or the nearest unoccupied space) rather than having it come back. When you teleport this way, a softly glowing orb of water-light forms in the space you left behind, hovering a few inches off the ground. The orb sheds dim light in a 10-foot radius and fades away at the start of your next turn. Once you teleport to a dagger this way, you can't do so again with either Lost Wave Dagger until the start of your next turn.",
+      "icon": "sword"
+    },
+    {
+      "id": "mtevz77aae2b",
+      "name": "Lost Wave Dagger II",
+      "quantity": 1,
+      "kind": "weapon",
+      "dmg": "1d4",
+      "dmgType": "Piercing",
+      "props": [
+        "Finesse",
+        "Light",
+        "Thrown"
+      ],
+      "rangeType": "Melee",
+      "weight": 1,
+      "equipped": true,
+      "skillEffects": [],
+      "desc": "A slender dagger of sea-glass-blue steel, its blade etched with a single curling wave that seems to shift and ripple faintly when tilted in the light. Engraved along the bottom of the handle, worn smooth by countless hands before its current owner, is a lone numeral: I. It is always found alongside its twin.\n\n**Special:** Wave Return. Immediately after you throw this dagger and it hits or misses, it rides a surge of phantom seawater back to your hand — you don't need to go retrieve it. \n\n**Paired Tide: ** Instead of letting it return to you, you can choose to teleport to it in a burst of water, appearing in the space it landed in (or the nearest unoccupied space) rather than having it come back. When you teleport this way, a softly glowing orb of water-light forms in the space you left behind, hovering a few inches off the ground. The orb sheds dim light in a 10-foot radius and fades away at the start of your next turn. Once you teleport to a dagger this way, you can't do so again with either Lost Wave Dagger until the start of your next turn."
+    },
+    {
+      "id": "mtew1xjafsxv",
+      "name": "Scale Mail",
+      "quantity": 1,
+      "kind": "armor",
+      "acBase": 14,
+      "dexMax": 2,
+      "weight": 45,
+      "equipped": true,
+      "skillEffects": [
+        {
+          "skill": "stealth",
+          "mode": "disadvantage"
+        }
+      ],
+      "desc": "This armor consists of a coat and leggings (and perhaps a separate skirt) of leather covered with overlapping pieces of metal, much like the scales of a fish. The suit includes gauntlets."
+    }
+  ],
+  "notes": "",
+  "journal": {
+    "entries": [],
+    "npcs": [],
+    "quests": [],
+    "goals": []
+  },
+  "speciesId": "hb-sea-elf",
+  "background": "",
+  "spellcastingAbility": "wis",
+  "customFeatures": [],
+  "channelDivinity": {
+    "max": 0
+  }
+}
