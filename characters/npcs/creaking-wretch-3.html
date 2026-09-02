@@ -688,9 +688,6 @@ function normalizeCharData(cd){
   cd.channelDivinity = cd.channelDivinity || {max: 0};
   return cd;
 }
-function isPaladin(){
-  return (charData.classes||[]).some(c => (c.name||"").toLowerCase().includes("paladin"));
-}
 
 // Default inventory grouping when nothing's been manually reordered yet:
 // weapons, then general items/gear, then armor & shields.
@@ -1660,7 +1657,7 @@ function renderFeatures(){
   const cdFeats = allFeats.filter(f => f.isChannelDivinity);
   const normalFeats = allFeats.filter(f => !f.isChannelDivinity);
   const cdMax = (charData.channelDivinity && charData.channelDivinity.max) || 0;
-  const showCdSection = editMode ? isPaladin() : (cdFeats.length > 0 || cdMax > 0);
+  const showCdSection = editMode ? true : (cdFeats.length > 0 || cdMax > 0);
 
   if(allFeats.length === 0 && !editMode){ panel.style.display = "none"; return; }
   panel.style.display = "";
@@ -1676,11 +1673,7 @@ function renderFeatures(){
     addBtn.className = "add-btn";
     addBtn.textContent = "+ Add feature";
     addBtn.onclick = () => {
-      let isCd = false;
-      if(isPaladin()){
-        isCd = confirm("Is this feature related to Channel Divinity?");
-      }
-      allFeats.push({id: uid("cf"), name: "New Feature", desc: "No description.", isChannelDivinity: isCd});
+      allFeats.push({id: uid("cf"), name: "New Feature", desc: "No description.", isChannelDivinity: false});
       saveCharData();
       renderAll();
     };
@@ -1746,18 +1739,16 @@ function buildFeatureEditCard(f, idx, allFeats){
     <div class="edit-field"><label>Name</label><input class="edit-input wide" data-f="name" value="${f.name||""}"></div>
     <div class="edit-field"><label>Description</label><textarea class="edit-input wide" data-f="desc" rows="3">${escapeHtml((f.desc && f.desc !== "No description.") ? f.desc : "")}</textarea></div>
   `;
-  if(isPaladin()){
-    const cdField = document.createElement("label");
-    cdField.className = "chk-label";
-    cdField.style.marginBottom = "8px";
-    cdField.innerHTML = `<input type="checkbox" ${f.isChannelDivinity?"checked":""}> Channel Divinity option`;
-    cdField.querySelector("input").onchange = (e) => {
-      f.isChannelDivinity = e.target.checked;
-      saveCharData();
-      renderAll();
-    };
-    card.appendChild(cdField);
-  }
+  const cdField = document.createElement("label");
+  cdField.className = "chk-label";
+  cdField.style.marginBottom = "8px";
+  cdField.innerHTML = `<input type="checkbox" ${f.isChannelDivinity?"checked":""}> Channel Divinity option`;
+  cdField.querySelector("input").onchange = (e) => {
+    f.isChannelDivinity = e.target.checked;
+    saveCharData();
+    renderAll();
+  };
+  card.appendChild(cdField);
 
   const poolField = document.createElement("label");
   poolField.className = "chk-label";
