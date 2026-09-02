@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>DM Dashboard</title>
+<style>
+  :root{
+    --bg:#1b1712; --panel:#242019; --panel-2:#2c2620; --border:#463c2e;
+    --text:#ece3d2; --text-dim:#b7a98d; --accent:#c9762c; --accent-2:#8a2f2f;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);min-height:100%;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  h1{font-family:Georgia,"Times New Roman",serif;font-size:1.6rem;margin:0 0 4px;}
+  h2{font-family:Georgia,"Times New Roman",serif;font-size:1.1rem;margin:0 0 10px;color:var(--accent);}
+  a{color:var(--accent);}
+  [hidden]{display:none !important;}
+  .wrap{padding:20px 16px 60px;max-width:900px;margin:0 auto;}
+  .backlink{display:inline-block;margin-bottom:14px;color:var(--text-dim);font-size:0.8rem;text-decoration:none;}
+  .sub{color:var(--text-dim);font-size:0.85rem;margin-bottom:20px;}
+
+  .lock-wrap{min-height:80vh;display:flex;align-items:center;justify-content:center;}
+  .lock-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;
+    padding:28px 24px;max-width:340px;width:100%;text-align:center;}
+  .lock-card input{width:100%;background:var(--panel-2);border:1px solid var(--border);
+    color:var(--text);border-radius:8px;padding:10px 12px;font-size:1rem;text-align:center;
+    margin:14px 0 10px;font-family:inherit;}
+  .lock-card button{width:100%;background:var(--accent);color:#1b1712;border:none;
+    border-radius:8px;padding:10px 0;font-weight:700;font-size:0.95rem;}
+  .lock-error{color:#f4a68a;font-size:0.8rem;min-height:1.2em;margin-top:6px;}
+
+  .section{margin-bottom:28px;}
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .logout-btn{background:none;border:1px solid var(--border);color:var(--text-dim);
+    border-radius:8px;padding:6px 12px;font-size:0.78rem;}
+  .comparebtn{display:inline-block;background:var(--panel-2);border:1px solid var(--border);
+    color:var(--text);border-radius:8px;padding:8px 14px;font-size:0.85rem;text-decoration:none;margin-bottom:20px;}
+  .save-all-btn{background:var(--accent);color:#1b1712;border:none;border-radius:8px;
+    padding:7px 14px;font-weight:700;font-size:0.8rem;flex-shrink:0;}
+  .char-card{transition:background-color .25s, border-color .25s;}
+  .char-card.flash-saved{background-color:rgba(92,154,92,.28) !important;border-color:#5c9a5c !important;}
+  .char-card.flash-skipped{background-color:rgba(224,169,64,.22) !important;border-color:#e0a940 !important;}
+  .char-card.flash-failed{background-color:rgba(180,69,62,.28) !important;border-color:#b4453e !important;}
+
+  .char-grid{display:grid;grid-template-columns:1fr;gap:10px;}
+  .char-card{display:block;background:var(--panel);border:1px solid var(--border);
+    border-radius:12px;padding:14px 16px;text-decoration:none;color:var(--text);}
+  .char-card-name{font-family:Georgia,"Times New Roman",serif;font-size:1.1rem;font-weight:700;}
+  .char-card-sub{color:var(--text-dim);font-size:0.82rem;margin-top:2px;}
+  .empty-note{color:var(--text-dim);font-size:0.85rem;padding:10px 2px;}
+  .add-npc-btn{display:block;background:var(--panel-2);border:1px dashed var(--border);
+    color:var(--text-dim);border-radius:12px;padding:14px;text-align:center;font-size:0.9rem;
+    margin-top:10px;width:100%;}
+
+  @media (min-width:820px){
+    .wrap{padding:36px 32px 60px;}
+    .char-grid{grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:14px;}
+    .char-card:hover{border-color:var(--accent);}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="lockWrap" class="lock-wrap">
+    <div class="lock-card">
+      <h1>DM Access</h1>
+      <div class="sub" style="margin-bottom:0;">Enter the DM passcode to continue.</div>
+      <input type="password" id="passInput" placeholder="Passcode" autocomplete="off">
+      <button onclick="tryLogin()">Enter</button>
+      <div class="lock-error" id="lockError"></div>
+    </div>
+  </div>
+
+  <div id="dashboard" hidden>
+    <a class="backlink" href="index.html">&larr; Player view</a>
+    <div class="topbar">
+      <h1>DM Dashboard</h1>
+      <button class="logout-btn" onclick="logout()">Log out of DM mode</button>
+    </div>
+    <div class="sub">Everything here is hidden from players.</div>
+    <a class="comparebtn" href="compare.html">⇄ Compare players</a>
+
+    <div class="section">
+      <div class="topbar" style="margin-bottom:10px;">
+        <h2 style="margin-bottom:0;">Players</h2>
+        <button class="save-all-btn" id="saveAllBtn" onclick="saveAllCharacters()" hidden>💾 Save all to folder</button>
+      </div>
+      <div id="saveAllStatus" class="empty-note" hidden></div>
+      <div class="char-grid" id="playerGrid"></div>
+    </div>
+
+    <div class="section">
+      <h2>NPCs &amp; Monsters</h2>
+      <div class="char-grid" id="npcGrid"></div>
+      <button class="add-npc-btn" onclick="newNpc()">+ New NPC / Monster</button>
+      <div class="empty-note">NPCs you create here are stored on this device only (not pushed to the public site).</div>
+    </div>
+  </div>
+
+</div>
+<script>
+const DM_KEY = "dnd-dm-auth";
+const DM_PASSCODE = "dmaccess1"; // change this to set your own DM passcode
+const CHARACTERS = [{"name": "Gracie", "slug": "gracie", "id": "mtemka9d-0p83me8", "fname": "gracie.json", "sub": "Fairy Cleric 3 \u00b7 Arcana Domain"}, {"name": "Jackson", "slug": "jackson", "id": "mtex0q6l-dtovimk", "fname": "jackson.json", "sub": "Snow Leopard Cleric 3 \u00b7 Grave Domain"}, {"name": "Lynzie", "slug": "lynzie", "id": "mtf7t7xc-droy3l7", "fname": "lynzie.json", "sub": "Aracockra Rogue 3 \u00b7 Swashbuckler"}, {"name": "Mahaan", "slug": "mahaan", "id": "mter77wo-1pz0rex", "fname": "mahaan.json", "sub": "Ubar Paladin 3 \u00b7 Oath of the Ancients"}, {"name": "Patrick", "slug": "patrick", "id": "mti170n4-ag05evy", "fname": "patrick.json", "sub": "Dwarf Paladin 3 \u00b7 Oath of Conquest"}, {"name": "Yami", "slug": "yami", "id": "mtevt777-goy527i", "fname": "yami.json", "sub": "Sea Elf Ranger 3 \u00b7 Hunter"}];
+
+function isDM(){
+  try{ return localStorage.getItem(DM_KEY) === "1"; }catch(e){ return false; }
+}
+
+/* ---------- direct-to-disk saving (Chrome/Edge desktop only) ---------- */
+const FS_SUPPORTED = typeof window.showDirectoryPicker === "function";
+const DIR_HANDLE_KEY = "characterSheetsDir";
+function idbGet(key){
+  return new Promise((resolve) => {
+    const req = indexedDB.open("dnd-sheet-fs", 1);
+    req.onupgradeneeded = () => req.result.createObjectStore("handles");
+    req.onsuccess = () => {
+      const tx = req.result.transaction("handles", "readonly");
+      const getReq = tx.objectStore("handles").get(key);
+      getReq.onsuccess = () => resolve(getReq.result || null);
+      getReq.onerror = () => resolve(null);
+    };
+    req.onerror = () => resolve(null);
+  });
+}
+function idbSet(key, value){
+  return new Promise((resolve) => {
+    const req = indexedDB.open("dnd-sheet-fs", 1);
+    req.onupgradeneeded = () => req.result.createObjectStore("handles");
+    req.onsuccess = () => {
+      const tx = req.result.transaction("handles", "readwrite");
+      tx.objectStore("handles").put(value, key);
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => resolve(false);
+    };
+    req.onerror = () => resolve(false);
+  });
+}
+async function getDirHandle(forcePick){
+  let handle = forcePick ? null : await idbGet(DIR_HANDLE_KEY);
+  if(handle){
+    try{
+      const perm = await handle.queryPermission({mode:"readwrite"});
+      if(perm === "granted") return handle;
+      const req = await handle.requestPermission({mode:"readwrite"});
+      if(req === "granted") return handle;
+    }catch(e){ /* stale handle - fall through to re-pick */ }
+  }
+  handle = await window.showDirectoryPicker({id:"dnd-character-sheets", mode:"readwrite"});
+  await idbSet(DIR_HANDLE_KEY, handle);
+  return handle;
+}
+
+async function saveAllCharacters(){
+  const statusEl = document.getElementById("saveAllStatus");
+  statusEl.hidden = false;
+  statusEl.textContent = "Saving…";
+  let dir;
+  try{
+    dir = await getDirHandle(false);
+  }catch(e){
+    if(e.name === "AbortError"){ statusEl.hidden = true; return; }
+    statusEl.textContent = "Couldn't open the Character Sheets folder: " + e.message;
+    return;
+  }
+
+  let savedCount = 0, skippedCount = 0, failedNames = [];
+  for(const c of CHARACTERS){
+    const raw = localStorage.getItem("dnd-sheet-edits-" + c.id);
+    if(!raw){ skippedCount++; flashCharCard(c.id, "flash-skipped"); continue; } // no edits made on this device - nothing to write
+    try{
+      const fileHandle = await dir.getFileHandle(c.fname, {create:true});
+      const writable = await fileHandle.createWritable();
+      await writable.write(JSON.stringify(JSON.parse(raw), null, 2));
+      await writable.close();
+      savedCount++;
+      flashCharCard(c.id, "flash-saved");
+    }catch(e){
+      failedNames.push(c.name);
+      flashCharCard(c.id, "flash-failed");
+    }
+  }
+
+  const parts = [];
+  if(savedCount) parts.push(savedCount + " saved");
+  if(skippedCount) parts.push(skippedCount + " unchanged (no local edits)");
+  if(failedNames.length) parts.push(failedNames.length + " failed (" + failedNames.join(", ") + ")");
+  statusEl.textContent = parts.join(" · ") || "Nothing to save.";
+}
+function flashCharCard(charId, cls){
+  const card = document.querySelector('.char-card[data-char-id="' + charId + '"]');
+  if(!card) return;
+  card.classList.add(cls);
+  setTimeout(() => card.classList.remove(cls), 2200);
+}
+function tryLogin(){
+  const val = document.getElementById("passInput").value;
+  if(val === DM_PASSCODE){
+    try{ localStorage.setItem(DM_KEY, "1"); }catch(e){}
+    showDashboard();
+  } else {
+    document.getElementById("lockError").textContent = "Incorrect passcode.";
+  }
+}
+document.getElementById("passInput").addEventListener("keydown", (e) => {
+  if(e.key === "Enter") tryLogin();
+});
+function logout(){
+  try{ localStorage.removeItem(DM_KEY); }catch(e){}
+  location.reload();
+}
+
+function loadNpcList(){
+  try{
+    const raw = localStorage.getItem("dnd-npc-list");
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){ return []; }
+}
+function newNpc(){
+  const id = "npc-" + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+  location.href = "characters/npc.html?id=" + id;
+}
+
+function showDashboard(){
+  document.getElementById("lockWrap").hidden = true;
+  document.getElementById("dashboard").hidden = false;
+  document.getElementById("saveAllBtn").hidden = !(FS_SUPPORTED && CHARACTERS.length > 0);
+
+  const pGrid = document.getElementById("playerGrid");
+  pGrid.innerHTML = "";
+  for(const c of CHARACTERS){
+    const a = document.createElement("a");
+    a.className = "char-card";
+    a.href = "characters/" + c.slug + ".html";
+    a.dataset.charId = c.id;
+    a.innerHTML = `<div class="char-card-name">${c.name}</div><div class="char-card-sub">${c.sub||""}</div>`;
+    pGrid.appendChild(a);
+  }
+
+  const nGrid = document.getElementById("npcGrid");
+  const npcs = loadNpcList();
+  nGrid.innerHTML = "";
+  if(npcs.length === 0){
+    nGrid.innerHTML = `<div class="empty-note">No NPCs or monsters yet — add one below.</div>`;
+  } else {
+    for(const n of npcs){
+      const a = document.createElement("a");
+      a.className = "char-card";
+      a.href = "characters/npc.html?id=" + encodeURIComponent(n.id);
+      a.innerHTML = `<div class="char-card-name">${n.name || "Unnamed NPC"}</div><div class="char-card-sub">NPC / Monster</div>`;
+      nGrid.appendChild(a);
+    }
+  }
+}
+
+if(isDM()) showDashboard();
+</script>
+</body>
+</html>

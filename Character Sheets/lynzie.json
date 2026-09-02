@@ -1,0 +1,81 @@
+{
+  "id": "mtf7t7xc-droy3l7",
+  "schemaVersion": 1,
+  "name": "Lynzie",
+  "createdAt": 1788058411104,
+  "updatedAt": 1788058465750,
+  "species": "Aracockra",
+  "classes": [
+    {
+      "id": "rogue",
+      "name": "Rogue",
+      "level": 3,
+      "hitDie": 8,
+      "subclass": "Swashbuckler"
+    }
+  ],
+  "abilities": {
+    "str": 6,
+    "dex": 18,
+    "con": 14,
+    "int": 12,
+    "wis": 8,
+    "cha": 10
+  },
+  "proficientSaves": [
+    "dex",
+    "int"
+  ],
+  "skillProficiencies": [
+    "acrobatics",
+    "athletics",
+    "stealth",
+    "sleightOfHand",
+    "animalHandling",
+    "persuasion"
+  ],
+  "skillExpertise": [],
+  "hp": {
+    "max": 24,
+    "current": 24,
+    "temp": 0
+  },
+  "hitDiceUsed": {},
+  "speed": 30,
+  "conditions": [],
+  "exhaustion": 0,
+  "deathSaves": {
+    "successes": 0,
+    "failures": 0
+  },
+  "inspiration": false,
+  "spellSlots": {},
+  "spellsPrepared": [],
+  "currency": {
+    "cp": 0,
+    "sp": 0,
+    "ep": 0,
+    "gp": 0,
+    "pp": 0
+  },
+  "inventory": [
+    {
+      "id": "mtf7ue3a5vte",
+      "name": "Leather Armor",
+      "quantity": 1,
+      "kind": "armor",
+      "acBase": 11,
+      "weight": 10,
+      "equipped": true
+    }
+  ],
+  "notes": "",
+  "journal": {
+    "entries": [],
+    "npcs": [],
+    "quests": [],
+    "goals": []
+  },
+  "speciesId": "hb-aracockra",
+  "background": "Custom"
+}

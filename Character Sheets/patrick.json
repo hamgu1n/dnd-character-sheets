@@ -1,0 +1,134 @@
+{
+  "id": "mti170n4-ag05evy",
+  "schemaVersion": 1,
+  "name": "Patrick",
+  "createdAt": 1788228696064,
+  "updatedAt": 1788229427896,
+  "species": "Dwarf",
+  "classes": [
+    {
+      "id": "paladin",
+      "name": "Paladin",
+      "level": 3,
+      "hitDie": 10,
+      "subclass": "Oath of Conquest"
+    }
+  ],
+  "abilities": {
+    "str": 12,
+    "dex": 10,
+    "con": 16,
+    "int": 6,
+    "wis": 8,
+    "cha": 16
+  },
+  "proficientSaves": [
+    "wis",
+    "cha"
+  ],
+  "skillProficiencies": [
+    "intimidation",
+    "insight",
+    "religion",
+    "survival"
+  ],
+  "skillExpertise": [],
+  "hp": {
+    "max": 31,
+    "current": 31,
+    "temp": 0
+  },
+  "hitDiceUsed": {},
+  "speed": 30,
+  "conditions": [],
+  "exhaustion": 0,
+  "deathSaves": {
+    "successes": 0,
+    "failures": 0
+  },
+  "inspiration": false,
+  "spellSlots": {
+    "1": {
+      "max": 3,
+      "used": 0
+    }
+  },
+  "spellsPrepared": [
+    "Compelled Duel",
+    "Armor of Agathys",
+    "Command",
+    "Shield of Faith"
+  ],
+  "currency": {
+    "cp": 0,
+    "sp": 0,
+    "ep": 0,
+    "gp": 0,
+    "pp": 0
+  },
+  "inventory": [
+    {
+      "id": "mti1conoe5nl",
+      "name": "Plate Armor",
+      "quantity": 1,
+      "kind": "armor",
+      "acBase": 18,
+      "dexMax": 0,
+      "weight": 65,
+      "equipped": true
+    },
+    {
+      "id": "mti1d3gye3q2",
+      "name": "Shield",
+      "quantity": 1,
+      "kind": "shield",
+      "acBonus": 2,
+      "weight": 6,
+      "equipped": true
+    },
+    {
+      "id": "mti1gfdodl0z",
+      "name": "Duckfoot (d6)",
+      "quantity": 1,
+      "kind": "gear"
+    },
+    {
+      "id": "mti1hlvlz5f5",
+      "name": "Bombs (3 max)",
+      "quantity": 1,
+      "kind": "gear"
+    },
+    {
+      "id": "mti1j6mb85by",
+      "name": "Maul",
+      "quantity": 1,
+      "kind": "weapon",
+      "dmg": "2d6",
+      "dmgType": "Bludgeoning",
+      "props": [
+        "Heavy",
+        "Two-Handed"
+      ],
+      "rangeType": "Melee",
+      "weight": 10,
+      "equipped": true
+    }
+  ],
+  "notes": "",
+  "journal": {
+    "entries": [],
+    "npcs": [],
+    "quests": [],
+    "goals": []
+  },
+  "speciesId": "hb-dwarf",
+  "background": "Custom",
+  "spellcastingAbility": "cha",
+  "customFeatures": [
+    {
+      "name": "Conquering Presence",
+      "desc": "No description.",
+      "id": "cf-mti17tledhbg"
+    }
+  ]
+}

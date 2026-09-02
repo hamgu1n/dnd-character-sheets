@@ -1,0 +1,106 @@
+{
+  "id": "mtex0q6l-dtovimk",
+  "schemaVersion": 1,
+  "name": "Jackson",
+  "createdAt": 1788040285581,
+  "updatedAt": 1788053743361,
+  "species": "Snow Leopard",
+  "classes": [
+    {
+      "id": "cleric",
+      "name": "Cleric",
+      "level": 3,
+      "hitDie": 8,
+      "subclass": "Grave Domain"
+    }
+  ],
+  "abilities": {
+    "str": 10,
+    "dex": 12,
+    "con": 14,
+    "int": 8,
+    "wis": 18,
+    "cha": 6
+  },
+  "proficientSaves": [
+    "wis",
+    "cha"
+  ],
+  "skillProficiencies": [
+    "insight",
+    "persuasion",
+    "deception"
+  ],
+  "skillExpertise": [],
+  "hp": {
+    "max": 24,
+    "current": 24,
+    "temp": 0
+  },
+  "hitDiceUsed": {},
+  "speed": 30,
+  "conditions": [],
+  "exhaustion": 0,
+  "deathSaves": {
+    "successes": 0,
+    "failures": 0
+  },
+  "inspiration": false,
+  "spellSlots": {
+    "1": {
+      "max": 4,
+      "used": 0
+    },
+    "2": {
+      "max": 2,
+      "used": 0
+    }
+  },
+  "spellsPrepared": [
+    "Sacred Frost",
+    "Toll the Dead",
+    "Spare the Dying",
+    "Guidance",
+    "Command",
+    "Cure Wounds",
+    "False Life",
+    "Ice Arrow",
+    "Fling"
+  ],
+  "currency": {
+    "cp": 0,
+    "sp": 0,
+    "ep": 0,
+    "gp": 0,
+    "pp": 0
+  },
+  "inventory": [
+    {
+      "id": "mtexpdvpgp61",
+      "name": "Arourus",
+      "quantity": 1,
+      "kind": "gear"
+    },
+    {
+      "id": "mtexqszc6fbq",
+      "name": "Scale Mail",
+      "quantity": 1,
+      "kind": "armor",
+      "acBase": 14,
+      "dexMax": 2,
+      "weight": 45,
+      "equipped": false
+    }
+  ],
+  "notes": "",
+  "journal": {
+    "entries": [],
+    "npcs": [],
+    "quests": [],
+    "goals": []
+  },
+  "speciesId": "hb-snow-leopard",
+  "background": "Custom",
+  "spellcastingAbility": "wis",
+  "concentration": null
+}

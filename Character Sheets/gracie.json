@@ -1,0 +1,76 @@
+{
+  "id": "mtemka9d-0p83me8",
+  "schemaVersion": 1,
+  "name": "Gracie",
+  "createdAt": 1788022722289,
+  "updatedAt": 1788022722289,
+  "species": "Fairy",
+  "classes": [
+    {
+      "id": "cleric",
+      "name": "Cleric",
+      "level": 3,
+      "hitDie": 8,
+      "subclass": "Arcana Domain"
+    }
+  ],
+  "abilities": {
+    "str": 15,
+    "dex": 14,
+    "con": 13,
+    "int": 12,
+    "wis": 10,
+    "cha": 8
+  },
+  "proficientSaves": [
+    "wis",
+    "cha"
+  ],
+  "skillProficiencies": [
+    "history",
+    "insight"
+  ],
+  "skillExpertise": [],
+  "hp": {
+    "max": 21,
+    "current": 21,
+    "temp": 0
+  },
+  "hitDiceUsed": {},
+  "speed": 30,
+  "conditions": [],
+  "exhaustion": 0,
+  "deathSaves": {
+    "successes": 0,
+    "failures": 0
+  },
+  "inspiration": false,
+  "spellSlots": {
+    "1": {
+      "max": 4,
+      "used": 0
+    },
+    "2": {
+      "max": 2,
+      "used": 0
+    }
+  },
+  "spellsPrepared": [],
+  "currency": {
+    "cp": 0,
+    "sp": 0,
+    "ep": 0,
+    "gp": 0,
+    "pp": 0
+  },
+  "inventory": [],
+  "notes": "",
+  "journal": {
+    "entries": [],
+    "npcs": [],
+    "quests": [],
+    "goals": []
+  },
+  "speciesId": "hb-fairy",
+  "spellcastingAbility": "wis"
+}
