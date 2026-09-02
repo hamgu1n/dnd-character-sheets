@@ -88,15 +88,15 @@
   .hp-controls{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:2px;}
   .hp-controls button{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);
     background:var(--panel);color:var(--text);font-size:1rem;line-height:1;}
-  .hp-input{width:44px;background:transparent;border:none;color:var(--text);font-size:1.25rem;
-    font-weight:700;text-align:center;font-family:inherit;transition:color .15s;}
+  .hp-input{width:2.5ch;min-width:2.5ch;padding:0;background:transparent;border:none;color:var(--text);font-size:1.25rem;
+    font-weight:700;text-align:center;font-family:inherit;transition:color .15s;box-sizing:content-box;}
   #hpStatbox.has-temp{border-color:var(--temp-hp);box-shadow:0 0 0 1px var(--temp-hp);}
   #hpStatbox.has-temp .hp-input{color:var(--temp-hp);}
   .hp-temp-badge{background:var(--temp-hp);color:#0d2433;border-radius:8px;padding:1px 7px;
     font-size:0.7rem;font-weight:700;}
   .hp-max{color:var(--text-dim);font-size:0.85rem;}
-  .hp-max input{width:36px;background:var(--panel);border:1px solid var(--border);border-radius:5px;
-    color:var(--text);text-align:center;font-family:inherit;font-size:0.85rem;}
+  .hp-max input{width:2.5ch;min-width:2.5ch;padding:1px 2px;background:var(--panel);border:1px solid var(--border);border-radius:5px;
+    color:var(--text);text-align:center;font-family:inherit;font-size:0.85rem;box-sizing:content-box;}
   .temp-row{margin-top:4px;font-size:0.7rem;color:var(--text-dim);display:flex;align-items:center;justify-content:center;gap:5px;}
   .temp-row #hpTempValue{width:20px;text-align:center;color:var(--text);font-weight:700;font-size:0.8rem;}
   .temp-row button{width:20px;height:20px;border-radius:5px;border:1px solid var(--border);
@@ -905,10 +905,29 @@ function applyDmVisibility(){
   }
 }
 
+// Number inputs default to a fixed width that clips 3+ digit values (temp HP,
+// a boss's 100+ HP, etc.) - measure the actual rendered text (ch units
+// undershoot for bold digits) and size to that instead.
+let __measureCanvasCtx = null;
+function measureTextPx(text, font){
+  if(!__measureCanvasCtx) __measureCanvasCtx = document.createElement("canvas").getContext("2d");
+  __measureCanvasCtx.font = font;
+  return __measureCanvasCtx.measureText(text).width;
+}
+function autoSizeNumberInput(el){
+  const text = String(el.value == null || el.value === "" ? "0" : el.value);
+  const cs = getComputedStyle(el);
+  const font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  const width = measureTextPx(text, font);
+  el.style.width = Math.ceil(width + 20) + "px";
+}
+
 function adjustHp(delta){
   let hp = parseInt(document.getElementById("hpCurrent").value) || 0;
   hp = Math.max(0, Math.min(charData.hp.max, hp + delta));
-  document.getElementById("hpCurrent").value = hp;
+  const hpEl = document.getElementById("hpCurrent");
+  hpEl.value = hp;
+  autoSizeNumberInput(hpEl);
   state.hpCurrent = hp;
   saveState();
 }
@@ -916,6 +935,7 @@ function setHp(v){
   let hp = parseInt(v);
   if(isNaN(hp)) hp = 0;
   hp = Math.max(0, Math.min(charData.hp.max, hp));
+  autoSizeNumberInput(document.getElementById("hpCurrent"));
   state.hpCurrent = hp;
   saveState();
 }
@@ -1314,7 +1334,9 @@ function renderTopStats(){
   document.getElementById("hpMaxDisplay").textContent = charData.hp.max;
   document.getElementById("hpMaxEdit").hidden = !editMode;
   document.getElementById("hpMaxEdit").value = charData.hp.max;
+  autoSizeNumberInput(document.getElementById("hpMaxEdit"));
   document.getElementById("hpCurrent").value = state.hpCurrent;
+  autoSizeNumberInput(document.getElementById("hpCurrent"));
   document.getElementById("hpTempValue").textContent = state.hpTemp || 0;
   refreshTempIndicator();
   document.getElementById("acValue").textContent = computeAC();
