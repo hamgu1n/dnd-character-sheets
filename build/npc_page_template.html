@@ -72,22 +72,37 @@
     font-family:inherit;font-weight:600;letter-spacing:.02em;}
   .tabnav-btn .tabnav-icon{font-size:1.25rem;line-height:1;}
   .tabnav-btn.active{color:var(--accent);}
+  .nav-toggle-btn{display:none;} /* desktop-only, see the media query below */
   @media (min-width:820px){
     /* Back to a real fixed sidebar here - sticky can't span the full height
        on both edges the way this layout needs, and desktop browsers don't
        have the custom-scroll-shell problem sticky is working around above. */
     .tabnav{position:fixed;top:0;bottom:0;right:auto;width:180px;flex-direction:column;
       align-items:stretch;justify-content:flex-start;padding:20px 0 0;gap:4px;
-      border-top:none;border-right:1px solid var(--border);box-shadow:none;}
+      border-top:none;border-right:1px solid var(--border);box-shadow:none;
+      transition:transform .15s;}
     .tabnav-btn{flex:none;flex-direction:row;justify-content:flex-start;gap:10px;
       padding:12px 18px;font-size:0.85rem;border-radius:0 24px 24px 0;margin-right:18px;}
     .tabnav-btn .tabnav-icon{font-size:1.1rem;}
     .tabnav-btn.active{background:var(--panel-2);}
-    .page-wrap{margin-left:180px;margin-right:0;padding:28px 32px 40px;max-width:960px;}
+    .page-wrap{margin-left:180px;margin-right:0;padding:28px 32px 40px;max-width:960px;
+      transition:margin-left .15s;}
     .header{margin-bottom:20px;}
     .header h1{font-size:2rem;}
     #tabSheet, #tabPlay{columns:2;column-gap:16px;}
     #identityPanel{column-span:all;}
+    /* Collapsible sidebar - hidable via .nav-toggle-btn below, desktop only
+       (mobile keeps the bottom tab bar always visible, it's too small to
+       spare the space for a toggle). Sliding via transform rather than
+       display:none keeps the transition, and margin-left tracks it 1:1. */
+    .nav-toggle-btn{display:flex;align-items:center;justify-content:center;
+      position:fixed;top:20px;left:180px;width:20px;height:40px;z-index:41;
+      background:var(--panel);border:1px solid var(--border);border-left:none;
+      border-radius:0 8px 8px 0;color:var(--text-dim);font-size:0.8rem;
+      transition:left .15s;}
+    html[data-nav-hidden="1"] .tabnav{transform:translateX(-100%);}
+    html[data-nav-hidden="1"] .page-wrap{margin-left:0;}
+    html[data-nav-hidden="1"] .nav-toggle-btn{left:0;}
   }
   @media (min-width:1300px){
     .page-wrap{max-width:1180px;}
@@ -325,6 +340,7 @@
   try{
     const t = localStorage.getItem("dnd-theme") || "slate";
     if(t !== "classic") document.documentElement.setAttribute("data-theme", t);
+    if(localStorage.getItem("dnd-navhidden") === "1") document.documentElement.setAttribute("data-nav-hidden", "1");
   }catch(e){}
 })();
 </script>
@@ -345,6 +361,7 @@
   <button class="tabnav-btn" id="tabBtnSheet" onclick="setTab('sheet')"><span class="tabnav-icon">📜</span><span>Sheet</span></button>
   <button class="tabnav-btn" id="tabBtnPlay" onclick="setTab('play')"><span class="tabnav-icon">⚔️</span><span>Play</span></button>
 </nav>
+<button class="nav-toggle-btn" id="navToggleBtn" onclick="toggleNav()" title="Hide menu" aria-label="Hide menu">◂</button>
 
 <div class="page-wrap">
 
@@ -760,6 +777,26 @@ document.addEventListener("click", (e) => {
   if(picker && !picker.contains(e.target)) document.getElementById("themeMenu").hidden = true;
 });
 updateThemeMenuActive();
+
+// Desktop-only sidebar hide/show (see .nav-toggle-btn - mobile's bottom tab
+// bar isn't affected). data-nav-hidden lives on <html> so the head script
+// above can apply it before first paint, same trick as the theme attribute.
+function setNavHidden(hidden){
+  try{ localStorage.setItem("dnd-navhidden", hidden ? "1" : "0"); }catch(e){}
+  if(hidden) document.documentElement.setAttribute("data-nav-hidden", "1");
+  else document.documentElement.removeAttribute("data-nav-hidden");
+  const btn = document.getElementById("navToggleBtn");
+  if(btn){
+    btn.textContent = hidden ? "▸" : "◂";
+    const label = hidden ? "Show menu" : "Hide menu";
+    btn.title = label;
+    btn.setAttribute("aria-label", label);
+  }
+}
+function toggleNav(){
+  setNavHidden(document.documentElement.getAttribute("data-nav-hidden") !== "1");
+}
+setNavHidden(document.documentElement.getAttribute("data-nav-hidden") === "1");
 
 const SKILLS = [
   ["acrobatics","Acrobatics","dex"],
