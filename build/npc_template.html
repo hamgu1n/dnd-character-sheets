@@ -454,6 +454,23 @@
     </div>
   </div>
 
+  <div class="panel">
+    <div class="statrow">
+      <div class="statbox">
+        <div class="label">Armor Class</div>
+        <div class="value" id="acValuePlay">—</div>
+      </div>
+      <div class="statbox" id="spellAttackBoxPlay" hidden>
+        <div class="label">Spell Attack</div>
+        <div class="value" id="spellAttackValuePlay">—</div>
+      </div>
+      <div class="statbox" id="spellDcBoxPlay" hidden>
+        <div class="label">Spell Save DC</div>
+        <div class="value" id="spellDcValuePlay">—</div>
+      </div>
+    </div>
+  </div>
+
   <div class="panel" id="attacksPanel">
     <h2>Attacks</h2>
     <div id="attacksList"></div>
@@ -1603,7 +1620,9 @@ function renderTopStats(){
   autoSizeNumberInput(document.getElementById("hpCurrent"));
   document.getElementById("hpTempValue").textContent = state.hpTemp || 0;
   refreshTempIndicator();
-  document.getElementById("acValue").textContent = computeAC();
+  const ac = computeAC();
+  document.getElementById("acValue").textContent = ac;
+  document.getElementById("acValuePlay").textContent = ac;
   document.getElementById("initValue").textContent = fmtMod(mod(charData.abilities.dex));
   document.getElementById("speedDisplay").hidden = editMode;
   document.getElementById("speedDisplay").textContent = charData.speed + " ft";
@@ -1621,10 +1640,14 @@ function renderTopStats(){
   const castAbility = charData.spellcastingAbility;
   const hasSpells = !!castAbility && castAbility in charData.abilities;
   document.getElementById("spellStatsRow").hidden = !hasSpells;
+  document.getElementById("spellAttackBoxPlay").hidden = !hasSpells;
+  document.getElementById("spellDcBoxPlay").hidden = !hasSpells;
   if(hasSpells){
     const castMod = mod(charData.abilities[castAbility]) + getProf();
     document.getElementById("spellAttackValue").textContent = fmtMod(castMod);
     document.getElementById("spellDcValue").textContent = 8 + castMod;
+    document.getElementById("spellAttackValuePlay").textContent = fmtMod(castMod);
+    document.getElementById("spellDcValuePlay").textContent = 8 + castMod;
   }
 }
 
