@@ -16,11 +16,34 @@
     --accent-2:#8a2f2f;
     --good:#5c9a5c;
     --bad:#b4453e;
-    --prof:#c9762c;
+    --prof:var(--accent);
     --temp-hp:#4d9fd6;
     --warn:#e0a940;
     --divine:#e6c860;
   }
+  /* ---- alternate themes, picked from the 🎨 button, remembered per-browser ---- */
+  [data-theme="slate"]{
+    --bg:#16181d; --panel:#1e2128; --panel-2:#262a33; --border:#343a46;
+    --text:#e8eaed; --text-dim:#9aa3af; --accent:#5b8def; --accent-2:#e0665c;
+  }
+  [data-theme="indigo"]{
+    --bg:#14121f; --panel:#1d1a2e; --panel-2:#241f3d; --border:#372f56;
+    --text:#e6e2f5; --text-dim:#a99cc9; --accent:#8b6cf2; --accent-2:#e0665c;
+  }
+  [data-theme="emerald"]{
+    --bg:#121815; --panel:#1a2320; --panel-2:#20302a; --border:#324a3d;
+    --text:#e5ede9; --text-dim:#9bb5a8; --accent:#4fae7a; --accent-2:#e0a940;
+  }
+  .theme-picker{position:fixed;top:8px;right:8px;z-index:80;}
+  .theme-picker-btn{background:var(--panel);border:1px solid var(--border);color:var(--text);
+    border-radius:50%;width:32px;height:32px;font-size:0.95rem;cursor:pointer;line-height:1;}
+  .theme-menu{position:absolute;top:38px;right:0;background:var(--panel);border:1px solid var(--border);
+    border-radius:10px;padding:6px;display:flex;flex-direction:column;gap:2px;min-width:130px;
+    box-shadow:0 4px 14px rgba(0,0,0,.35);}
+  .theme-menu button{background:none;border:none;color:var(--text);text-align:left;padding:7px 9px;
+    border-radius:6px;font-size:0.82rem;font-family:inherit;cursor:pointer;width:100%;}
+  .theme-menu button:hover{background:var(--panel-2);}
+  .theme-menu button.active{font-weight:700;color:var(--accent);}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -280,18 +303,29 @@
   .checkline{display:flex;align-items:center;gap:6px;font-size:0.85rem;padding:3px 0;}
   .checkline label{display:flex;align-items:center;gap:4px;font-size:0.7rem;color:var(--text-dim);}
 </style>
+<script>
+// Applied here (in <head>, before the body paints) so switching themes never
+// flashes the old palette on load.
+(function(){
+  try{
+    const t = localStorage.getItem("dnd-theme") || "slate";
+    if(t !== "classic") document.documentElement.setAttribute("data-theme", t);
+  }catch(e){}
+})();
+</script>
 </head>
 <body>
 
-<div id="lockScreen" class="lock-screen">
-  <div class="lock-card">
-    <h1 style="font-size:1.3rem;">DM Access Required</h1>
-    <p style="color:var(--text-dim);font-size:0.85rem;">NPC and monster sheets are hidden from players. Enter DM mode first.</p>
-    <a class="reset-btn" href="../../dm.html" style="display:inline-block;width:auto;padding:9px 18px;">Go to DM Dashboard</a>
+<div class="theme-picker" id="themePicker">
+  <button class="theme-picker-btn" onclick="toggleThemeMenu()" title="Theme" aria-label="Change theme">🎨</button>
+  <div class="theme-menu" id="themeMenu" hidden>
+    <button data-theme-opt="slate" onclick="setTheme('slate')">Slate</button>
+    <button data-theme-opt="indigo" onclick="setTheme('indigo')">Indigo</button>
+    <button data-theme-opt="emerald" onclick="setTheme('emerald')">Emerald</button>
+    <button data-theme-opt="classic" onclick="setTheme('classic')">Classic (brown)</button>
   </div>
 </div>
 
-<div id="appRoot" hidden>
 <nav class="tabnav" id="tabNav">
   <button class="tabnav-btn" id="tabBtnSheet" onclick="setTab('sheet')"><span class="tabnav-icon">📜</span><span>Sheet</span></button>
   <button class="tabnav-btn" id="tabBtnPlay" onclick="setTab('play')"><span class="tabnav-icon">⚔️</span><span>Play</span></button>
@@ -313,6 +347,8 @@
     <div class="sub" id="charSub"></div>
   </div>
   <div class="header-btns">
+    <button class="reset-btn" id="dmLoginBtn" onclick="openDmLogin()">🔑 DM Login</button>
+    <button class="reset-btn" id="dmLogoutBtn" onclick="dmLogout()" hidden>Log out (DM)</button>
     <button class="edit-toggle-btn" id="editBtn" onclick="toggleEditMode()" hidden>✎ Edit</button>
     <button class="insp-btn" id="inspBtn" onclick="toggleInspiration()">✦ Inspiration</button>
   </div>
@@ -454,6 +490,7 @@
 <button class="reset-btn save-folder-btn" id="saveToFolderBtn" onclick="saveToFolder()" hidden>💾 Save to Character Sheets folder</button>
 <button class="reset-btn" id="changeFolderBtn" onclick="chooseNewFolder()" hidden style="margin-top:6px;">🔁 Change folder (if saves keep landing in the wrong place)</button>
 <div class="folder-status" id="folderStatus" hidden></div>
+<button class="reset-btn" id="syncBtn" onclick="manualSyncToFirestore()" hidden>☁️ Sync to Firestore now</button>
 <button class="reset-btn" id="exportBtn" onclick="exportJson()" hidden>⬇ Export character JSON (fallback download)</button>
 <button class="reset-btn" id="discardEditsBtn" onclick="discardEdits()" hidden>Discard edits (revert to original import)</button>
 <button class="reset-btn" onclick="resetProgress()">Reset tracked stats (HP, spell slots, notes…)</button>
@@ -481,14 +518,125 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="dmLoginModal" hidden onclick="if(event.target===this) closeDmLogin()">
+  <div class="modal-card">
+    <div class="modal-top">
+      <div class="modal-title">DM Login</div>
+      <button class="modal-close" onclick="closeDmLogin()">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <input type="email" id="dmLoginEmail" placeholder="Email" style="padding:8px;border-radius:6px;border:1px solid var(--border);background:var(--panel-2);color:var(--text);">
+      <input type="password" id="dmLoginPassword" placeholder="Password" style="padding:8px;border-radius:6px;border:1px solid var(--border);background:var(--panel-2);color:var(--text);">
+      <div id="dmLoginError" style="color:#e0665c;font-size:0.85rem;"></div>
+      <button class="reset-btn" onclick="submitDmLogin()">Log in</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script>
 const DATA = {"name": "Creaking Wretch 2", "species": "Undead", "background": "CR 2 \u2014 animated petrified tree, a trapped soul", "classes": [{"id": "role", "name": "Creaking Wretch", "level": 3, "hitDie": 8, "subclass": ""}], "abilities": {"str": 14, "dex": 10, "con": 12, "int": 8, "wis": 13, "cha": 10}, "proficientSaves": [], "skillProficiencies": [], "skillExpertise": [], "hp": {"max": 27, "current": 27, "temp": 0}, "speed": 20, "conditions": [], "inspiration": false, "spellSlots": {}, "spellsPrepared": [], "currency": {"cp": 0, "sp": 0, "ep": 0, "gp": 0, "pp": 0}, "inventory": [{"id": "i1", "name": "Grasping Branch", "kind": "weapon", "quantity": 1, "dmg": "2d6", "dmgType": "Bludgeoning", "rangeType": "Melee", "props": ["Reach", "Grapple"], "equipped": true, "desc": "Reach 10 ft. Melee Weapon Attack: +4 to hit. Hit: 9 (2d6+2) bludgeoning damage, and the target is grappled (escape DC 12) if Medium or smaller."}, {"id": "i2", "name": "Splintering Crush", "kind": "weapon", "quantity": 1, "dmg": "2d6", "dmgType": "Bludgeoning", "rangeType": "Melee", "props": [], "equipped": false, "desc": "Only usable against a target the Wretch has grappled. Melee Weapon Attack: +4 to hit. Hit: 11 (2d6+4) bludgeoning damage."}, {"id": "i3", "name": "Petrified Bark", "kind": "armor", "quantity": 1, "acBase": 13, "dexMax": 0, "equipped": true, "desc": "Natural armor, fixed AC 13."}], "notes": "A petrified tree animated by a soul that never found rest, its bark cracked open in places to reveal a faint, cold light where a face might once have been. It doesn't speak \u2014 it only remembers being trapped, and wants company in that grief. Resists bludgeoning/piercing/slashing from nonmagical attacks; immune to necrotic and poison damage; immune to exhaustion and poisoned condition. Darkvision 60 ft. Understands the languages it knew in life but can't speak. Suggested quantity: 2-3 for a 5-6 PC level 3 party.", "customFeatures": [{"id": "f1", "name": "False Stillness", "desc": "While motionless, a creaking wretch is indistinguishable from a dead, petrified tree. A creature must succeed on a DC 13 Wisdom (Perception) check to notice it before it acts."}, {"id": "f2", "name": "Sunless Dread", "desc": "Any creature that starts its turn within 10 feet of a creaking wretch must succeed on a DC 11 Wisdom save or have disadvantage on attack rolls until the start of its next turn, overwhelmed by grief and cold dread bleeding off the trapped soul."}], "id": "npc-creaking-wretch-2-d1ba477f"};
 const STORE_KEY = "dnd-sheet-" + DATA.id;
 const EDIT_KEY = "dnd-sheet-edits-" + DATA.id;
 const TAB_KEY = "dnd-sheet-tab";
-const DM_KEY = "dnd-dm-auth";
 const SOURCE_FILENAME = "creaking-wretch-2.json";
-const FS_SUPPORTED = typeof window.showDirectoryPicker === "function";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBKwdUomjwLubIzcZTRXAJNqiiiUbzPAoQ",
+  authDomain: "dnd-character-sheets-87c23.firebaseapp.com",
+  projectId: "dnd-character-sheets-87c23",
+  storageBucket: "dnd-character-sheets-87c23.firebasestorage.app",
+  messagingSenderId: "787644284719",
+  appId: "1:787644284719:web:9b93eb9f189b9090f4ebda",
+};
+const DM_UID = "0eIBWmxYyEQK7Umox44FvmKsQVr2";
+// true/npcs are set per template by the build
+// scripts: real player pages and pushed NPC pages sync live; the blank
+// ad-hoc NPC template and the new-character draft template stay local-only
+// (nothing stable to key a Firestore doc on until they're actually saved).
+const FS_SYNC_ENABLED = "true" === "true";
+const FS_COLLECTION = "npcs";
+firebase.initializeApp(firebaseConfig);
+const fbAuth = firebase.auth();
+const db = firebase.firestore();
+const charRef = FS_SYNC_ENABLED ? db.collection(FS_COLLECTION).doc(DATA.id) : null;
+const playRef = FS_SYNC_ENABLED ? charRef.collection("play").doc("state") : null;
+
+let dmAuthed = false;
+fbAuth.onAuthStateChanged(user => {
+  dmAuthed = !!(user && user.uid === DM_UID);
+  document.getElementById("dmLoginBtn").hidden = dmAuthed;
+  document.getElementById("dmLogoutBtn").hidden = !dmAuthed;
+  renderAll();
+});
+function openDmLogin(){
+  document.getElementById("dmLoginError").textContent = "";
+  document.getElementById("dmLoginModal").hidden = false;
+}
+function closeDmLogin(){ document.getElementById("dmLoginModal").hidden = true; }
+async function submitDmLogin(){
+  const email = document.getElementById("dmLoginEmail").value;
+  const password = document.getElementById("dmLoginPassword").value;
+  try{
+    await fbAuth.signInWithEmailAndPassword(email, password);
+    closeDmLogin();
+  }catch(e){
+    document.getElementById("dmLoginError").textContent = "Login failed: " + e.message;
+  }
+}
+function dmLogout(){ fbAuth.signOut(); }
+
+function debounce(fn, ms){
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+// Only DM writes are allowed by the Firestore rules, but guard client-side
+// too so a stray call from a non-DM viewer doesn't even attempt it.
+const pushCharToFirestore = debounce(() => {
+  if(!FS_SYNC_ENABLED || !dmAuthed) return;
+  charRef.set(charData).catch(err => toast("Sync failed", err.message));
+}, 600);
+const pushStateToFirestore = debounce(() => {
+  if(!FS_SYNC_ENABLED) return;
+  playRef.set(state).catch(err => toast("Sync failed", err.message));
+}, 600);
+function manualSyncToFirestore(){
+  if(!FS_SYNC_ENABLED) return;
+  if(!dmAuthed){ toast("Not logged in", "Log in as DM first"); return; }
+  charRef.set(charData).then(() => toast(charData.name, "Synced to Firestore"))
+    .catch(err => toast("Sync failed", err.message));
+}
+// Live updates: if another device (or the DM) changes this character's
+// Firestore doc, pick it up here instead of staying stuck on whatever was
+// baked in at build time or cached in this browser.
+if(FS_SYNC_ENABLED){
+  charRef.onSnapshot(doc => {
+    if(!doc.exists) return;
+    const remote = normalizeCharData(doc.data());
+    if(JSON.stringify(remote) === JSON.stringify(charData)) return;
+    charData = remote;
+    try{ localStorage.setItem(EDIT_KEY, JSON.stringify(charData)); }catch(e){}
+    renderAll();
+  });
+  playRef.onSnapshot(doc => {
+    if(!doc.exists) return;
+    const remote = normalizeState(doc.data());
+    if(JSON.stringify(remote) === JSON.stringify(state)) return;
+    state = remote;
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+    renderAll();
+  });
+}
+</script>
+
+<script>
+// Superseded by live Firestore sync for real characters and pushed NPCs -
+// only the new-character draft template still needs this (its only path to
+// becoming a real character, until draft creation also moves to Firestore).
+const LEGACY_FOLDER_SAVE_ENABLED = "false" === "true";
+const FS_SUPPORTED = LEGACY_FOLDER_SAVE_ENABLED && typeof window.showDirectoryPicker === "function";
 const DIR_HANDLE_KEY = "npcsDir";
 const FOLDER_LABEL = "NPCs";
 
@@ -565,8 +713,33 @@ async function chooseNewFolder(){
 }
 
 function isDM(){
-  try{ return localStorage.getItem(DM_KEY) === "1"; }catch(e){ return false; }
+  return dmAuthed;
 }
+
+function setTheme(name){
+  try{ localStorage.setItem("dnd-theme", name); }catch(e){}
+  if(name === "classic") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", name);
+  document.getElementById("themeMenu").hidden = true;
+  updateThemeMenuActive();
+}
+function toggleThemeMenu(){
+  const menu = document.getElementById("themeMenu");
+  menu.hidden = !menu.hidden;
+  updateThemeMenuActive();
+}
+function updateThemeMenuActive(){
+  let current = "slate";
+  try{ current = localStorage.getItem("dnd-theme") || "slate"; }catch(e){}
+  document.querySelectorAll("#themeMenu button").forEach(b => {
+    b.classList.toggle("active", b.dataset.themeOpt === current);
+  });
+}
+document.addEventListener("click", (e) => {
+  const picker = document.getElementById("themePicker");
+  if(picker && !picker.contains(e.target)) document.getElementById("themeMenu").hidden = true;
+});
+updateThemeMenuActive();
 
 const SKILLS = [
   ["acrobatics","Acrobatics","dex"],
@@ -727,6 +900,7 @@ function loadCharData(){
 }
 function saveCharData(){
   try{ localStorage.setItem(EDIT_KEY, JSON.stringify(charData)); }catch(e){}
+  pushCharToFirestore();
 }
 function hasEdits(){
   try{ return !!localStorage.getItem(EDIT_KEY); }catch(e){ return false; }
@@ -781,9 +955,17 @@ function loadState(){
       },
     };
   }
+  return normalizeState(s);
+}
+// Fills in defaults for a play-state object coming from localStorage or
+// Firestore, either of which may predate a field that's since been added.
+function normalizeState(s){
+  s = s || {};
   s.conditions = s.conditions || [];
   s.channelDivinityUsed = s.channelDivinityUsed || 0;
   s.featurePools = s.featurePools || {};
+  s.slotsUsed = s.slotsUsed || {};
+  s.equipped = s.equipped || {};
   s.journal = s.journal || {entries:[],npcs:[],quests:[],goals:[]};
   for(const [cat] of JOURNAL_CATS) s.journal[cat] = s.journal[cat] || [];
   return s;
@@ -792,6 +974,7 @@ let state = loadState();
 
 function saveState(){
   try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+  pushStateToFirestore();
 }
 
 function mod(score){ return Math.floor((score-10)/2); }
@@ -902,6 +1085,7 @@ function toggleEditMode(){
   editMode = !editMode;
   document.getElementById("editBtn").classList.toggle("on", editMode);
   document.getElementById("editBanner").hidden = !editMode;
+  document.getElementById("syncBtn").hidden = !editMode;
   document.getElementById("exportBtn").hidden = !editMode;
   document.getElementById("discardEditsBtn").hidden = !(editMode && hasEdits());
   document.getElementById("saveToFolderBtn").hidden = !(editMode && FS_SUPPORTED && SOURCE_FILENAME);
@@ -2081,6 +2265,7 @@ function renderInventory(){
 
 function renderAll(){
   applyDmVisibility();
+  document.getElementById("syncBtn").hidden = !editMode;
   document.getElementById("exportBtn").hidden = !editMode;
   document.getElementById("discardEditsBtn").hidden = !(editMode && hasEdits());
   document.getElementById("saveToFolderBtn").hidden = !(editMode && FS_SUPPORTED && SOURCE_FILENAME);

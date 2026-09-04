@@ -246,6 +246,15 @@ html = html.replace(
     }catch(e){}'''
 )
 
+# Drafts aren't real characters yet - no live sync until "Save to folder"
+# actually promotes one into Character Sheets/ and a real rebuild happens.
+html = html.replace("__FS_SYNC_ENABLED__", "false")
+html = html.replace("__FS_COLLECTION__", "unused")
+# This template's "Save to folder" is still the only way a draft becomes a
+# real character (unlike the other derived templates, which Firestore has
+# fully superseded) - keep it working here.
+html = html.replace("__LEGACY_FOLDER_SAVE_ENABLED__", "true")
+
 # close the appRoot wrapper div right before </body>
 html = html.replace("</body>", "</div>\n</body>")
 

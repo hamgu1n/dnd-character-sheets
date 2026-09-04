@@ -16,11 +16,34 @@
     --accent-2:#8a2f2f;
     --good:#5c9a5c;
     --bad:#b4453e;
-    --prof:#c9762c;
+    --prof:var(--accent);
     --temp-hp:#4d9fd6;
     --warn:#e0a940;
     --divine:#e6c860;
   }
+  /* ---- alternate themes, picked from the 🎨 button, remembered per-browser ---- */
+  [data-theme="slate"]{
+    --bg:#16181d; --panel:#1e2128; --panel-2:#262a33; --border:#343a46;
+    --text:#e8eaed; --text-dim:#9aa3af; --accent:#5b8def; --accent-2:#e0665c;
+  }
+  [data-theme="indigo"]{
+    --bg:#14121f; --panel:#1d1a2e; --panel-2:#241f3d; --border:#372f56;
+    --text:#e6e2f5; --text-dim:#a99cc9; --accent:#8b6cf2; --accent-2:#e0665c;
+  }
+  [data-theme="emerald"]{
+    --bg:#121815; --panel:#1a2320; --panel-2:#20302a; --border:#324a3d;
+    --text:#e5ede9; --text-dim:#9bb5a8; --accent:#4fae7a; --accent-2:#e0a940;
+  }
+  .theme-picker{position:fixed;top:8px;right:8px;z-index:80;}
+  .theme-picker-btn{background:var(--panel);border:1px solid var(--border);color:var(--text);
+    border-radius:50%;width:32px;height:32px;font-size:0.95rem;cursor:pointer;line-height:1;}
+  .theme-menu{position:absolute;top:38px;right:0;background:var(--panel);border:1px solid var(--border);
+    border-radius:10px;padding:6px;display:flex;flex-direction:column;gap:2px;min-width:130px;
+    box-shadow:0 4px 14px rgba(0,0,0,.35);}
+  .theme-menu button{background:none;border:none;color:var(--text);text-align:left;padding:7px 9px;
+    border-radius:6px;font-size:0.82rem;font-family:inherit;cursor:pointer;width:100%;}
+  .theme-menu button:hover{background:var(--panel-2);}
+  .theme-menu button.active{font-weight:700;color:var(--accent);}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -275,8 +298,28 @@
   .checkline{display:flex;align-items:center;gap:6px;font-size:0.85rem;padding:3px 0;}
   .checkline label{display:flex;align-items:center;gap:4px;font-size:0.7rem;color:var(--text-dim);}
 </style>
+<script>
+// Applied here (in <head>, before the body paints) so switching themes never
+// flashes the old palette on load.
+(function(){
+  try{
+    const t = localStorage.getItem("dnd-theme") || "slate";
+    if(t !== "classic") document.documentElement.setAttribute("data-theme", t);
+  }catch(e){}
+})();
+</script>
 </head>
 <body>
+
+<div class="theme-picker" id="themePicker">
+  <button class="theme-picker-btn" onclick="toggleThemeMenu()" title="Theme" aria-label="Change theme">🎨</button>
+  <div class="theme-menu" id="themeMenu" hidden>
+    <button data-theme-opt="slate" onclick="setTheme('slate')">Slate</button>
+    <button data-theme-opt="indigo" onclick="setTheme('indigo')">Indigo</button>
+    <button data-theme-opt="emerald" onclick="setTheme('emerald')">Emerald</button>
+    <button data-theme-opt="classic" onclick="setTheme('classic')">Classic (brown)</button>
+  </div>
+</div>
 
 <nav class="tabnav" id="tabNav">
   <button class="tabnav-btn" id="tabBtnSheet" onclick="setTab('sheet')"><span class="tabnav-icon">📜</span><span>Sheet</span></button>
@@ -299,6 +342,8 @@
     <div class="sub" id="charSub"></div>
   </div>
   <div class="header-btns">
+    <button class="reset-btn" id="dmLoginBtn" onclick="openDmLogin()">🔑 DM Login</button>
+    <button class="reset-btn" id="dmLogoutBtn" onclick="dmLogout()" hidden>Log out (DM)</button>
     <button class="edit-toggle-btn" id="editBtn" onclick="toggleEditMode()" hidden>✎ Edit</button>
     <button class="insp-btn" id="inspBtn" onclick="toggleInspiration()">✦ Inspiration</button>
   </div>
@@ -440,6 +485,7 @@
 <button class="reset-btn save-folder-btn" id="saveToFolderBtn" onclick="saveToFolder()" hidden>💾 Save to Character Sheets folder</button>
 <button class="reset-btn" id="changeFolderBtn" onclick="chooseNewFolder()" hidden style="margin-top:6px;">🔁 Change folder (if saves keep landing in the wrong place)</button>
 <div class="folder-status" id="folderStatus" hidden></div>
+<button class="reset-btn" id="syncBtn" onclick="manualSyncToFirestore()" hidden>☁️ Sync to Firestore now</button>
 <button class="reset-btn" id="exportBtn" onclick="exportJson()" hidden>⬇ Export character JSON (fallback download)</button>
 <button class="reset-btn" id="discardEditsBtn" onclick="discardEdits()" hidden>Discard edits (revert to original import)</button>
 <button class="reset-btn" onclick="resetProgress()">Reset tracked stats (HP, spell slots, notes…)</button>
@@ -467,14 +513,125 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="dmLoginModal" hidden onclick="if(event.target===this) closeDmLogin()">
+  <div class="modal-card">
+    <div class="modal-top">
+      <div class="modal-title">DM Login</div>
+      <button class="modal-close" onclick="closeDmLogin()">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <input type="email" id="dmLoginEmail" placeholder="Email" style="padding:8px;border-radius:6px;border:1px solid var(--border);background:var(--panel-2);color:var(--text);">
+      <input type="password" id="dmLoginPassword" placeholder="Password" style="padding:8px;border-radius:6px;border:1px solid var(--border);background:var(--panel-2);color:var(--text);">
+      <div id="dmLoginError" style="color:#e0665c;font-size:0.85rem;"></div>
+      <button class="reset-btn" onclick="submitDmLogin()">Log in</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script>
 const DATA = {"id": "mtemka9d-0p83me8", "schemaVersion": 1, "name": "Cache", "createdAt": 1788022722289, "updatedAt": 1788022722289, "species": "Fairy", "classes": [{"id": "cleric", "name": "Cleric", "level": 3, "hitDie": 8, "subclass": "Arcana Domain"}], "abilities": {"str": 8, "dex": 12, "con": 14, "int": 10, "wis": 18, "cha": 6}, "proficientSaves": ["wis", "cha"], "skillProficiencies": ["history", "insight", "survival", "arcana"], "skillExpertise": [], "hp": {"max": 21, "current": 21, "temp": 0}, "hitDiceUsed": {}, "speed": 30, "conditions": [], "exhaustion": 0, "deathSaves": {"successes": 0, "failures": 0}, "inspiration": false, "spellSlots": {"1": {"max": 4, "used": 0}, "2": {"max": 2, "used": 0}}, "spellsPrepared": [{"level": 0, "desc": "Flame-like radiance descends on a creature that you can see within range. The target must succeed on a Dexterity saving throw or take 1d8 radiant damage. The target gains no benefit from cover for this saving throw.", "castingTime": "", "range": "", "name": "Sacred Flame", "spellType": "fire"}, {"level": 0, "desc": "You touch one willing creature. Once before the spell ends, the target can roll a d4 and add the number rolled to one ability check of its choice. It can roll the die before or after making the ability check. The spell then ends.", "castingTime": "", "range": "Touch", "name": "Guidance", "spellType": "enchantment"}, {"level": 0, "desc": "You touch a living creature that has 0 hit points. The creature becomes stable. This spell has no effect on undead or constructs.", "castingTime": "", "range": "Touch", "name": "Spare the Dying", "spellType": "necromancy"}, {"level": 0, "desc": "You hurl a mote of fire at a creature or object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 fire damage. A flammable object hit by this spell ignites if it isn\u2019t being worn or carried. This spell\u2019s damage increases by 1d10 when you reach 5th level (2d10), 11th level (3d10), and 17th level (4d10).", "castingTime": "", "range": "120 feet", "name": "Firebolt", "spellType": "fire"}, {"level": 0, "desc": "You create a sound or an image of an object within range that lasts for the duration. The illusion also ends if you dismiss it as an action or cast this spell again.\nIf you create a sound, its volume can range from a whisper to a scream. It can be your voice, someone else\u2019s voice, a lion\u2019s roar, a beating of drums, or any other sound you choose. The sound continues unabated throughout the duration, or you can make discrete sounds at different times before the spell ends.\nIf you create an image of an object\u2014such as a chair, muddy footprints, or a small chest\u2014it must be no larger than a 5-foot cube. The image can\u2019t create sound, light, smell, or any other sensory effect. Physical interaction with the image reveals it to be an illusion, because things can pass through it.\nIf a creature uses its action to examine the sound or image, the creature can determine that it is an illusion with a successful Intelligence (Investigation) check against your spell save DC. If a creature discerns the illusion for what it is, the illusion becomes faint to the creature.", "castingTime": "", "range": "30 feet", "name": "Minor Illusion", "spellType": "illusion"}, {"level": 1, "desc": "A creature you touch regains a number of hit points equal to 1d8 + your spellcasting ability modifier. This spell has no effect on undead or constructs.\n\n**At Higher Levels:** When you cast this spell using a spell slot of 2nd level or higher, the Healing increases by 1d8 for each slot level above 1st.", "castingTime": "", "range": "Touch", "name": "Cure Wounds", "spellType": "evocation"}, {"level": 1, "desc": "You bless up to three creatures of your choice within range. Whenever a target makes an attack roll or a saving throw before the spell ends, the target can roll a d4 and add the number rolled to the attack roll or saving throw.\n\n**At Higher Levels:** When you cast this spell using a spell slot of 2nd level or higher, you can target one additional creature for each slot level above 1st.", "castingTime": "", "range": "30 feet", "name": "Bless", "spellType": "enchantment"}, {"level": 1, "desc": "A shimmering field appears and surrounds a creature of your choice within range, granting it a +2 bonus to AC for the duration.", "castingTime": "1 bonus", "range": "", "name": "Shield of Faith", "spellType": "abjuration"}, {"level": 1, "desc": "A creature of your choice that you can see within range regains hit points equal to 1d4 + your spellcasting ability modifier. This spell has no effect on undead or constructs.\n\n**At Higher Levels:** When you cast this spell using a spell slot of 2nd level or higher, the Healing increases by 1d4 for each slot level above 1st.", "castingTime": "1 bonus", "range": "", "name": "Healing Word", "spellType": "evocation"}, {"level": 2, "desc": "You touch a creature and can end either one disease or one condition afflicting it. The condition can be blinded, deafened, paralyzed, or poisoned.", "castingTime": "", "range": "Touch", "name": "Lesser Restoration", "spellType": "abjuration"}, {"level": 2, "desc": "You create a floating, spectral weapon within range that lasts for the duration or until you cast this spell again. When you cast the spell, you can make a melee spell attack against a creature within 5 feet of the weapon. On a hit, the target takes force damage equal to 1d8 + your spellcasting ability modifier. As a bonus action on your turn, you can move the weapon up to 20 feet and repeat the attack against a creature within 5 feet of it. The weapon can take whatever form you choose. Clerics of deities who are associated with a particular weapon (as St. Cuthbert is known for his mace and Thor for his hammer) make this spell\u2019s effect resemble that weapon.\nAt Higher Levels: When you cast this spell using a spell slot 3rd level of or higher, the damage increases by 1d8 for every two slot levels above the 2nd.", "castingTime": "1 bonus", "range": "", "name": "Spiritual Weapon", "spellType": "evocation"}, {"level": 2, "desc": "Classes: Artificer, Bard, Cleric, Paladin, Ranger\nYour spell bolsters your allies with toughness and resolve. Choose up to three creatures within range. Each target\u2019s hit point maximum and current hit points increase by 5 for the duration.\n\n**At Higher Levels: **When you cast this spell using a spell slot of 3rd level or higher, a target\u2019s hit points increase by an additional 5 for each slot level above 2nd.", "castingTime": "", "range": "30 feet", "name": "Aid", "spellType": "abjuration"}], "currency": {"cp": 0, "sp": 0, "ep": 0, "gp": 0, "pp": 0}, "inventory": [{"id": "item-mtkj76qpwx40a", "name": "War Hammer Pick", "quantity": 1, "kind": "weapon", "skillEffects": [], "icon": "mace", "weight": 30, "equipped": true, "dmg": "1d10", "dmgType": "Bludgeoning/Piercing", "props": ["Two-Handed", "Special"], "desc": "A double headed weapon with a war hammer head on one side and warpick on the other side. "}], "notes": "", "journal": {"entries": [], "npcs": [], "quests": [], "goals": []}, "speciesId": "hb-fairy", "spellcastingAbility": "wis", "channelDivinity": {"max": 1}, "customFeatures": [{"id": "cf-mtkjz6hmztzna", "name": "Arcane Abjuration", "desc": "As an action, you present your holy symbol, and one celestial, elemental, fey, or fiend of your choice that is within 30 feet of you must make a Wisdom saving throw, provided that the creature can see or hear you. If the creature fails its saving throw, it is turned for 1 minute or until it takes any damage.\n\nA turned creature must spend its turns trying to move as far away from you as it can, and it can't willingly end its move in a space within 30 feet of you. It also can't take reactions. For its action, it can only use the Dash action or try to escape from an effect that prevents it from moving. If there's nowhere to move, the creature can use the Dodge action.\n\nAfter you reach 5th level, when a creature fails its saving throw against your Arcane Abjuration feature, the creature is banished for 1 minute (as in the Banishment spell, no concentration required) if it isn't on its plane of origin and its challenge rating is at or below a certain threshold, as shown on the Arcane Banishment table.", "isChannelDivinity": true, "hasPool": false, "poolMax": 1}, {"id": "cf-mtkkipoqwd9md", "name": "Arcane Initiate", "desc": "When you choose this domain at 1st level, you gain proficiency in the Arcana skill, and you gain two cantrips of your choice from the wizard spell list. For you, these cantrips count as cleric cantrips.", "isChannelDivinity": false}, {"id": "cf-mtkkkelsfgtn9", "name": "Turn Undead", "desc": "As an action, you present your holy symbol and speak a prayer censuring the undead. Each undead that can see or hear you within 30 feet of you must make a Wisdom saving throw. If the creature fails its saving throw, it is turned for 1 minute or until it takes any damage.\n\nA turned creature must spend its turns trying to move as far away from you as it can, and it can't willingly move to a space within 30 feet of you. It also can't take reactions. For its action, it can use only the Dash action or try to escape from an effect that prevents it from moving. If there's nowhere to move, the creature can use the Dodge action.\n", "isChannelDivinity": true}]};
 const STORE_KEY = "dnd-sheet-" + DATA.id;
 const EDIT_KEY = "dnd-sheet-edits-" + DATA.id;
 const TAB_KEY = "dnd-sheet-tab";
-const DM_KEY = "dnd-dm-auth";
 const SOURCE_FILENAME = "gracie.json";
-const FS_SUPPORTED = typeof window.showDirectoryPicker === "function";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBKwdUomjwLubIzcZTRXAJNqiiiUbzPAoQ",
+  authDomain: "dnd-character-sheets-87c23.firebaseapp.com",
+  projectId: "dnd-character-sheets-87c23",
+  storageBucket: "dnd-character-sheets-87c23.firebasestorage.app",
+  messagingSenderId: "787644284719",
+  appId: "1:787644284719:web:9b93eb9f189b9090f4ebda",
+};
+const DM_UID = "0eIBWmxYyEQK7Umox44FvmKsQVr2";
+// true/characters are set per template by the build
+// scripts: real player pages and pushed NPC pages sync live; the blank
+// ad-hoc NPC template and the new-character draft template stay local-only
+// (nothing stable to key a Firestore doc on until they're actually saved).
+const FS_SYNC_ENABLED = "true" === "true";
+const FS_COLLECTION = "characters";
+firebase.initializeApp(firebaseConfig);
+const fbAuth = firebase.auth();
+const db = firebase.firestore();
+const charRef = FS_SYNC_ENABLED ? db.collection(FS_COLLECTION).doc(DATA.id) : null;
+const playRef = FS_SYNC_ENABLED ? charRef.collection("play").doc("state") : null;
+
+let dmAuthed = false;
+fbAuth.onAuthStateChanged(user => {
+  dmAuthed = !!(user && user.uid === DM_UID);
+  document.getElementById("dmLoginBtn").hidden = dmAuthed;
+  document.getElementById("dmLogoutBtn").hidden = !dmAuthed;
+  renderAll();
+});
+function openDmLogin(){
+  document.getElementById("dmLoginError").textContent = "";
+  document.getElementById("dmLoginModal").hidden = false;
+}
+function closeDmLogin(){ document.getElementById("dmLoginModal").hidden = true; }
+async function submitDmLogin(){
+  const email = document.getElementById("dmLoginEmail").value;
+  const password = document.getElementById("dmLoginPassword").value;
+  try{
+    await fbAuth.signInWithEmailAndPassword(email, password);
+    closeDmLogin();
+  }catch(e){
+    document.getElementById("dmLoginError").textContent = "Login failed: " + e.message;
+  }
+}
+function dmLogout(){ fbAuth.signOut(); }
+
+function debounce(fn, ms){
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+// Only DM writes are allowed by the Firestore rules, but guard client-side
+// too so a stray call from a non-DM viewer doesn't even attempt it.
+const pushCharToFirestore = debounce(() => {
+  if(!FS_SYNC_ENABLED || !dmAuthed) return;
+  charRef.set(charData).catch(err => toast("Sync failed", err.message));
+}, 600);
+const pushStateToFirestore = debounce(() => {
+  if(!FS_SYNC_ENABLED) return;
+  playRef.set(state).catch(err => toast("Sync failed", err.message));
+}, 600);
+function manualSyncToFirestore(){
+  if(!FS_SYNC_ENABLED) return;
+  if(!dmAuthed){ toast("Not logged in", "Log in as DM first"); return; }
+  charRef.set(charData).then(() => toast(charData.name, "Synced to Firestore"))
+    .catch(err => toast("Sync failed", err.message));
+}
+// Live updates: if another device (or the DM) changes this character's
+// Firestore doc, pick it up here instead of staying stuck on whatever was
+// baked in at build time or cached in this browser.
+if(FS_SYNC_ENABLED){
+  charRef.onSnapshot(doc => {
+    if(!doc.exists) return;
+    const remote = normalizeCharData(doc.data());
+    if(JSON.stringify(remote) === JSON.stringify(charData)) return;
+    charData = remote;
+    try{ localStorage.setItem(EDIT_KEY, JSON.stringify(charData)); }catch(e){}
+    renderAll();
+  });
+  playRef.onSnapshot(doc => {
+    if(!doc.exists) return;
+    const remote = normalizeState(doc.data());
+    if(JSON.stringify(remote) === JSON.stringify(state)) return;
+    state = remote;
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+    renderAll();
+  });
+}
+</script>
+
+<script>
+// Superseded by live Firestore sync for real characters and pushed NPCs -
+// only the new-character draft template still needs this (its only path to
+// becoming a real character, until draft creation also moves to Firestore).
+const LEGACY_FOLDER_SAVE_ENABLED = "false" === "true";
+const FS_SUPPORTED = LEGACY_FOLDER_SAVE_ENABLED && typeof window.showDirectoryPicker === "function";
 const DIR_HANDLE_KEY = "characterSheetsDir"; // which cached folder-picker handle this page's saves use
 const FOLDER_LABEL = "Character Sheets"; // just for the "Saved to ..." status text
 
@@ -551,8 +708,33 @@ async function chooseNewFolder(){
 }
 
 function isDM(){
-  try{ return localStorage.getItem(DM_KEY) === "1"; }catch(e){ return false; }
+  return dmAuthed;
 }
+
+function setTheme(name){
+  try{ localStorage.setItem("dnd-theme", name); }catch(e){}
+  if(name === "classic") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", name);
+  document.getElementById("themeMenu").hidden = true;
+  updateThemeMenuActive();
+}
+function toggleThemeMenu(){
+  const menu = document.getElementById("themeMenu");
+  menu.hidden = !menu.hidden;
+  updateThemeMenuActive();
+}
+function updateThemeMenuActive(){
+  let current = "slate";
+  try{ current = localStorage.getItem("dnd-theme") || "slate"; }catch(e){}
+  document.querySelectorAll("#themeMenu button").forEach(b => {
+    b.classList.toggle("active", b.dataset.themeOpt === current);
+  });
+}
+document.addEventListener("click", (e) => {
+  const picker = document.getElementById("themePicker");
+  if(picker && !picker.contains(e.target)) document.getElementById("themeMenu").hidden = true;
+});
+updateThemeMenuActive();
 
 const SKILLS = [
   ["acrobatics","Acrobatics","dex"],
@@ -713,6 +895,7 @@ function loadCharData(){
 }
 function saveCharData(){
   try{ localStorage.setItem(EDIT_KEY, JSON.stringify(charData)); }catch(e){}
+  pushCharToFirestore();
 }
 function hasEdits(){
   try{ return !!localStorage.getItem(EDIT_KEY); }catch(e){ return false; }
@@ -767,9 +950,17 @@ function loadState(){
       },
     };
   }
+  return normalizeState(s);
+}
+// Fills in defaults for a play-state object coming from localStorage or
+// Firestore, either of which may predate a field that's since been added.
+function normalizeState(s){
+  s = s || {};
   s.conditions = s.conditions || [];
   s.channelDivinityUsed = s.channelDivinityUsed || 0;
   s.featurePools = s.featurePools || {};
+  s.slotsUsed = s.slotsUsed || {};
+  s.equipped = s.equipped || {};
   s.journal = s.journal || {entries:[],npcs:[],quests:[],goals:[]};
   for(const [cat] of JOURNAL_CATS) s.journal[cat] = s.journal[cat] || [];
   return s;
@@ -778,6 +969,7 @@ let state = loadState();
 
 function saveState(){
   try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+  pushStateToFirestore();
 }
 
 function mod(score){ return Math.floor((score-10)/2); }
@@ -888,6 +1080,7 @@ function toggleEditMode(){
   editMode = !editMode;
   document.getElementById("editBtn").classList.toggle("on", editMode);
   document.getElementById("editBanner").hidden = !editMode;
+  document.getElementById("syncBtn").hidden = !editMode;
   document.getElementById("exportBtn").hidden = !editMode;
   document.getElementById("discardEditsBtn").hidden = !(editMode && hasEdits());
   document.getElementById("saveToFolderBtn").hidden = !(editMode && FS_SUPPORTED && SOURCE_FILENAME);
@@ -2067,6 +2260,7 @@ function renderInventory(){
 
 function renderAll(){
   applyDmVisibility();
+  document.getElementById("syncBtn").hidden = !editMode;
   document.getElementById("exportBtn").hidden = !editMode;
   document.getElementById("discardEditsBtn").hidden = !(editMode && hasEdits());
   document.getElementById("saveToFolderBtn").hidden = !(editMode && FS_SUPPORTED && SOURCE_FILENAME);

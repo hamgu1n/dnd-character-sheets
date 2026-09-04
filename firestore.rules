@@ -1,0 +1,22 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isDM() {
+      return request.auth != null
+        && request.auth.uid == "0eIBWmxYyEQK7Umox44FvmKsQVr2";
+    }
+
+    match /characters/{charId} {
+      allow read: if true;
+      allow write: if isDM();
+
+      match /play/{docId} {
+        allow read, write: if true;
+      }
+    }
+
+    match /npcs/{npcId} {
+      allow read, write: if isDM();
+    }
+  }
+}

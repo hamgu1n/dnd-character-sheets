@@ -16,11 +16,34 @@
     --accent-2:#8a2f2f;
     --good:#5c9a5c;
     --bad:#b4453e;
-    --prof:#c9762c;
+    --prof:var(--accent);
     --temp-hp:#4d9fd6;
     --warn:#e0a940;
     --divine:#e6c860;
   }
+  /* ---- alternate themes, picked from the 🎨 button, remembered per-browser ---- */
+  [data-theme="slate"]{
+    --bg:#16181d; --panel:#1e2128; --panel-2:#262a33; --border:#343a46;
+    --text:#e8eaed; --text-dim:#9aa3af; --accent:#5b8def; --accent-2:#e0665c;
+  }
+  [data-theme="indigo"]{
+    --bg:#14121f; --panel:#1d1a2e; --panel-2:#241f3d; --border:#372f56;
+    --text:#e6e2f5; --text-dim:#a99cc9; --accent:#8b6cf2; --accent-2:#e0665c;
+  }
+  [data-theme="emerald"]{
+    --bg:#121815; --panel:#1a2320; --panel-2:#20302a; --border:#324a3d;
+    --text:#e5ede9; --text-dim:#9bb5a8; --accent:#4fae7a; --accent-2:#e0a940;
+  }
+  .theme-picker{position:fixed;top:8px;right:8px;z-index:80;}
+  .theme-picker-btn{background:var(--panel);border:1px solid var(--border);color:var(--text);
+    border-radius:50%;width:32px;height:32px;font-size:0.95rem;cursor:pointer;line-height:1;}
+  .theme-menu{position:absolute;top:38px;right:0;background:var(--panel);border:1px solid var(--border);
+    border-radius:10px;padding:6px;display:flex;flex-direction:column;gap:2px;min-width:130px;
+    box-shadow:0 4px 14px rgba(0,0,0,.35);}
+  .theme-menu button{background:none;border:none;color:var(--text);text-align:left;padding:7px 9px;
+    border-radius:6px;font-size:0.82rem;font-family:inherit;cursor:pointer;width:100%;}
+  .theme-menu button:hover{background:var(--panel-2);}
+  .theme-menu button.active{font-weight:700;color:var(--accent);}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -280,18 +303,29 @@
   .checkline{display:flex;align-items:center;gap:6px;font-size:0.85rem;padding:3px 0;}
   .checkline label{display:flex;align-items:center;gap:4px;font-size:0.7rem;color:var(--text-dim);}
 </style>
+<script>
+// Applied here (in <head>, before the body paints) so switching themes never
+// flashes the old palette on load.
+(function(){
+  try{
+    const t = localStorage.getItem("dnd-theme") || "slate";
+    if(t !== "classic") document.documentElement.setAttribute("data-theme", t);
+  }catch(e){}
+})();
+</script>
 </head>
 <body>
 
-<div id="lockScreen" class="lock-screen">
-  <div class="lock-card">
-    <h1 style="font-size:1.3rem;">DM Access Required</h1>
-    <p style="color:var(--text-dim);font-size:0.85rem;">NPC and monster sheets are hidden from players. Enter DM mode first.</p>
-    <a class="reset-btn" href="../../dm.html" style="display:inline-block;width:auto;padding:9px 18px;">Go to DM Dashboard</a>
+<div class="theme-picker" id="themePicker">
+  <button class="theme-picker-btn" onclick="toggleThemeMenu()" title="Theme" aria-label="Change theme">🎨</button>
+  <div class="theme-menu" id="themeMenu" hidden>
+    <button data-theme-opt="slate" onclick="setTheme('slate')">Slate</button>
+    <button data-theme-opt="indigo" onclick="setTheme('indigo')">Indigo</button>
+    <button data-theme-opt="emerald" onclick="setTheme('emerald')">Emerald</button>
+    <button data-theme-opt="classic" onclick="setTheme('classic')">Classic (brown)</button>
   </div>
 </div>
 
-<div id="appRoot" hidden>
 <nav class="tabnav" id="tabNav">
   <button class="tabnav-btn" id="tabBtnSheet" onclick="setTab('sheet')"><span class="tabnav-icon">📜</span><span>Sheet</span></button>
   <button class="tabnav-btn" id="tabBtnPlay" onclick="setTab('play')"><span class="tabnav-icon">⚔️</span><span>Play</span></button>
@@ -313,6 +347,8 @@
     <div class="sub" id="charSub"></div>
   </div>
   <div class="header-btns">
+    <button class="reset-btn" id="dmLoginBtn" onclick="openDmLogin()">🔑 DM Login</button>
+    <button class="reset-btn" id="dmLogoutBtn" onclick="dmLogout()" hidden>Log out (DM)</button>
     <button class="edit-toggle-btn" id="editBtn" onclick="toggleEditMode()" hidden>✎ Edit</button>
     <button class="insp-btn" id="inspBtn" onclick="toggleInspiration()">✦ Inspiration</button>
   </div>
@@ -454,6 +490,7 @@
 <button class="reset-btn save-folder-btn" id="saveToFolderBtn" onclick="saveToFolder()" hidden>💾 Save to Character Sheets folder</button>
 <button class="reset-btn" id="changeFolderBtn" onclick="chooseNewFolder()" hidden style="margin-top:6px;">🔁 Change folder (if saves keep landing in the wrong place)</button>
 <div class="folder-status" id="folderStatus" hidden></div>
+<button class="reset-btn" id="syncBtn" onclick="manualSyncToFirestore()" hidden>☁️ Sync to Firestore now</button>
 <button class="reset-btn" id="exportBtn" onclick="exportJson()" hidden>⬇ Export character JSON (fallback download)</button>
 <button class="reset-btn" id="discardEditsBtn" onclick="discardEdits()" hidden>Discard edits (revert to original import)</button>
 <button class="reset-btn" onclick="resetProgress()">Reset tracked stats (HP, spell slots, notes…)</button>
@@ -481,14 +518,125 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="dmLoginModal" hidden onclick="if(event.target===this) closeDmLogin()">
+  <div class="modal-card">
+    <div class="modal-top">
+      <div class="modal-title">DM Login</div>
+      <button class="modal-close" onclick="closeDmLogin()">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <input type="email" id="dmLoginEmail" placeholder="Email" style="padding:8px;border-radius:6px;border:1px solid var(--border);background:var(--panel-2);color:var(--text);">
+      <input type="password" id="dmLoginPassword" placeholder="Password" style="padding:8px;border-radius:6px;border:1px solid var(--border);background:var(--panel-2);color:var(--text);">
+      <div id="dmLoginError" style="color:#e0665c;font-size:0.85rem;"></div>
+      <button class="reset-btn" onclick="submitDmLogin()">Log in</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script>
 const DATA = {"name": "The Hollow Warden", "species": "Undead (Large)", "background": "CR 7 boss \u2014 a hollow formed from merged lost souls, bound to a petrified tree vessel", "classes": [{"id": "role", "name": "Hollow Warden", "level": 6, "hitDie": 10, "subclass": ""}], "abilities": {"str": 18, "dex": 10, "con": 15, "int": 12, "wis": 16, "cha": 14}, "proficientSaves": ["con", "wis"], "skillProficiencies": [], "skillExpertise": [], "hp": {"max": 105, "current": 105, "temp": 0}, "speed": 30, "conditions": [], "inspiration": false, "spellSlots": {}, "spellsPrepared": [], "currency": {"cp": 0, "sp": 0, "ep": 0, "gp": 0, "pp": 0}, "inventory": [{"id": "i1", "name": "Grasping Bough", "kind": "weapon", "quantity": 1, "dmg": "2d8", "dmgType": "Bludgeoning", "rangeType": "Melee", "props": ["Reach", "Grapple"], "equipped": true, "desc": "Reach 15 ft. Melee Weapon Attack: +7 to hit. Hit: 13 (2d8+4) bludgeoning damage, and the target is grappled (escape DC 15) if Large or smaller. Multiattack: two Grasping Bough attacks per turn. Only usable while veseled."}, {"id": "i2", "name": "Warden's Bark", "kind": "armor", "quantity": 1, "acBase": 15, "dexMax": 0, "equipped": true, "desc": "Natural armor while veseled, fixed AC 15. AC drops to 12 while unveseled."}], "notes": "Once a warden of these woods in life, it fused with the largest petrified tree in the grove after death and grew into something ancient and enormous. It remembers duty more than grief now \u2014 it believes it is still protecting the forest, and sees the party as trespassers to be rooted in place forever, joining its garden of the trapped. A hollow forms when lost souls find one another and merge; it cannot exist outside a vessel, and without one it dissipates within minutes, destroying every merged soul. Resists bludgeoning/piercing/slashing from nonmagical attacks while veseled; immune to necrotic and poison damage; immune to exhaustion, frightened, and poisoned. Darkvision 60 ft. Speaks Common in a dry, hollow rasp layered with the murmur of many voices. DM tips: open the fight veseled using Grasping Bough and Wail of the Buried; telegraph Soul Surge before using it; the 1-minute dissipation timer is a built-in failsafe if the party strands the Warden outside a vessel; consider seeding this lore earlier so possession doesn't feel like a first-time gotcha.", "customFeatures": [{"id": "f1", "name": "Legendary Resistance (1/Day)", "desc": "If the Warden fails a saving throw, it can choose to succeed instead."}, {"id": "f2", "name": "Vessel Bound", "desc": "The Warden is a mass of merged souls with no body of its own \u2014 it requires a vessel (normally its host petrified tree) to persist. While it occupies a vessel, it uses that vessel's physical form and gains its resistances. If the Warden is ever without a vessel for more than 1 minute (10 rounds), it dissipates entirely and all souls composing it are destroyed, ending the encounter instantly."}, {"id": "f3", "name": "Regeneration", "desc": "While veseled, the Warden regains 10 hit points at the start of its turn if it has at least 1 hit point."}, {"id": "f4", "name": "Wail of the Buried (Recharge 5-6)", "desc": "Each creature within 20 feet must make a DC 14 Wisdom saving throw, taking 18 (4d8) psychic damage and becoming frightened until the end of its next turn on a failure, or half damage and no fright on a success."}, {"id": "f5", "name": "Soul Surge (Possession)", "desc": "The Warden abandons its current vessel in a burst of shadow and attempts to possess a creature it can see within 30 feet that is grappled by it or was grappled by it in the last round. The target must succeed on a DC 15 Wisdom saving throw or become possessed (see the Possessed feature below). The Warden's vessel goes dormant and inert for the duration \u2014 it can be attacked (AC 15, treated as an object with the Warden's remaining HP) but takes no actions and grants no benefit to the Warden while it's away. Once the Warden leaves a vessel, it must return to a vessel or possess a creature within 1 minute or dissipate permanently."}, {"id": "f6", "name": "Legendary Actions (3/round)", "desc": "Can't use the same option twice in a row; unavailable while possessing a creature. Splintering Reach: the Warden makes one Grasping Bough attack. Creeping Roots (Costs 2 Actions): the ground within 15 feet of the Warden's vessel erupts with grasping roots \u2014 each creature there must succeed on a DC 14 Dexterity save or be restrained until it uses an action to break free (DC 14 Strength check)."}, {"id": "f7", "name": "Possessed (condition inflicted by Soul Surge)", "desc": "While possessed, the Warden controls the target's body directly, using the possessed creature's own statblock rather than its own action economy; the Warden gets no separate turn or legendary actions while possessing. At the start of each of the possessed creature's turns, its soul takes a cumulative point of erosion \u2014 after 3 rounds of possession, the soul is fully engulfed and consumed and the character dies, becoming fuel for the Warden (DM may increase the Warden's max HP by 10-15 per soul consumed this way). At the end of each of its turns while possessed, the possessed creature can attempt a DC 15 Wisdom saving throw to expel the Warden early; an ally who spends their action trying to reach the possessed creature (roleplay, an Insight check, a relevant class feature, etc.) grants advantage on that save. If the possessed creature drops to 0 HP, the Warden is immediately ejected and the creature falls unconscious as normal rather than dying from the possession. While possessing a creature, the Warden's original vessel is dormant and can be destroyed by the party, forcing the Warden to find a new vessel or dissipate."}], "id": "npc-hollow-warden-7aad88f3"};
 const STORE_KEY = "dnd-sheet-" + DATA.id;
 const EDIT_KEY = "dnd-sheet-edits-" + DATA.id;
 const TAB_KEY = "dnd-sheet-tab";
-const DM_KEY = "dnd-dm-auth";
 const SOURCE_FILENAME = "hollow-warden.json";
-const FS_SUPPORTED = typeof window.showDirectoryPicker === "function";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBKwdUomjwLubIzcZTRXAJNqiiiUbzPAoQ",
+  authDomain: "dnd-character-sheets-87c23.firebaseapp.com",
+  projectId: "dnd-character-sheets-87c23",
+  storageBucket: "dnd-character-sheets-87c23.firebasestorage.app",
+  messagingSenderId: "787644284719",
+  appId: "1:787644284719:web:9b93eb9f189b9090f4ebda",
+};
+const DM_UID = "0eIBWmxYyEQK7Umox44FvmKsQVr2";
+// true/npcs are set per template by the build
+// scripts: real player pages and pushed NPC pages sync live; the blank
+// ad-hoc NPC template and the new-character draft template stay local-only
+// (nothing stable to key a Firestore doc on until they're actually saved).
+const FS_SYNC_ENABLED = "true" === "true";
+const FS_COLLECTION = "npcs";
+firebase.initializeApp(firebaseConfig);
+const fbAuth = firebase.auth();
+const db = firebase.firestore();
+const charRef = FS_SYNC_ENABLED ? db.collection(FS_COLLECTION).doc(DATA.id) : null;
+const playRef = FS_SYNC_ENABLED ? charRef.collection("play").doc("state") : null;
+
+let dmAuthed = false;
+fbAuth.onAuthStateChanged(user => {
+  dmAuthed = !!(user && user.uid === DM_UID);
+  document.getElementById("dmLoginBtn").hidden = dmAuthed;
+  document.getElementById("dmLogoutBtn").hidden = !dmAuthed;
+  renderAll();
+});
+function openDmLogin(){
+  document.getElementById("dmLoginError").textContent = "";
+  document.getElementById("dmLoginModal").hidden = false;
+}
+function closeDmLogin(){ document.getElementById("dmLoginModal").hidden = true; }
+async function submitDmLogin(){
+  const email = document.getElementById("dmLoginEmail").value;
+  const password = document.getElementById("dmLoginPassword").value;
+  try{
+    await fbAuth.signInWithEmailAndPassword(email, password);
+    closeDmLogin();
+  }catch(e){
+    document.getElementById("dmLoginError").textContent = "Login failed: " + e.message;
+  }
+}
+function dmLogout(){ fbAuth.signOut(); }
+
+function debounce(fn, ms){
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+// Only DM writes are allowed by the Firestore rules, but guard client-side
+// too so a stray call from a non-DM viewer doesn't even attempt it.
+const pushCharToFirestore = debounce(() => {
+  if(!FS_SYNC_ENABLED || !dmAuthed) return;
+  charRef.set(charData).catch(err => toast("Sync failed", err.message));
+}, 600);
+const pushStateToFirestore = debounce(() => {
+  if(!FS_SYNC_ENABLED) return;
+  playRef.set(state).catch(err => toast("Sync failed", err.message));
+}, 600);
+function manualSyncToFirestore(){
+  if(!FS_SYNC_ENABLED) return;
+  if(!dmAuthed){ toast("Not logged in", "Log in as DM first"); return; }
+  charRef.set(charData).then(() => toast(charData.name, "Synced to Firestore"))
+    .catch(err => toast("Sync failed", err.message));
+}
+// Live updates: if another device (or the DM) changes this character's
+// Firestore doc, pick it up here instead of staying stuck on whatever was
+// baked in at build time or cached in this browser.
+if(FS_SYNC_ENABLED){
+  charRef.onSnapshot(doc => {
+    if(!doc.exists) return;
+    const remote = normalizeCharData(doc.data());
+    if(JSON.stringify(remote) === JSON.stringify(charData)) return;
+    charData = remote;
+    try{ localStorage.setItem(EDIT_KEY, JSON.stringify(charData)); }catch(e){}
+    renderAll();
+  });
+  playRef.onSnapshot(doc => {
+    if(!doc.exists) return;
+    const remote = normalizeState(doc.data());
+    if(JSON.stringify(remote) === JSON.stringify(state)) return;
+    state = remote;
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+    renderAll();
+  });
+}
+</script>
+
+<script>
+// Superseded by live Firestore sync for real characters and pushed NPCs -
+// only the new-character draft template still needs this (its only path to
+// becoming a real character, until draft creation also moves to Firestore).
+const LEGACY_FOLDER_SAVE_ENABLED = "false" === "true";
+const FS_SUPPORTED = LEGACY_FOLDER_SAVE_ENABLED && typeof window.showDirectoryPicker === "function";
 const DIR_HANDLE_KEY = "npcsDir";
 const FOLDER_LABEL = "NPCs";
 
@@ -565,8 +713,33 @@ async function chooseNewFolder(){
 }
 
 function isDM(){
-  try{ return localStorage.getItem(DM_KEY) === "1"; }catch(e){ return false; }
+  return dmAuthed;
 }
+
+function setTheme(name){
+  try{ localStorage.setItem("dnd-theme", name); }catch(e){}
+  if(name === "classic") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", name);
+  document.getElementById("themeMenu").hidden = true;
+  updateThemeMenuActive();
+}
+function toggleThemeMenu(){
+  const menu = document.getElementById("themeMenu");
+  menu.hidden = !menu.hidden;
+  updateThemeMenuActive();
+}
+function updateThemeMenuActive(){
+  let current = "slate";
+  try{ current = localStorage.getItem("dnd-theme") || "slate"; }catch(e){}
+  document.querySelectorAll("#themeMenu button").forEach(b => {
+    b.classList.toggle("active", b.dataset.themeOpt === current);
+  });
+}
+document.addEventListener("click", (e) => {
+  const picker = document.getElementById("themePicker");
+  if(picker && !picker.contains(e.target)) document.getElementById("themeMenu").hidden = true;
+});
+updateThemeMenuActive();
 
 const SKILLS = [
   ["acrobatics","Acrobatics","dex"],
@@ -727,6 +900,7 @@ function loadCharData(){
 }
 function saveCharData(){
   try{ localStorage.setItem(EDIT_KEY, JSON.stringify(charData)); }catch(e){}
+  pushCharToFirestore();
 }
 function hasEdits(){
   try{ return !!localStorage.getItem(EDIT_KEY); }catch(e){ return false; }
@@ -781,9 +955,17 @@ function loadState(){
       },
     };
   }
+  return normalizeState(s);
+}
+// Fills in defaults for a play-state object coming from localStorage or
+// Firestore, either of which may predate a field that's since been added.
+function normalizeState(s){
+  s = s || {};
   s.conditions = s.conditions || [];
   s.channelDivinityUsed = s.channelDivinityUsed || 0;
   s.featurePools = s.featurePools || {};
+  s.slotsUsed = s.slotsUsed || {};
+  s.equipped = s.equipped || {};
   s.journal = s.journal || {entries:[],npcs:[],quests:[],goals:[]};
   for(const [cat] of JOURNAL_CATS) s.journal[cat] = s.journal[cat] || [];
   return s;
@@ -792,6 +974,7 @@ let state = loadState();
 
 function saveState(){
   try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+  pushStateToFirestore();
 }
 
 function mod(score){ return Math.floor((score-10)/2); }
@@ -902,6 +1085,7 @@ function toggleEditMode(){
   editMode = !editMode;
   document.getElementById("editBtn").classList.toggle("on", editMode);
   document.getElementById("editBanner").hidden = !editMode;
+  document.getElementById("syncBtn").hidden = !editMode;
   document.getElementById("exportBtn").hidden = !editMode;
   document.getElementById("discardEditsBtn").hidden = !(editMode && hasEdits());
   document.getElementById("saveToFolderBtn").hidden = !(editMode && FS_SUPPORTED && SOURCE_FILENAME);
@@ -2081,6 +2265,7 @@ function renderInventory(){
 
 function renderAll(){
   applyDmVisibility();
+  document.getElementById("syncBtn").hidden = !editMode;
   document.getElementById("exportBtn").hidden = !editMode;
   document.getElementById("discardEditsBtn").hidden = !(editMode && hasEdits());
   document.getElementById("saveToFolderBtn").hidden = !(editMode && FS_SUPPORTED && SOURCE_FILENAME);

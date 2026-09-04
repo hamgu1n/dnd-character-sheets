@@ -16,11 +16,34 @@
     --accent-2:#8a2f2f;
     --good:#5c9a5c;
     --bad:#b4453e;
-    --prof:#c9762c;
+    --prof:var(--accent);
     --temp-hp:#4d9fd6;
     --warn:#e0a940;
     --divine:#e6c860;
   }
+  /* ---- alternate themes, picked from the 🎨 button, remembered per-browser ---- */
+  [data-theme="slate"]{
+    --bg:#16181d; --panel:#1e2128; --panel-2:#262a33; --border:#343a46;
+    --text:#e8eaed; --text-dim:#9aa3af; --accent:#5b8def; --accent-2:#e0665c;
+  }
+  [data-theme="indigo"]{
+    --bg:#14121f; --panel:#1d1a2e; --panel-2:#241f3d; --border:#372f56;
+    --text:#e6e2f5; --text-dim:#a99cc9; --accent:#8b6cf2; --accent-2:#e0665c;
+  }
+  [data-theme="emerald"]{
+    --bg:#121815; --panel:#1a2320; --panel-2:#20302a; --border:#324a3d;
+    --text:#e5ede9; --text-dim:#9bb5a8; --accent:#4fae7a; --accent-2:#e0a940;
+  }
+  .theme-picker{position:fixed;top:8px;right:8px;z-index:80;}
+  .theme-picker-btn{background:var(--panel);border:1px solid var(--border);color:var(--text);
+    border-radius:50%;width:32px;height:32px;font-size:0.95rem;cursor:pointer;line-height:1;}
+  .theme-menu{position:absolute;top:38px;right:0;background:var(--panel);border:1px solid var(--border);
+    border-radius:10px;padding:6px;display:flex;flex-direction:column;gap:2px;min-width:130px;
+    box-shadow:0 4px 14px rgba(0,0,0,.35);}
+  .theme-menu button{background:none;border:none;color:var(--text);text-align:left;padding:7px 9px;
+    border-radius:6px;font-size:0.82rem;font-family:inherit;cursor:pointer;width:100%;}
+  .theme-menu button:hover{background:var(--panel-2);}
+  .theme-menu button.active{font-weight:700;color:var(--accent);}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -275,8 +298,28 @@
   .checkline{display:flex;align-items:center;gap:6px;font-size:0.85rem;padding:3px 0;}
   .checkline label{display:flex;align-items:center;gap:4px;font-size:0.7rem;color:var(--text-dim);}
 </style>
+<script>
+// Applied here (in <head>, before the body paints) so switching themes never
+// flashes the old palette on load.
+(function(){
+  try{
+    const t = localStorage.getItem("dnd-theme") || "slate";
+    if(t !== "classic") document.documentElement.setAttribute("data-theme", t);
+  }catch(e){}
+})();
+</script>
 </head>
 <body>
+
+<div class="theme-picker" id="themePicker">
+  <button class="theme-picker-btn" onclick="toggleThemeMenu()" title="Theme" aria-label="Change theme">🎨</button>
+  <div class="theme-menu" id="themeMenu" hidden>
+    <button data-theme-opt="slate" onclick="setTheme('slate')">Slate</button>
+    <button data-theme-opt="indigo" onclick="setTheme('indigo')">Indigo</button>
+    <button data-theme-opt="emerald" onclick="setTheme('emerald')">Emerald</button>
+    <button data-theme-opt="classic" onclick="setTheme('classic')">Classic (brown)</button>
+  </div>
+</div>
 
 <nav class="tabnav" id="tabNav">
   <button class="tabnav-btn" id="tabBtnSheet" onclick="setTab('sheet')"><span class="tabnav-icon">📜</span><span>Sheet</span></button>
@@ -299,6 +342,8 @@
     <div class="sub" id="charSub"></div>
   </div>
   <div class="header-btns">
+    <button class="reset-btn" id="dmLoginBtn" onclick="openDmLogin()">🔑 DM Login</button>
+    <button class="reset-btn" id="dmLogoutBtn" onclick="dmLogout()" hidden>Log out (DM)</button>
     <button class="edit-toggle-btn" id="editBtn" onclick="toggleEditMode()" hidden>✎ Edit</button>
     <button class="insp-btn" id="inspBtn" onclick="toggleInspiration()">✦ Inspiration</button>
   </div>
@@ -440,6 +485,7 @@
 <button class="reset-btn save-folder-btn" id="saveToFolderBtn" onclick="saveToFolder()" hidden>💾 Save to Character Sheets folder</button>
 <button class="reset-btn" id="changeFolderBtn" onclick="chooseNewFolder()" hidden style="margin-top:6px;">🔁 Change folder (if saves keep landing in the wrong place)</button>
 <div class="folder-status" id="folderStatus" hidden></div>
+<button class="reset-btn" id="syncBtn" onclick="manualSyncToFirestore()" hidden>☁️ Sync to Firestore now</button>
 <button class="reset-btn" id="exportBtn" onclick="exportJson()" hidden>⬇ Export character JSON (fallback download)</button>
 <button class="reset-btn" id="discardEditsBtn" onclick="discardEdits()" hidden>Discard edits (revert to original import)</button>
 <button class="reset-btn" onclick="resetProgress()">Reset tracked stats (HP, spell slots, notes…)</button>
@@ -467,14 +513,125 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="dmLoginModal" hidden onclick="if(event.target===this) closeDmLogin()">
+  <div class="modal-card">
+    <div class="modal-top">
+      <div class="modal-title">DM Login</div>
+      <button class="modal-close" onclick="closeDmLogin()">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <input type="email" id="dmLoginEmail" placeholder="Email" style="padding:8px;border-radius:6px;border:1px solid var(--border);background:var(--panel-2);color:var(--text);">
+      <input type="password" id="dmLoginPassword" placeholder="Password" style="padding:8px;border-radius:6px;border:1px solid var(--border);background:var(--panel-2);color:var(--text);">
+      <div id="dmLoginError" style="color:#e0665c;font-size:0.85rem;"></div>
+      <button class="reset-btn" onclick="submitDmLogin()">Log in</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script>
 const DATA = {"id": "mtex0q6l-dtovimk", "schemaVersion": 1, "name": "Jackson", "createdAt": 1788040285581, "updatedAt": 1788053743361, "species": "Snow Leopard", "classes": [{"id": "cleric", "name": "Cleric", "level": 3, "hitDie": 8, "subclass": "Grave Domain"}], "abilities": {"str": 10, "dex": 12, "con": 14, "int": 8, "wis": 18, "cha": 6}, "proficientSaves": ["wis", "cha"], "skillProficiencies": ["insight", "persuasion", "deception", "arcana"], "skillExpertise": [], "hp": {"max": 24, "current": 24, "temp": 0}, "hitDiceUsed": {}, "speed": 30, "conditions": [], "exhaustion": 0, "deathSaves": {"successes": 0, "failures": 0}, "inspiration": false, "spellSlots": {"1": {"max": 4, "used": 0}, "2": {"max": 2, "used": 0}}, "spellsPrepared": [{"level": 0, "desc": "Frost-like radiance descends on a creature that you can see within range. The target must succeed on a Dexterity saving throw or take 1d8 radiant damage. The target gains no benefit from cover for this saving throw.", "castingTime": "1 actions", "range": "60 feet", "name": "Sacred Frost", "spellType": "ice"}, {"level": 0, "desc": "You point at one creature you can see within range, and the sound of a dolorous bell fills the air around it for a moment. The target must succeed on a Wisdom saving throw or take 1d8 necrotic damage. If the target is missing any of its hit points, it instead takes 1d12 necrotic damage.", "castingTime": "1 action", "range": "60 feet", "name": "Toll the Dead", "spellType": "necromancy"}, {"level": 0, "desc": "You touch a living creature that has 0 hit points. The creature becomes stable. This spell has no effect on undead or constructs.", "castingTime": "1 action ", "range": "60 feet", "name": "Spare the Dying", "spellType": "necromancy"}, {"level": 0, "desc": "You touch one willing creature. Once before the spell ends, the target can roll a d4 and add the number rolled to one ability check of its choice. It can roll the die before or after making the ability check. The spell then ends.", "castingTime": "1 action + bonus action", "range": "Touch", "name": "Guidance", "spellType": "enchantment"}, {"level": 1, "desc": "You speak a one-word command to a creature you can see within range. The target must succeed on a Wisdom saving throw or follow the command on its next turn. The spell has no effect if the target is undead, if it doesn\u2019t understand your language, or if your command is directly harmful to it. Some typical commands and their effects follow. You might issue a command other than one described here. If you do so, the GM determines how the target behaves. If the target can\u2019t follow your command, the spell ends. Approach. The target moves toward you by the shortest and most direct route, ending its turn if it moves within 5 feet of you. Drop. The target drops whatever it is holding and then ends its turn. Flee. The target spends its turn moving away from you by the fastest available means. Grovel. The target falls prone and then ends its turn. Halt. The target doesn\u2019t move and takes no actions. A flying creature stays aloft, provided that it is able to do so. If it must move to stay aloft, it flies the minimum distance needed to remain in the air.", "castingTime": "1 action", "range": "Sight", "name": "Command", "spellType": "enchantment"}, {"level": 1, "desc": "A creature you touch regains a number of hit points equal to 1d8 + your spellcasting ability modifier. This spell has no effect on undead or constructs.", "castingTime": "1 action", "range": "Touch", "name": "Cure Wounds", "spellType": "evocation"}, {"level": 1, "desc": "Bolstering yourself with a necromantic facsimile of life, you gain 1d4 + 4 temporary hit points for the duration.", "castingTime": "1 action", "range": "Self", "name": "False Life", "spellType": "necromancy"}, {"level": 1, "desc": "You conjure a shard of solid ice and hurl it toward a creature or object within range. Make a ranged spell attack against the target. On a hit, the target takes 3d6 cold damage. If the target is a creature, it must succeed on a Constitution saving throw or have its speed reduced by 10 feet until the end of its next turn as ice clings to the wound.  If you hit an object that isn't being worn or carried, the shard deals damage as normal and, if the object is a container of liquid, the liquid inside freezes solid (potentially cracking a fragile container).", "castingTime": "1 action", "range": "90 feet", "name": "Ice Arrow", "spellType": "ice"}, {"level": 2, "desc": "Creature. The target must make a Strength saving throw. On a failure, it takes 3d6 force damage and is flung up to 20 feet in a direction of your choice, then falls prone. If the destination is blocked by a solid surface (a wall or ceiling), the creature instead stops there and takes 1d6 bludgeoning damage in addition to the spell's damage. On a success, the creature takes half damage and isn't flung or knocked prone.  Object. An unattended object weighing up to 200 pounds is flung up to 40 feet in a direction of your choice. If hurled at a creature, that creature must succeed on a Dexterity saving throw or take 3d6 bludgeoning damage.  At Higher Levels. When you cast this spell using a spell slot of 3rd level or higher, the distance a creature or object can be flung increases by 15 feet, and the damage increases by 1d6, for each slot level above 2nd.", "castingTime": "1 action", "range": "60 feet", "name": "Fling", "spellType": "transmutation"}], "currency": {"cp": 0, "sp": 0, "ep": 0, "gp": 0, "pp": 0}, "inventory": [{"id": "item-mtk8fxpm2r1ul", "name": "Arorus", "quantity": 1, "kind": "weapon", "skillEffects": [], "icon": "sword", "dmg": "1d10", "dmgType": "Cold", "props": ["Conjured"], "desc": "After conjuring your weapon will melt after 1d6 turns. You will be left unarmed until the start of your next turn."}, {"id": "mtexqszc6fbq", "name": "Scale Mail", "quantity": 1, "kind": "armor", "acBase": 14, "dexMax": 2, "weight": 45, "equipped": false, "desc": "This armor consists of a coat and leggings (and perhaps a separate skirt) of leather covered with overlapping pieces of metal, much like the scales of a fish. The suit includes gauntlets.  Stealth. The wearer has disadvantage on Dexterity (Stealth) checks.", "skillEffects": [{"skill": "stealth", "mode": "disadvantage"}]}], "notes": "", "journal": {"entries": [], "npcs": [], "quests": [], "goals": []}, "speciesId": "hb-snow-leopard", "background": "Custom", "spellcastingAbility": "wis", "concentration": null, "customFeatures": [], "channelDivinity": {"max": 0}};
 const STORE_KEY = "dnd-sheet-" + DATA.id;
 const EDIT_KEY = "dnd-sheet-edits-" + DATA.id;
 const TAB_KEY = "dnd-sheet-tab";
-const DM_KEY = "dnd-dm-auth";
 const SOURCE_FILENAME = "jackson.json";
-const FS_SUPPORTED = typeof window.showDirectoryPicker === "function";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBKwdUomjwLubIzcZTRXAJNqiiiUbzPAoQ",
+  authDomain: "dnd-character-sheets-87c23.firebaseapp.com",
+  projectId: "dnd-character-sheets-87c23",
+  storageBucket: "dnd-character-sheets-87c23.firebasestorage.app",
+  messagingSenderId: "787644284719",
+  appId: "1:787644284719:web:9b93eb9f189b9090f4ebda",
+};
+const DM_UID = "0eIBWmxYyEQK7Umox44FvmKsQVr2";
+// true/characters are set per template by the build
+// scripts: real player pages and pushed NPC pages sync live; the blank
+// ad-hoc NPC template and the new-character draft template stay local-only
+// (nothing stable to key a Firestore doc on until they're actually saved).
+const FS_SYNC_ENABLED = "true" === "true";
+const FS_COLLECTION = "characters";
+firebase.initializeApp(firebaseConfig);
+const fbAuth = firebase.auth();
+const db = firebase.firestore();
+const charRef = FS_SYNC_ENABLED ? db.collection(FS_COLLECTION).doc(DATA.id) : null;
+const playRef = FS_SYNC_ENABLED ? charRef.collection("play").doc("state") : null;
+
+let dmAuthed = false;
+fbAuth.onAuthStateChanged(user => {
+  dmAuthed = !!(user && user.uid === DM_UID);
+  document.getElementById("dmLoginBtn").hidden = dmAuthed;
+  document.getElementById("dmLogoutBtn").hidden = !dmAuthed;
+  renderAll();
+});
+function openDmLogin(){
+  document.getElementById("dmLoginError").textContent = "";
+  document.getElementById("dmLoginModal").hidden = false;
+}
+function closeDmLogin(){ document.getElementById("dmLoginModal").hidden = true; }
+async function submitDmLogin(){
+  const email = document.getElementById("dmLoginEmail").value;
+  const password = document.getElementById("dmLoginPassword").value;
+  try{
+    await fbAuth.signInWithEmailAndPassword(email, password);
+    closeDmLogin();
+  }catch(e){
+    document.getElementById("dmLoginError").textContent = "Login failed: " + e.message;
+  }
+}
+function dmLogout(){ fbAuth.signOut(); }
+
+function debounce(fn, ms){
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+// Only DM writes are allowed by the Firestore rules, but guard client-side
+// too so a stray call from a non-DM viewer doesn't even attempt it.
+const pushCharToFirestore = debounce(() => {
+  if(!FS_SYNC_ENABLED || !dmAuthed) return;
+  charRef.set(charData).catch(err => toast("Sync failed", err.message));
+}, 600);
+const pushStateToFirestore = debounce(() => {
+  if(!FS_SYNC_ENABLED) return;
+  playRef.set(state).catch(err => toast("Sync failed", err.message));
+}, 600);
+function manualSyncToFirestore(){
+  if(!FS_SYNC_ENABLED) return;
+  if(!dmAuthed){ toast("Not logged in", "Log in as DM first"); return; }
+  charRef.set(charData).then(() => toast(charData.name, "Synced to Firestore"))
+    .catch(err => toast("Sync failed", err.message));
+}
+// Live updates: if another device (or the DM) changes this character's
+// Firestore doc, pick it up here instead of staying stuck on whatever was
+// baked in at build time or cached in this browser.
+if(FS_SYNC_ENABLED){
+  charRef.onSnapshot(doc => {
+    if(!doc.exists) return;
+    const remote = normalizeCharData(doc.data());
+    if(JSON.stringify(remote) === JSON.stringify(charData)) return;
+    charData = remote;
+    try{ localStorage.setItem(EDIT_KEY, JSON.stringify(charData)); }catch(e){}
+    renderAll();
+  });
+  playRef.onSnapshot(doc => {
+    if(!doc.exists) return;
+    const remote = normalizeState(doc.data());
+    if(JSON.stringify(remote) === JSON.stringify(state)) return;
+    state = remote;
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+    renderAll();
+  });
+}
+</script>
+
+<script>
+// Superseded by live Firestore sync for real characters and pushed NPCs -
+// only the new-character draft template still needs this (its only path to
+// becoming a real character, until draft creation also moves to Firestore).
+const LEGACY_FOLDER_SAVE_ENABLED = "false" === "true";
+const FS_SUPPORTED = LEGACY_FOLDER_SAVE_ENABLED && typeof window.showDirectoryPicker === "function";
 const DIR_HANDLE_KEY = "characterSheetsDir"; // which cached folder-picker handle this page's saves use
 const FOLDER_LABEL = "Character Sheets"; // just for the "Saved to ..." status text
 
@@ -551,8 +708,33 @@ async function chooseNewFolder(){
 }
 
 function isDM(){
-  try{ return localStorage.getItem(DM_KEY) === "1"; }catch(e){ return false; }
+  return dmAuthed;
 }
+
+function setTheme(name){
+  try{ localStorage.setItem("dnd-theme", name); }catch(e){}
+  if(name === "classic") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", name);
+  document.getElementById("themeMenu").hidden = true;
+  updateThemeMenuActive();
+}
+function toggleThemeMenu(){
+  const menu = document.getElementById("themeMenu");
+  menu.hidden = !menu.hidden;
+  updateThemeMenuActive();
+}
+function updateThemeMenuActive(){
+  let current = "slate";
+  try{ current = localStorage.getItem("dnd-theme") || "slate"; }catch(e){}
+  document.querySelectorAll("#themeMenu button").forEach(b => {
+    b.classList.toggle("active", b.dataset.themeOpt === current);
+  });
+}
+document.addEventListener("click", (e) => {
+  const picker = document.getElementById("themePicker");
+  if(picker && !picker.contains(e.target)) document.getElementById("themeMenu").hidden = true;
+});
+updateThemeMenuActive();
 
 const SKILLS = [
   ["acrobatics","Acrobatics","dex"],
@@ -713,6 +895,7 @@ function loadCharData(){
 }
 function saveCharData(){
   try{ localStorage.setItem(EDIT_KEY, JSON.stringify(charData)); }catch(e){}
+  pushCharToFirestore();
 }
 function hasEdits(){
   try{ return !!localStorage.getItem(EDIT_KEY); }catch(e){ return false; }
@@ -767,9 +950,17 @@ function loadState(){
       },
     };
   }
+  return normalizeState(s);
+}
+// Fills in defaults for a play-state object coming from localStorage or
+// Firestore, either of which may predate a field that's since been added.
+function normalizeState(s){
+  s = s || {};
   s.conditions = s.conditions || [];
   s.channelDivinityUsed = s.channelDivinityUsed || 0;
   s.featurePools = s.featurePools || {};
+  s.slotsUsed = s.slotsUsed || {};
+  s.equipped = s.equipped || {};
   s.journal = s.journal || {entries:[],npcs:[],quests:[],goals:[]};
   for(const [cat] of JOURNAL_CATS) s.journal[cat] = s.journal[cat] || [];
   return s;
@@ -778,6 +969,7 @@ let state = loadState();
 
 function saveState(){
   try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+  pushStateToFirestore();
 }
 
 function mod(score){ return Math.floor((score-10)/2); }
@@ -888,6 +1080,7 @@ function toggleEditMode(){
   editMode = !editMode;
   document.getElementById("editBtn").classList.toggle("on", editMode);
   document.getElementById("editBanner").hidden = !editMode;
+  document.getElementById("syncBtn").hidden = !editMode;
   document.getElementById("exportBtn").hidden = !editMode;
   document.getElementById("discardEditsBtn").hidden = !(editMode && hasEdits());
   document.getElementById("saveToFolderBtn").hidden = !(editMode && FS_SUPPORTED && SOURCE_FILENAME);
@@ -2067,6 +2260,7 @@ function renderInventory(){
 
 function renderAll(){
   applyDmVisibility();
+  document.getElementById("syncBtn").hidden = !editMode;
   document.getElementById("exportBtn").hidden = !editMode;
   document.getElementById("discardEditsBtn").hidden = !(editMode && hasEdits());
   document.getElementById("saveToFolderBtn").hidden = !(editMode && FS_SUPPORTED && SOURCE_FILENAME);

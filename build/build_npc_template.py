@@ -208,6 +208,12 @@ html = html.replace(
 # DM's browser storage - so disable the "save to folder" feature for them.
 html = html.replace('const SOURCE_FILENAME = "__SOURCE_FILENAME__";', 'const SOURCE_FILENAME = "";')
 
+# Ad-hoc local drafts have no stable id to key a Firestore doc on and are
+# meant to stay browser-only (see build/README.md) - no live sync for these.
+html = html.replace("__FS_SYNC_ENABLED__", "false")
+html = html.replace("__FS_COLLECTION__", "unused")
+html = html.replace("__LEGACY_FOLDER_SAVE_ENABLED__", "false")
+
 # close the appRoot wrapper div right before </body>
 html = html.replace("</body>", "</div>\n</body>")
 

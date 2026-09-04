@@ -31,6 +31,9 @@ for path in source_files:
     html = TEMPLATE.replace("__CHARACTER_DATA__", data_json)
     html = html.replace("__CHARACTER_NAME__", data["name"])
     html = html.replace("__SOURCE_FILENAME__", fname)
+    html = html.replace("__FS_SYNC_ENABLED__", "true")
+    html = html.replace("__FS_COLLECTION__", "characters")
+    html = html.replace("__LEGACY_FOLDER_SAVE_ENABLED__", "false")
     out_path = os.path.join(OUT_DIR, f"{slug}.html")
     with open(out_path, "w") as f:
         f.write(html)
@@ -59,6 +62,11 @@ for path in npc_source_files:
     html = NPC_PAGE_TEMPLATE.replace("__CHARACTER_DATA__", json.dumps(data))
     html = html.replace("__CHARACTER_NAME__", data["name"])
     html = html.replace("__SOURCE_FILENAME__", fname)
+    # Pushed NPCs sync too, but to their own DM-only-read collection - never
+    # "characters", which is public read (see firestore.rules).
+    html = html.replace("__FS_SYNC_ENABLED__", "true")
+    html = html.replace("__FS_COLLECTION__", "npcs")
+    html = html.replace("__LEGACY_FOLDER_SAVE_ENABLED__", "false")
     out_path = os.path.join(NPC_OUT_DIR, f"{slug}.html")
     with open(out_path, "w") as f:
         f.write(html)
@@ -69,7 +77,7 @@ for path in npc_source_files:
 
 # Build index.html
 index_items = "\n".join(
-    f'''      <a class="char-card" href="characters/{c['slug']}.html">
+    f'''      <a class="char-card" href="characters/{c['slug']}.html" data-char-id="{c['id']}">
         <div class="char-card-name">{c['name']}</div>
         <div class="char-card-sub">{c['species']} {c['cls']} {c['level']}{' &middot; ' + c['subclass'] if c['subclass'] else ''}</div>
       </a>'''
@@ -94,8 +102,8 @@ with open(os.path.join(PROJECT_ROOT, "compare.html"), "w") as f:
     f.write(compare_html)
 print("wrote compare.html")
 
-# Build dm.html
-DM_PASSCODE = "dmaccess1"  # change this (and re-run) to set your own DM passcode
+# Build dm.html - DM access is now real Firebase Auth (see dm_template.html),
+# not a baked-in passcode.
 dm_char_list = [{
     "name": c["name"], "slug": c["slug"], "id": c["id"], "fname": c["fname"],
     "sub": f"{c['species']} {c['cls']} {c['level']}" + (f" · {c['subclass']}" if c["subclass"] else "")
@@ -107,11 +115,10 @@ dm_npc_list = [{
 DM_TEMPLATE = open(os.path.join(os.path.dirname(__file__), "dm_template.html")).read()
 dm_html = (DM_TEMPLATE
     .replace("__CHAR_LIST__", json.dumps(dm_char_list))
-    .replace("__PUSHED_NPC_LIST__", json.dumps(dm_npc_list))
-    .replace("__DM_PASSCODE__", DM_PASSCODE))
+    .replace("__PUSHED_NPC_LIST__", json.dumps(dm_npc_list)))
 with open(os.path.join(PROJECT_ROOT, "dm.html"), "w") as f:
     f.write(dm_html)
-print("wrote dm.html  (DM passcode:", DM_PASSCODE, ")")
+print("wrote dm.html")
 
 # Build characters/npc.html (generic, ad-hoc NPC/monster sheet)
 import subprocess

@@ -16,11 +16,34 @@
     --accent-2:#8a2f2f;
     --good:#5c9a5c;
     --bad:#b4453e;
-    --prof:#c9762c;
+    --prof:var(--accent);
     --temp-hp:#4d9fd6;
     --warn:#e0a940;
     --divine:#e6c860;
   }
+  /* ---- alternate themes, picked from the 🎨 button, remembered per-browser ---- */
+  [data-theme="slate"]{
+    --bg:#16181d; --panel:#1e2128; --panel-2:#262a33; --border:#343a46;
+    --text:#e8eaed; --text-dim:#9aa3af; --accent:#5b8def; --accent-2:#e0665c;
+  }
+  [data-theme="indigo"]{
+    --bg:#14121f; --panel:#1d1a2e; --panel-2:#241f3d; --border:#372f56;
+    --text:#e6e2f5; --text-dim:#a99cc9; --accent:#8b6cf2; --accent-2:#e0665c;
+  }
+  [data-theme="emerald"]{
+    --bg:#121815; --panel:#1a2320; --panel-2:#20302a; --border:#324a3d;
+    --text:#e5ede9; --text-dim:#9bb5a8; --accent:#4fae7a; --accent-2:#e0a940;
+  }
+  .theme-picker{position:fixed;top:8px;right:8px;z-index:80;}
+  .theme-picker-btn{background:var(--panel);border:1px solid var(--border);color:var(--text);
+    border-radius:50%;width:32px;height:32px;font-size:0.95rem;cursor:pointer;line-height:1;}
+  .theme-menu{position:absolute;top:38px;right:0;background:var(--panel);border:1px solid var(--border);
+    border-radius:10px;padding:6px;display:flex;flex-direction:column;gap:2px;min-width:130px;
+    box-shadow:0 4px 14px rgba(0,0,0,.35);}
+  .theme-menu button{background:none;border:none;color:var(--text);text-align:left;padding:7px 9px;
+    border-radius:6px;font-size:0.82rem;font-family:inherit;cursor:pointer;width:100%;}
+  .theme-menu button:hover{background:var(--panel-2);}
+  .theme-menu button.active{font-weight:700;color:var(--accent);}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -275,8 +298,28 @@
   .checkline{display:flex;align-items:center;gap:6px;font-size:0.85rem;padding:3px 0;}
   .checkline label{display:flex;align-items:center;gap:4px;font-size:0.7rem;color:var(--text-dim);}
 </style>
+<script>
+// Applied here (in <head>, before the body paints) so switching themes never
+// flashes the old palette on load.
+(function(){
+  try{
+    const t = localStorage.getItem("dnd-theme") || "slate";
+    if(t !== "classic") document.documentElement.setAttribute("data-theme", t);
+  }catch(e){}
+})();
+</script>
 </head>
 <body>
+
+<div class="theme-picker" id="themePicker">
+  <button class="theme-picker-btn" onclick="toggleThemeMenu()" title="Theme" aria-label="Change theme">🎨</button>
+  <div class="theme-menu" id="themeMenu" hidden>
+    <button data-theme-opt="slate" onclick="setTheme('slate')">Slate</button>
+    <button data-theme-opt="indigo" onclick="setTheme('indigo')">Indigo</button>
+    <button data-theme-opt="emerald" onclick="setTheme('emerald')">Emerald</button>
+    <button data-theme-opt="classic" onclick="setTheme('classic')">Classic (brown)</button>
+  </div>
+</div>
 
 <nav class="tabnav" id="tabNav">
   <button class="tabnav-btn" id="tabBtnSheet" onclick="setTab('sheet')"><span class="tabnav-icon">📜</span><span>Sheet</span></button>
@@ -299,6 +342,8 @@
     <div class="sub" id="charSub"></div>
   </div>
   <div class="header-btns">
+    <button class="reset-btn" id="dmLoginBtn" onclick="openDmLogin()">🔑 DM Login</button>
+    <button class="reset-btn" id="dmLogoutBtn" onclick="dmLogout()" hidden>Log out (DM)</button>
     <button class="edit-toggle-btn" id="editBtn" onclick="toggleEditMode()" hidden>✎ Edit</button>
     <button class="insp-btn" id="inspBtn" onclick="toggleInspiration()">✦ Inspiration</button>
   </div>
@@ -440,6 +485,7 @@
 <button class="reset-btn save-folder-btn" id="saveToFolderBtn" onclick="saveToFolder()" hidden>💾 Save to Character Sheets folder</button>
 <button class="reset-btn" id="changeFolderBtn" onclick="chooseNewFolder()" hidden style="margin-top:6px;">🔁 Change folder (if saves keep landing in the wrong place)</button>
 <div class="folder-status" id="folderStatus" hidden></div>
+<button class="reset-btn" id="syncBtn" onclick="manualSyncToFirestore()" hidden>☁️ Sync to Firestore now</button>
 <button class="reset-btn" id="exportBtn" onclick="exportJson()" hidden>⬇ Export character JSON (fallback download)</button>
 <button class="reset-btn" id="discardEditsBtn" onclick="discardEdits()" hidden>Discard edits (revert to original import)</button>
 <button class="reset-btn" onclick="resetProgress()">Reset tracked stats (HP, spell slots, notes…)</button>
@@ -467,14 +513,125 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="dmLoginModal" hidden onclick="if(event.target===this) closeDmLogin()">
+  <div class="modal-card">
+    <div class="modal-top">
+      <div class="modal-title">DM Login</div>
+      <button class="modal-close" onclick="closeDmLogin()">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <input type="email" id="dmLoginEmail" placeholder="Email" style="padding:8px;border-radius:6px;border:1px solid var(--border);background:var(--panel-2);color:var(--text);">
+      <input type="password" id="dmLoginPassword" placeholder="Password" style="padding:8px;border-radius:6px;border:1px solid var(--border);background:var(--panel-2);color:var(--text);">
+      <div id="dmLoginError" style="color:#e0665c;font-size:0.85rem;"></div>
+      <button class="reset-btn" onclick="submitDmLogin()">Log in</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script>
 const DATA = {"id": "mtevt777-goy527i", "schemaVersion": 1, "name": "Celia", "createdAt": 1788038254771, "updatedAt": 1788044730815, "species": "Sea Elf", "classes": [{"id": "ranger", "name": "Ranger", "level": 3, "hitDie": 10, "subclass": "Hunter"}], "abilities": {"str": 8, "dex": 18, "con": 12, "int": 10, "wis": 15, "cha": 7}, "proficientSaves": ["str", "dex"], "skillProficiencies": ["animalHandling", "nature", "survival", "perception", "arcana"], "skillExpertise": [], "hp": {"max": 25, "current": 25, "temp": 8}, "hitDiceUsed": {}, "speed": 30, "conditions": [], "exhaustion": 0, "deathSaves": {"successes": 0, "failures": 0}, "inspiration": false, "spellSlots": {"1": {"max": 3, "used": 0}}, "spellsPrepared": [{"level": 1, "desc": "You choose a creature you can see within range and mystically mark it as your quarry. Until the spell ends, you deal an extra 1d6 damage to the target whenever you hit it with a weapon attack, and you have advantage on any Wisdom (Perception) or Wisdom (Survival) check you make to find it. If the target drops to 0 hit points before this spell ends, you can use a bonus action on a subsequent turn of yours to mark a new creature.", "castingTime": "1 bonus action", "range": "90 feet", "name": "Hunter's Mark", "spellType": "divination"}, {"level": 1, "desc": "A creature you touch regains a number of hit points equal to 1d8 + your spellcasting ability modifier. This spell has no effect on undead or constructs.", "castingTime": "", "range": "Touch", "name": "Cure Wounds", "spellType": "evocation"}, {"level": 1, "desc": "The next time you hit a creature with a weapon attack before this spell ends, a writhing mass of thorny vines appears at the point of impact, and the target must succeed on a Strength saving throw or be restrained by the magical vines until the spell ends. A Large or larger creature has advantage on this saving throw. If the target succeeds on the save, the vines shrivel away.\n\nWhile restrained by this spell, the target takes 1d6 piercing damage at the start of each of its turns. A creature restrained by the vines or one that can touch the creature can use its action to make a Strength check against your spell save DC. On a success, the target is freed.", "castingTime": "1 bonus aciotn", "range": "Self", "name": "Ensnaring Strike", "spellType": "conjuration"}], "currency": {"cp": 0, "sp": 0, "ep": 0, "gp": 0, "pp": 0}, "inventory": [{"id": "mtevz47g20a8", "name": "Lost Wave Dagger I", "quantity": 1, "kind": "weapon", "dmg": "1d4", "dmgType": "Piercing", "props": ["Finesse", "Light", "Thrown"], "rangeType": "Melee", "weight": 1, "equipped": true, "skillEffects": [], "desc": "A slender dagger of sea-glass-blue steel, its blade etched with a single curling wave that seems to shift and ripple faintly when tilted in the light. Engraved along the bottom of the handle, worn smooth by countless hands before its current owner, is a lone numeral: I. It is always found alongside its twin.\n\n**Special:** Wave Return. Immediately after you throw this dagger and it hits or misses, it rides a surge of phantom seawater back to your hand \u2014 you don't need to go retrieve it. \n\n**Paired Tide: ** Instead of letting it return to you, you can choose to teleport to it in a burst of water, appearing in the space it landed in (or the nearest unoccupied space) rather than having it come back. When you teleport this way, a softly glowing orb of water-light forms in the space you left behind, hovering a few inches off the ground. The orb sheds dim light in a 10-foot radius and fades away at the start of your next turn. Once you teleport to a dagger this way, you can't do so again with either Lost Wave Dagger until the start of your next turn.", "icon": "sword"}, {"id": "mtevz77aae2b", "name": "Lost Wave Dagger II", "quantity": 1, "kind": "weapon", "dmg": "1d4", "dmgType": "Piercing", "props": ["Finesse", "Light", "Thrown"], "rangeType": "Melee", "weight": 1, "equipped": true, "skillEffects": [], "desc": "A slender dagger of sea-glass-blue steel, its blade etched with a single curling wave that seems to shift and ripple faintly when tilted in the light. Engraved along the bottom of the handle, worn smooth by countless hands before its current owner, is a lone numeral: I. It is always found alongside its twin.\n\n**Special:** Wave Return. Immediately after you throw this dagger and it hits or misses, it rides a surge of phantom seawater back to your hand \u2014 you don't need to go retrieve it. \n\n**Paired Tide: ** Instead of letting it return to you, you can choose to teleport to it in a burst of water, appearing in the space it landed in (or the nearest unoccupied space) rather than having it come back. When you teleport this way, a softly glowing orb of water-light forms in the space you left behind, hovering a few inches off the ground. The orb sheds dim light in a 10-foot radius and fades away at the start of your next turn. Once you teleport to a dagger this way, you can't do so again with either Lost Wave Dagger until the start of your next turn."}, {"id": "mtew1xjafsxv", "name": "Scale Mail", "quantity": 1, "kind": "armor", "acBase": 14, "dexMax": 2, "weight": 45, "equipped": true, "skillEffects": [{"skill": "stealth", "mode": "disadvantage"}], "desc": "This armor consists of a coat and leggings (and perhaps a separate skirt) of leather covered with overlapping pieces of metal, much like the scales of a fish. The suit includes gauntlets."}], "notes": "", "journal": {"entries": [], "npcs": [], "quests": [], "goals": []}, "speciesId": "hb-sea-elf", "background": "", "spellcastingAbility": "wis", "customFeatures": [], "channelDivinity": {"max": 0}};
 const STORE_KEY = "dnd-sheet-" + DATA.id;
 const EDIT_KEY = "dnd-sheet-edits-" + DATA.id;
 const TAB_KEY = "dnd-sheet-tab";
-const DM_KEY = "dnd-dm-auth";
 const SOURCE_FILENAME = "celia.json";
-const FS_SUPPORTED = typeof window.showDirectoryPicker === "function";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBKwdUomjwLubIzcZTRXAJNqiiiUbzPAoQ",
+  authDomain: "dnd-character-sheets-87c23.firebaseapp.com",
+  projectId: "dnd-character-sheets-87c23",
+  storageBucket: "dnd-character-sheets-87c23.firebasestorage.app",
+  messagingSenderId: "787644284719",
+  appId: "1:787644284719:web:9b93eb9f189b9090f4ebda",
+};
+const DM_UID = "0eIBWmxYyEQK7Umox44FvmKsQVr2";
+// true/characters are set per template by the build
+// scripts: real player pages and pushed NPC pages sync live; the blank
+// ad-hoc NPC template and the new-character draft template stay local-only
+// (nothing stable to key a Firestore doc on until they're actually saved).
+const FS_SYNC_ENABLED = "true" === "true";
+const FS_COLLECTION = "characters";
+firebase.initializeApp(firebaseConfig);
+const fbAuth = firebase.auth();
+const db = firebase.firestore();
+const charRef = FS_SYNC_ENABLED ? db.collection(FS_COLLECTION).doc(DATA.id) : null;
+const playRef = FS_SYNC_ENABLED ? charRef.collection("play").doc("state") : null;
+
+let dmAuthed = false;
+fbAuth.onAuthStateChanged(user => {
+  dmAuthed = !!(user && user.uid === DM_UID);
+  document.getElementById("dmLoginBtn").hidden = dmAuthed;
+  document.getElementById("dmLogoutBtn").hidden = !dmAuthed;
+  renderAll();
+});
+function openDmLogin(){
+  document.getElementById("dmLoginError").textContent = "";
+  document.getElementById("dmLoginModal").hidden = false;
+}
+function closeDmLogin(){ document.getElementById("dmLoginModal").hidden = true; }
+async function submitDmLogin(){
+  const email = document.getElementById("dmLoginEmail").value;
+  const password = document.getElementById("dmLoginPassword").value;
+  try{
+    await fbAuth.signInWithEmailAndPassword(email, password);
+    closeDmLogin();
+  }catch(e){
+    document.getElementById("dmLoginError").textContent = "Login failed: " + e.message;
+  }
+}
+function dmLogout(){ fbAuth.signOut(); }
+
+function debounce(fn, ms){
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+// Only DM writes are allowed by the Firestore rules, but guard client-side
+// too so a stray call from a non-DM viewer doesn't even attempt it.
+const pushCharToFirestore = debounce(() => {
+  if(!FS_SYNC_ENABLED || !dmAuthed) return;
+  charRef.set(charData).catch(err => toast("Sync failed", err.message));
+}, 600);
+const pushStateToFirestore = debounce(() => {
+  if(!FS_SYNC_ENABLED) return;
+  playRef.set(state).catch(err => toast("Sync failed", err.message));
+}, 600);
+function manualSyncToFirestore(){
+  if(!FS_SYNC_ENABLED) return;
+  if(!dmAuthed){ toast("Not logged in", "Log in as DM first"); return; }
+  charRef.set(charData).then(() => toast(charData.name, "Synced to Firestore"))
+    .catch(err => toast("Sync failed", err.message));
+}
+// Live updates: if another device (or the DM) changes this character's
+// Firestore doc, pick it up here instead of staying stuck on whatever was
+// baked in at build time or cached in this browser.
+if(FS_SYNC_ENABLED){
+  charRef.onSnapshot(doc => {
+    if(!doc.exists) return;
+    const remote = normalizeCharData(doc.data());
+    if(JSON.stringify(remote) === JSON.stringify(charData)) return;
+    charData = remote;
+    try{ localStorage.setItem(EDIT_KEY, JSON.stringify(charData)); }catch(e){}
+    renderAll();
+  });
+  playRef.onSnapshot(doc => {
+    if(!doc.exists) return;
+    const remote = normalizeState(doc.data());
+    if(JSON.stringify(remote) === JSON.stringify(state)) return;
+    state = remote;
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+    renderAll();
+  });
+}
+</script>
+
+<script>
+// Superseded by live Firestore sync for real characters and pushed NPCs -
+// only the new-character draft template still needs this (its only path to
+// becoming a real character, until draft creation also moves to Firestore).
+const LEGACY_FOLDER_SAVE_ENABLED = "false" === "true";
+const FS_SUPPORTED = LEGACY_FOLDER_SAVE_ENABLED && typeof window.showDirectoryPicker === "function";
 const DIR_HANDLE_KEY = "characterSheetsDir"; // which cached folder-picker handle this page's saves use
 const FOLDER_LABEL = "Character Sheets"; // just for the "Saved to ..." status text
 
@@ -551,8 +708,33 @@ async function chooseNewFolder(){
 }
 
 function isDM(){
-  try{ return localStorage.getItem(DM_KEY) === "1"; }catch(e){ return false; }
+  return dmAuthed;
 }
+
+function setTheme(name){
+  try{ localStorage.setItem("dnd-theme", name); }catch(e){}
+  if(name === "classic") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", name);
+  document.getElementById("themeMenu").hidden = true;
+  updateThemeMenuActive();
+}
+function toggleThemeMenu(){
+  const menu = document.getElementById("themeMenu");
+  menu.hidden = !menu.hidden;
+  updateThemeMenuActive();
+}
+function updateThemeMenuActive(){
+  let current = "slate";
+  try{ current = localStorage.getItem("dnd-theme") || "slate"; }catch(e){}
+  document.querySelectorAll("#themeMenu button").forEach(b => {
+    b.classList.toggle("active", b.dataset.themeOpt === current);
+  });
+}
+document.addEventListener("click", (e) => {
+  const picker = document.getElementById("themePicker");
+  if(picker && !picker.contains(e.target)) document.getElementById("themeMenu").hidden = true;
+});
+updateThemeMenuActive();
 
 const SKILLS = [
   ["acrobatics","Acrobatics","dex"],
@@ -713,6 +895,7 @@ function loadCharData(){
 }
 function saveCharData(){
   try{ localStorage.setItem(EDIT_KEY, JSON.stringify(charData)); }catch(e){}
+  pushCharToFirestore();
 }
 function hasEdits(){
   try{ return !!localStorage.getItem(EDIT_KEY); }catch(e){ return false; }
@@ -767,9 +950,17 @@ function loadState(){
       },
     };
   }
+  return normalizeState(s);
+}
+// Fills in defaults for a play-state object coming from localStorage or
+// Firestore, either of which may predate a field that's since been added.
+function normalizeState(s){
+  s = s || {};
   s.conditions = s.conditions || [];
   s.channelDivinityUsed = s.channelDivinityUsed || 0;
   s.featurePools = s.featurePools || {};
+  s.slotsUsed = s.slotsUsed || {};
+  s.equipped = s.equipped || {};
   s.journal = s.journal || {entries:[],npcs:[],quests:[],goals:[]};
   for(const [cat] of JOURNAL_CATS) s.journal[cat] = s.journal[cat] || [];
   return s;
@@ -778,6 +969,7 @@ let state = loadState();
 
 function saveState(){
   try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+  pushStateToFirestore();
 }
 
 function mod(score){ return Math.floor((score-10)/2); }
@@ -888,6 +1080,7 @@ function toggleEditMode(){
   editMode = !editMode;
   document.getElementById("editBtn").classList.toggle("on", editMode);
   document.getElementById("editBanner").hidden = !editMode;
+  document.getElementById("syncBtn").hidden = !editMode;
   document.getElementById("exportBtn").hidden = !editMode;
   document.getElementById("discardEditsBtn").hidden = !(editMode && hasEdits());
   document.getElementById("saveToFolderBtn").hidden = !(editMode && FS_SUPPORTED && SOURCE_FILENAME);
@@ -2067,6 +2260,7 @@ function renderInventory(){
 
 function renderAll(){
   applyDmVisibility();
+  document.getElementById("syncBtn").hidden = !editMode;
   document.getElementById("exportBtn").hidden = !editMode;
   document.getElementById("discardEditsBtn").hidden = !(editMode && hasEdits());
   document.getElementById("saveToFolderBtn").hidden = !(editMode && FS_SUPPORTED && SOURCE_FILENAME);

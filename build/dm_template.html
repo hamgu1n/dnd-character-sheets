@@ -9,6 +9,28 @@
     --bg:#1b1712; --panel:#242019; --panel-2:#2c2620; --border:#463c2e;
     --text:#ece3d2; --text-dim:#b7a98d; --accent:#c9762c; --accent-2:#8a2f2f;
   }
+  [data-theme="slate"]{
+    --bg:#16181d; --panel:#1e2128; --panel-2:#262a33; --border:#343a46;
+    --text:#e8eaed; --text-dim:#9aa3af; --accent:#5b8def; --accent-2:#e0665c;
+  }
+  [data-theme="indigo"]{
+    --bg:#14121f; --panel:#1d1a2e; --panel-2:#241f3d; --border:#372f56;
+    --text:#e6e2f5; --text-dim:#a99cc9; --accent:#8b6cf2; --accent-2:#e0665c;
+  }
+  [data-theme="emerald"]{
+    --bg:#121815; --panel:#1a2320; --panel-2:#20302a; --border:#324a3d;
+    --text:#e5ede9; --text-dim:#9bb5a8; --accent:#4fae7a; --accent-2:#e0a940;
+  }
+  .theme-picker{position:fixed;top:8px;right:8px;z-index:80;}
+  .theme-picker-btn{background:var(--panel);border:1px solid var(--border);color:var(--text);
+    border-radius:50%;width:32px;height:32px;font-size:0.95rem;cursor:pointer;line-height:1;}
+  .theme-menu{position:absolute;top:38px;right:0;background:var(--panel);border:1px solid var(--border);
+    border-radius:10px;padding:6px;display:flex;flex-direction:column;gap:2px;min-width:130px;
+    box-shadow:0 4px 14px rgba(0,0,0,.35);}
+  .theme-menu button{background:none;border:none;color:var(--text);text-align:left;padding:7px 9px;
+    border-radius:6px;font-size:0.82rem;font-family:inherit;cursor:pointer;width:100%;}
+  .theme-menu button:hover{background:var(--panel-2);}
+  .theme-menu button.active{font-weight:700;color:var(--accent);}
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--text);min-height:100%;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
@@ -61,16 +83,36 @@
     .char-card:hover{border-color:var(--accent);}
   }
 </style>
+<script>
+(function(){
+  try{
+    const t = localStorage.getItem("dnd-theme") || "slate";
+    if(t !== "classic") document.documentElement.setAttribute("data-theme", t);
+  }catch(e){}
+})();
+</script>
 </head>
 <body>
+
+<div class="theme-picker" id="themePicker">
+  <button class="theme-picker-btn" onclick="toggleThemeMenu()" title="Theme" aria-label="Change theme">🎨</button>
+  <div class="theme-menu" id="themeMenu" hidden>
+    <button data-theme-opt="slate" onclick="setTheme('slate')">Slate</button>
+    <button data-theme-opt="indigo" onclick="setTheme('indigo')">Indigo</button>
+    <button data-theme-opt="emerald" onclick="setTheme('emerald')">Emerald</button>
+    <button data-theme-opt="classic" onclick="setTheme('classic')">Classic (brown)</button>
+  </div>
+</div>
+
 <div class="wrap">
 
   <div id="lockWrap" class="lock-wrap">
     <div class="lock-card">
       <h1>DM Access</h1>
-      <div class="sub" style="margin-bottom:0;">Enter the DM passcode to continue.</div>
-      <input type="password" id="passInput" placeholder="Passcode" autocomplete="off">
-      <button onclick="tryLogin()">Enter</button>
+      <div class="sub" style="margin-bottom:0;">Log in with your DM account.</div>
+      <input type="email" id="emailInput" placeholder="Email" autocomplete="username" style="margin-top:14px;">
+      <input type="password" id="passInput" placeholder="Password" autocomplete="current-password">
+      <button onclick="tryLogin()">Log in</button>
       <div class="lock-error" id="lockError"></div>
     </div>
   </div>
@@ -88,8 +130,7 @@
       <div class="topbar" style="margin-bottom:10px;gap:8px;flex-wrap:wrap;">
         <h2 style="margin-bottom:0;">Players</h2>
         <div style="display:flex;gap:8px;">
-          <button class="logout-btn" id="changeFolderBtn" onclick="chooseNewFolder()" hidden>🔁 Change folder</button>
-          <button class="save-all-btn" id="saveAllBtn" onclick="saveAllCharacters()" hidden>💾 Save all to folder</button>
+          <button class="save-all-btn" id="syncAllBtn" onclick="syncAllToFirestore()">☁️ Sync all to Firestore</button>
         </div>
       </div>
       <div id="saveAllStatus" class="empty-note" hidden></div>
@@ -118,108 +159,90 @@
   </div>
 
 </div>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script>
-const DM_KEY = "dnd-dm-auth";
-const DM_PASSCODE = "__DM_PASSCODE__"; // change this to set your own DM passcode
 const CHARACTERS = __CHAR_LIST__;
 const PUSHED_NPCS = __PUSHED_NPC_LIST__;
 
+const firebaseConfig = {
+  apiKey: "AIzaSyBKwdUomjwLubIzcZTRXAJNqiiiUbzPAoQ",
+  authDomain: "dnd-character-sheets-87c23.firebaseapp.com",
+  projectId: "dnd-character-sheets-87c23",
+  storageBucket: "dnd-character-sheets-87c23.firebasestorage.app",
+  messagingSenderId: "787644284719",
+  appId: "1:787644284719:web:9b93eb9f189b9090f4ebda",
+};
+const DM_UID = "0eIBWmxYyEQK7Umox44FvmKsQVr2";
+firebase.initializeApp(firebaseConfig);
+const fbAuth = firebase.auth();
+const db = firebase.firestore();
+
 function isDM(){
-  try{ return localStorage.getItem(DM_KEY) === "1"; }catch(e){ return false; }
+  return dmAuthed;
 }
 
-/* ---------- direct-to-disk saving (Chrome/Edge desktop only) ---------- */
-const FS_SUPPORTED = typeof window.showDirectoryPicker === "function";
-const DIR_HANDLE_KEY = "characterSheetsDir";
-function idbGet(key){
-  return new Promise((resolve) => {
-    const req = indexedDB.open("dnd-sheet-fs", 1);
-    req.onupgradeneeded = () => req.result.createObjectStore("handles");
-    req.onsuccess = () => {
-      const tx = req.result.transaction("handles", "readonly");
-      const getReq = tx.objectStore("handles").get(key);
-      getReq.onsuccess = () => resolve(getReq.result || null);
-      getReq.onerror = () => resolve(null);
-    };
-    req.onerror = () => resolve(null);
+function cardSub(data){
+  const cls = (data.classes && data.classes[0]) || {};
+  const parts = [data.species, cls.name, cls.level].filter(Boolean);
+  let sub = parts.join(" ");
+  if(cls.subclass) sub += " · " + cls.subclass;
+  return sub;
+}
+// Keeps the dashboard's own player cards (name/sub) live too, same as the
+// player-facing index page - a rename shows up here without a rebuild.
+db.collection("characters").onSnapshot(snap => {
+  snap.forEach(doc => {
+    const card = document.querySelector('.char-card[data-char-id="' + doc.id + '"]');
+    if(!card) return;
+    const data = doc.data();
+    card.querySelector(".char-card-name").textContent = data.name;
+    card.querySelector(".char-card-sub").textContent = cardSub(data);
   });
-}
-function idbSet(key, value){
-  return new Promise((resolve) => {
-    const req = indexedDB.open("dnd-sheet-fs", 1);
-    req.onupgradeneeded = () => req.result.createObjectStore("handles");
-    req.onsuccess = () => {
-      const tx = req.result.transaction("handles", "readwrite");
-      tx.objectStore("handles").put(value, key);
-      tx.oncomplete = () => resolve(true);
-      tx.onerror = () => resolve(false);
-    };
-    req.onerror = () => resolve(false);
-  });
-}
-async function getDirHandle(forcePick){
-  let handle = forcePick ? null : await idbGet(DIR_HANDLE_KEY);
-  if(handle){
-    try{
-      const perm = await handle.queryPermission({mode:"readwrite"});
-      if(perm === "granted") return handle;
-      const req = await handle.requestPermission({mode:"readwrite"});
-      if(req === "granted") return handle;
-    }catch(e){ /* stale handle - fall through to re-pick */ }
-  }
-  handle = await window.showDirectoryPicker({id:"dnd-character-sheets", mode:"readwrite"});
-  await idbSet(DIR_HANDLE_KEY, handle);
-  return handle;
-}
-// Forces a fresh folder picker instead of reusing whatever's cached - use this
-// if saves keep landing in the wrong place (e.g. one folder level too high).
-async function chooseNewFolder(){
+});
+let dmAuthed = false;
+fbAuth.onAuthStateChanged(user => {
+  dmAuthed = !!(user && user.uid === DM_UID);
+  if(dmAuthed) showDashboard();
+  else { document.getElementById("lockWrap").hidden = false; document.getElementById("dashboard").hidden = true; }
+});
+
+// Fetches every character's/NPC's current JSON straight from this same site
+// (works on GitHub Pages and from a local folder alike) and writes each one
+// into Firestore - the one-shot migration, and the fallback if a page's own
+// live sync ever falls behind.
+async function syncAllToFirestore(){
+  if(!dmAuthed) return;
   const statusEl = document.getElementById("saveAllStatus");
   statusEl.hidden = false;
-  try{
-    const dir = await getDirHandle(true);
-    statusEl.textContent = "Folder set to “" + (dir.name || "the selected folder") + "” — future saves will use this location.";
-  }catch(err){
-    if(err.name === "AbortError"){ statusEl.hidden = true; return; }
-    statusEl.textContent = "Couldn't set folder: " + (err.message || "try again");
-  }
-}
-
-async function saveAllCharacters(){
-  const statusEl = document.getElementById("saveAllStatus");
-  statusEl.hidden = false;
-  statusEl.textContent = "Saving…";
-  let dir;
-  try{
-    dir = await getDirHandle(false);
-  }catch(e){
-    if(e.name === "AbortError"){ statusEl.hidden = true; return; }
-    statusEl.textContent = "Couldn't open the Character Sheets folder: " + e.message;
-    return;
-  }
-
-  let savedCount = 0, skippedCount = 0, failedNames = [];
+  statusEl.textContent = "Syncing…";
+  let okCount = 0, failedNames = [];
   for(const c of CHARACTERS){
-    const raw = localStorage.getItem("dnd-sheet-edits-" + c.id);
-    if(!raw){ skippedCount++; flashCharCard(c.id, "flash-skipped"); continue; } // no edits made on this device - nothing to write
     try{
-      const fileHandle = await dir.getFileHandle(c.fname, {create:true});
-      const writable = await fileHandle.createWritable();
-      await writable.write(JSON.stringify(JSON.parse(raw), null, 2));
-      await writable.close();
-      savedCount++;
+      const data = await fetch("Character Sheets/" + c.fname).then(r => r.json());
+      await db.collection("characters").doc(c.id).set(data);
+      okCount++;
       flashCharCard(c.id, "flash-saved");
     }catch(e){
       failedNames.push(c.name);
       flashCharCard(c.id, "flash-failed");
     }
   }
-
-  const parts = [];
-  if(savedCount) parts.push(savedCount + " saved");
-  if(skippedCount) parts.push(skippedCount + " unchanged (no local edits)");
+  for(const n of PUSHED_NPCS){
+    try{
+      const data = await fetch("NPCs/" + n.fname).then(r => r.json());
+      await db.collection("npcs").doc(n.id).set(data);
+      okCount++;
+      flashCharCard(n.id, "flash-saved");
+    }catch(e){
+      failedNames.push(n.name);
+      flashCharCard(n.id, "flash-failed");
+    }
+  }
+  const parts = [okCount + " synced"];
   if(failedNames.length) parts.push(failedNames.length + " failed (" + failedNames.join(", ") + ")");
-  statusEl.textContent = parts.join(" · ") || "Nothing to save.";
+  statusEl.textContent = parts.join(" · ");
 }
 function flashCharCard(charId, cls){
   const card = document.querySelector('.char-card[data-char-id="' + charId + '"]');
@@ -227,22 +250,46 @@ function flashCharCard(charId, cls){
   card.classList.add(cls);
   setTimeout(() => card.classList.remove(cls), 2200);
 }
-function tryLogin(){
-  const val = document.getElementById("passInput").value;
-  if(val === DM_PASSCODE){
-    try{ localStorage.setItem(DM_KEY, "1"); }catch(e){}
-    showDashboard();
-  } else {
-    document.getElementById("lockError").textContent = "Incorrect passcode.";
+async function tryLogin(){
+  const email = document.getElementById("emailInput").value;
+  const password = document.getElementById("passInput").value;
+  try{
+    await fbAuth.signInWithEmailAndPassword(email, password);
+  }catch(e){
+    document.getElementById("lockError").textContent = "Login failed: " + e.message;
   }
 }
 document.getElementById("passInput").addEventListener("keydown", (e) => {
   if(e.key === "Enter") tryLogin();
 });
 function logout(){
-  try{ localStorage.removeItem(DM_KEY); }catch(e){}
-  location.reload();
+  fbAuth.signOut();
 }
+
+function setTheme(name){
+  try{ localStorage.setItem("dnd-theme", name); }catch(e){}
+  if(name === "classic") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", name);
+  document.getElementById("themeMenu").hidden = true;
+  updateThemeMenuActive();
+}
+function toggleThemeMenu(){
+  const menu = document.getElementById("themeMenu");
+  menu.hidden = !menu.hidden;
+  updateThemeMenuActive();
+}
+function updateThemeMenuActive(){
+  let current = "slate";
+  try{ current = localStorage.getItem("dnd-theme") || "slate"; }catch(e){}
+  document.querySelectorAll("#themeMenu button").forEach(b => {
+    b.classList.toggle("active", b.dataset.themeOpt === current);
+  });
+}
+document.addEventListener("click", (e) => {
+  const picker = document.getElementById("themePicker");
+  if(picker && !picker.contains(e.target)) document.getElementById("themeMenu").hidden = true;
+});
+updateThemeMenuActive();
 
 function loadNpcList(){
   try{
@@ -309,8 +356,6 @@ function enableDragReorder(gridEl, storageKey){
 function showDashboard(){
   document.getElementById("lockWrap").hidden = true;
   document.getElementById("dashboard").hidden = false;
-  document.getElementById("saveAllBtn").hidden = !(FS_SUPPORTED && CHARACTERS.length > 0);
-  document.getElementById("changeFolderBtn").hidden = !FS_SUPPORTED;
 
   const pGrid = document.getElementById("playerGrid");
   pGrid.innerHTML = "";
@@ -379,8 +424,6 @@ function showDashboard(){
   }
   if(draftChars.length > 0) enableDragReorder(dcGrid, "dnd-dm-order-draft-chars");
 }
-
-if(isDM()) showDashboard();
 </script>
 </body>
 </html>
