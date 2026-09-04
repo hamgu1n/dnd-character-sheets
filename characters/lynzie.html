@@ -383,6 +383,16 @@
         <div class="value" id="passivePerc">—</div>
       </div>
     </div>
+    <div class="statrow" id="spellStatsRow" style="margin-top:8px;" hidden>
+      <div class="statbox">
+        <div class="label">Spell Attack</div>
+        <div class="value" id="spellAttackValue">—</div>
+      </div>
+      <div class="statbox">
+        <div class="label">Spell Save DC</div>
+        <div class="value" id="spellDcValue">—</div>
+      </div>
+    </div>
   </div>
 
   <div class="panel">
@@ -587,10 +597,16 @@ function debounce(fn, ms){
   let t;
   return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
 }
+// Guards against a race that once wiped live edits for real: writing
+// whatever's baked in at build time (or cached from a previous visit)
+// before we've actually heard back from Firestore about what's really
+// there. Nothing pushes until the first snapshot has resolved at least
+// once - by then charData already reflects the live doc if one exists.
+let charDocLoaded = !FS_SYNC_ENABLED;
 // Only DM writes are allowed by the Firestore rules, but guard client-side
 // too so a stray call from a non-DM viewer doesn't even attempt it.
 const pushCharToFirestore = debounce(() => {
-  if(!FS_SYNC_ENABLED || !dmAuthed) return;
+  if(!FS_SYNC_ENABLED || !dmAuthed || !charDocLoaded) return;
   charRef.set(charData).catch(err => toast("Sync failed", err.message));
 }, 600);
 const pushStateToFirestore = debounce(() => {
@@ -600,6 +616,7 @@ const pushStateToFirestore = debounce(() => {
 function manualSyncToFirestore(){
   if(!FS_SYNC_ENABLED) return;
   if(!dmAuthed){ toast("Not logged in", "Log in as DM first"); return; }
+  if(!charDocLoaded){ toast("Still loading", "Wait a moment and try again"); return; }
   charRef.set(charData).then(() => toast(charData.name, "Synced to Firestore"))
     .catch(err => toast("Sync failed", err.message));
 }
@@ -608,6 +625,7 @@ function manualSyncToFirestore(){
 // baked in at build time or cached in this browser.
 if(FS_SYNC_ENABLED){
   charRef.onSnapshot(doc => {
+    charDocLoaded = true;
     if(!doc.exists) return;
     const remote = normalizeCharData(doc.data());
     if(JSON.stringify(remote) === JSON.stringify(charData)) return;
@@ -1544,6 +1562,17 @@ function renderTopStats(){
   const percExp = (charData.skillExpertise||[]).includes("perception");
   const percBonus = wisMod + (percProf ? getProf() * (percExp?2:1) : 0);
   document.getElementById("passivePerc").textContent = 10 + percBonus;
+
+  // Spell attack = spellcasting ability mod + proficiency bonus.
+  // Spell save DC = 8 + that same total.
+  const castAbility = charData.spellcastingAbility;
+  const hasSpells = !!castAbility && castAbility in charData.abilities;
+  document.getElementById("spellStatsRow").hidden = !hasSpells;
+  if(hasSpells){
+    const castMod = mod(charData.abilities[castAbility]) + getProf();
+    document.getElementById("spellAttackValue").textContent = fmtMod(castMod);
+    document.getElementById("spellDcValue").textContent = 8 + castMod;
+  }
 }
 
 function renderAbilities(){

@@ -130,7 +130,7 @@
       <div class="topbar" style="margin-bottom:10px;gap:8px;flex-wrap:wrap;">
         <h2 style="margin-bottom:0;">Players</h2>
         <div style="display:flex;gap:8px;">
-          <button class="save-all-btn" id="syncAllBtn" onclick="syncAllToFirestore()">☁️ Sync all to Firestore</button>
+          <button class="save-all-btn" id="syncAllBtn" onclick="syncAllToFirestore()" title="Only adds characters/NPCs that aren't in Firestore yet - never overwrites live data">☁️ Add new to Firestore</button>
         </div>
       </div>
       <div id="saveAllStatus" class="empty-note" hidden></div>
@@ -212,17 +212,24 @@ fbAuth.onAuthStateChanged(user => {
 // (works on GitHub Pages and from a local folder alike) and writes each one
 // into Firestore - the one-shot migration, and the fallback if a page's own
 // live sync ever falls behind.
+// Firestore is the only source of truth once a character/NPC has been
+// pushed once - this NEVER overwrites an existing doc with the JSON file,
+// which would blow away every live edit made since (this is exactly what
+// happened once already). It only fills in docs that don't exist yet, e.g.
+// a brand-new character/NPC added straight into the repo and never opened.
 async function syncAllToFirestore(){
   if(!dmAuthed) return;
   const statusEl = document.getElementById("saveAllStatus");
   statusEl.hidden = false;
-  statusEl.textContent = "Syncing…";
-  let okCount = 0, failedNames = [];
+  statusEl.textContent = "Checking…";
+  let createdCount = 0, skippedCount = 0, failedNames = [];
   for(const c of CHARACTERS){
     try{
+      const existing = await db.collection("characters").doc(c.id).get();
+      if(existing.exists){ skippedCount++; continue; }
       const data = await fetch("Character Sheets/" + c.fname).then(r => r.json());
       await db.collection("characters").doc(c.id).set(data);
-      okCount++;
+      createdCount++;
       flashCharCard(c.id, "flash-saved");
     }catch(e){
       failedNames.push(c.name);
@@ -231,16 +238,18 @@ async function syncAllToFirestore(){
   }
   for(const n of PUSHED_NPCS){
     try{
+      const existing = await db.collection("npcs").doc(n.id).get();
+      if(existing.exists){ skippedCount++; continue; }
       const data = await fetch("NPCs/" + n.fname).then(r => r.json());
       await db.collection("npcs").doc(n.id).set(data);
-      okCount++;
+      createdCount++;
       flashCharCard(n.id, "flash-saved");
     }catch(e){
       failedNames.push(n.name);
       flashCharCard(n.id, "flash-failed");
     }
   }
-  const parts = [okCount + " synced"];
+  const parts = [createdCount + " newly added", skippedCount + " already in Firestore (untouched)"];
   if(failedNames.length) parts.push(failedNames.length + " failed (" + failedNames.join(", ") + ")");
   statusEl.textContent = parts.join(" · ");
 }

@@ -73,12 +73,12 @@
       "id": "item-mtknca5cs92ol",
       "name": "Shield",
       "quantity": 1,
-      "kind": "armor",
+      "kind": "shield",
       "icon": "shield",
       "skillEffects": [],
-      "acBase": 2,
       "equipped": true,
-      "desc": "A shield is made from wood or metal and is carried in one hand. Wielding a shield increases your Armor Class by 2. You can benefit from only one shield at a time."
+      "desc": "A shield is made from wood or metal and is carried in one hand. Wielding a shield increases your Armor Class by 2. You can benefit from only one shield at a time.",
+      "acBonus": 2
     },
     {
       "id": "item-mtkncmtdhlg8t",
@@ -89,7 +89,7 @@
       "skillEffects": [],
       "dmg": "2d6",
       "equipped": true,
-      "desc": "Arm of Justice is less a sword than a verdict given form — a slab of blackened steel nearly as tall as the one who wields it, its blade broad enough to eclipse a shield and thick enough to turn parries into shattered bones. The crossguard is cast in the shape of two clasped hands, worn smooth where countless palms have rested before a swing, and the fuller running down its length is etched with a line of old judicial script, half-illegible now, that once listed the crimes it was forged to answer.\n\nIt's not a fast weapon. It doesn't need to be. Every swing carries the weight of finality — the kind of blow meant to end an argument, not start one. Those who've faced it rarely need to be told twice what it's called.",
+      "desc": "Arm of Justice is less a sword than a verdict given form \u2014 a slab of blackened steel nearly as tall as the one who wields it, its blade broad enough to eclipse a shield and thick enough to turn parries into shattered bones. The crossguard is cast in the shape of two clasped hands, worn smooth where countless palms have rested before a swing, and the fuller running down its length is etched with a line of old judicial script, half-illegible now, that once listed the crimes it was forged to answer.\n\nIt's not a fast weapon. It doesn't need to be. Every swing carries the weight of finality \u2014 the kind of blow meant to end an argument, not start one. Those who've faced it rarely need to be told twice what it's called.",
       "props": [
         "Two-Handed"
       ]
