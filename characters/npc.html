@@ -365,7 +365,6 @@
     <div class="sub" id="charSub"></div>
   </div>
   <div class="header-btns">
-    <button class="reset-btn" id="dmLoginBtn" onclick="openDmLogin()">🔑 DM Login</button>
     <button class="reset-btn" id="dmLogoutBtn" onclick="dmLogout()" hidden>Log out (DM)</button>
     <button class="edit-toggle-btn" id="editBtn" onclick="toggleEditMode()" hidden>✎ Edit</button>
     <button class="insp-btn" id="inspBtn" onclick="toggleInspiration()">✦ Inspiration</button>
@@ -562,21 +561,6 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="dmLoginModal" hidden onclick="if(event.target===this) closeDmLogin()">
-  <div class="modal-card">
-    <div class="modal-top">
-      <div class="modal-title">DM Login</div>
-      <button class="modal-close" onclick="closeDmLogin()">✕</button>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:10px;">
-      <input type="email" id="dmLoginEmail" placeholder="Email" style="padding:8px;border-radius:6px;border:1px solid var(--border);background:var(--panel-2);color:var(--text);">
-      <input type="password" id="dmLoginPassword" placeholder="Password" style="padding:8px;border-radius:6px;border:1px solid var(--border);background:var(--panel-2);color:var(--text);">
-      <div id="dmLoginError" style="color:#e0665c;font-size:0.85rem;"></div>
-      <button class="reset-btn" onclick="submitDmLogin()">Log in</button>
-    </div>
-  </div>
-</div>
-
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
@@ -639,28 +623,16 @@ const db = firebase.firestore();
 const charRef = FS_SYNC_ENABLED ? db.collection(FS_COLLECTION).doc(DATA.id) : null;
 const playRef = FS_SYNC_ENABLED ? charRef.collection("play").doc("state") : null;
 
+// No login form here on purpose - DM login only lives on the main
+// character-list page (index.html) and the DM Dashboard. Logging in there
+// carries over here automatically (same-origin session), so all this page
+// needs is to react to that state and offer a way to log back out.
 let dmAuthed = false;
 fbAuth.onAuthStateChanged(user => {
   dmAuthed = !!(user && user.uid === DM_UID);
-  document.getElementById("dmLoginBtn").hidden = dmAuthed;
   document.getElementById("dmLogoutBtn").hidden = !dmAuthed;
   renderAll();
 });
-function openDmLogin(){
-  document.getElementById("dmLoginError").textContent = "";
-  document.getElementById("dmLoginModal").hidden = false;
-}
-function closeDmLogin(){ document.getElementById("dmLoginModal").hidden = true; }
-async function submitDmLogin(){
-  const email = document.getElementById("dmLoginEmail").value;
-  const password = document.getElementById("dmLoginPassword").value;
-  try{
-    await fbAuth.signInWithEmailAndPassword(email, password);
-    closeDmLogin();
-  }catch(e){
-    document.getElementById("dmLoginError").textContent = "Login failed: " + e.message;
-  }
-}
 function dmLogout(){ fbAuth.signOut(); }
 
 function debounce(fn, ms){
