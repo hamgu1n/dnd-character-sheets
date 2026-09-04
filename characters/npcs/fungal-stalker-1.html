@@ -48,13 +48,23 @@
   html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     -webkit-text-size-adjust:100%;}
+  /* min-height (not height) + flex column so the nav is pushed to the bottom
+     of short pages by page-wrap's flex:1, and can otherwise sit as the last
+     line of actual page content - see .tabnav's position:sticky below for why. */
+  body{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;}
   h1,h2,h3{font-family:Georgia,"Times New Roman",serif;margin:0;}
   a{color:var(--accent);}
   [hidden]{display:none !important;}
 
   /* --- app shell / tab navigation --- */
-  .page-wrap{padding:14px 12px 92px;max-width:520px;margin:0 auto;}
-  .tabnav{position:fixed;z-index:40;background:var(--panel);border-top:1px solid var(--border);
+  .page-wrap{padding:14px 12px 92px;max-width:520px;margin:0 auto;flex:1;width:100%;}
+  /* Sticky, not fixed: some mobile browsers (e.g. Arc on iOS) render pages
+     inside their own custom scroll shell for swipe gestures, which breaks
+     true position:fixed - the bar just scrolls away with the page. Sticky
+     is computed off the actual scroll flow instead of "the viewport", so it
+     isn't fooled by that. order:2 plus body's flex-column keeps it visually
+     pinned below page-wrap regardless of DOM position. */
+  .tabnav{position:sticky;order:2;z-index:40;background:var(--panel);border-top:1px solid var(--border);
     left:0;right:0;bottom:0;display:flex;padding-bottom:env(safe-area-inset-bottom);
     box-shadow:0 -2px 10px rgba(0,0,0,.25);}
   .tabnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
@@ -63,7 +73,10 @@
   .tabnav-btn .tabnav-icon{font-size:1.25rem;line-height:1;}
   .tabnav-btn.active{color:var(--accent);}
   @media (min-width:820px){
-    .tabnav{top:0;bottom:0;right:auto;width:180px;flex-direction:column;
+    /* Back to a real fixed sidebar here - sticky can't span the full height
+       on both edges the way this layout needs, and desktop browsers don't
+       have the custom-scroll-shell problem sticky is working around above. */
+    .tabnav{position:fixed;top:0;bottom:0;right:auto;width:180px;flex-direction:column;
       align-items:stretch;justify-content:flex-start;padding:20px 0 0;gap:4px;
       border-top:none;border-right:1px solid var(--border);box-shadow:none;}
     .tabnav-btn{flex:none;flex-direction:row;justify-content:flex-start;gap:10px;
