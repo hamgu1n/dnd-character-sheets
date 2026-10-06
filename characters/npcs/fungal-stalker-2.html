@@ -155,6 +155,30 @@
   .temp-row button{width:20px;height:20px;border-radius:5px;border:1px solid var(--border);
     background:var(--panel);color:var(--text);font-size:0.85rem;line-height:1;padding:0;}
 
+  /* --- temporary AC buffs --- */
+  .statbox.has-ac-buff{border-color:var(--temp-hp);box-shadow:0 0 0 1px var(--temp-hp);}
+  .statbox.has-ac-buff .value{color:var(--temp-hp);}
+  .ac-base-note{font-size:0.62rem;color:var(--text-dim);margin-top:1px;}
+  .ac-buffs{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px;}
+  .ac-buff-chip{display:inline-flex;align-items:center;gap:6px;background:var(--temp-hp);color:#0d2433;
+    border-radius:14px;padding:3px 4px 3px 10px;font-size:0.75rem;font-weight:700;}
+  .ac-buff-chip.debuff{background:var(--accent-2);color:#f4e9dc;}
+  .ac-buff-chip button{background:rgba(0,0,0,.18);border:none;color:inherit;border-radius:50%;
+    width:20px;height:20px;font-size:0.7rem;line-height:1;padding:0;}
+  .ac-buff-add{background:var(--panel-2);border:1px dashed var(--border);color:var(--text-dim);
+    border-radius:14px;padding:4px 11px;font-size:0.75rem;}
+  .ac-buff-form{margin-top:8px;padding:10px;background:var(--panel-2);border:1px solid var(--border);border-radius:10px;}
+  .ac-buff-presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+  .ac-buff-presets button{background:var(--panel);border:1px solid var(--border);color:var(--text);
+    border-radius:14px;padding:4px 10px;font-size:0.75rem;}
+  .ac-buff-custom{display:flex;gap:6px;align-items:center;}
+  .ac-buff-custom input{background:var(--panel);border:1px solid var(--border);border-radius:6px;
+    color:var(--text);padding:6px 8px;font-family:inherit;font-size:0.85rem;min-width:0;}
+  .ac-buff-custom input[type=text]{flex:1;}
+  .ac-buff-custom input[type=number]{width:62px;text-align:center;}
+  .ac-buff-custom button{background:var(--accent);color:var(--bg);border:none;border-radius:6px;
+    padding:7px 12px;font-size:0.8rem;font-weight:700;}
+
   .abilgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
   .abilbox{background:var(--panel-2);border:1px solid var(--border);border-radius:10px;
     padding:8px 4px;text-align:center;}
@@ -426,9 +450,10 @@
 
   <div class="panel">
     <div class="statrow">
-      <div class="statbox">
+      <div class="statbox" id="acBox">
         <div class="label">Armor Class</div>
         <div class="value" id="acValue">—</div>
+        <div class="ac-base-note" id="acBaseNote" hidden></div>
       </div>
       <div class="statbox">
         <div class="label">Initiative</div>
@@ -500,9 +525,10 @@
 
   <div class="panel">
     <div class="statrow statrow-auto">
-      <div class="statbox">
+      <div class="statbox" id="acBoxPlay">
         <div class="label">Armor Class</div>
         <div class="value" id="acValuePlay">—</div>
+        <div class="ac-base-note" id="acBaseNotePlay" hidden></div>
       </div>
       <div class="statbox" id="spellAttackBoxPlay" hidden>
         <div class="label">Spell Attack</div>
@@ -513,6 +539,15 @@
         <div class="value" id="spellDcValuePlay">—</div>
       </div>
     </div>
+    <div class="ac-buffs" id="acBuffsList"></div>
+    <div class="ac-buff-form" id="acBuffForm" hidden>
+      <div class="ac-buff-presets" id="acBuffPresets"></div>
+      <div class="ac-buff-custom">
+        <input type="text" id="acBuffName" placeholder="Source (e.g. Shield)" maxlength="40" onkeydown="if(event.key==='Enter') addAcBuffFromForm()">
+        <input type="number" id="acBuffValue" value="2" min="-20" max="20" aria-label="AC bonus" onkeydown="if(event.key==='Enter') addAcBuffFromForm()">
+        <button onclick="addAcBuffFromForm()">Add</button>
+      </div>
+    </div>
   </div>
 
   <div class="panel" id="attacksPanel">
@@ -521,7 +556,10 @@
   </div>
 
   <div class="panel" id="featuresPanel">
-    <h2>Feats &amp; Features</h2>
+    <div class="panel-head">
+      <h2>Feats &amp; Features</h2>
+      <button class="reorder-toggle" id="featuresReorderBtn" hidden onclick="toggleReorderMode('features')">⇅ Reorder</button>
+    </div>
     <div id="channelDivinitySection" class="channel-divinity-card" hidden>
       <h3>Channel Divinity</h3>
       <div id="channelDivinitySlots"></div>
@@ -1060,6 +1098,7 @@ function normalizeState(s){
   s.featurePools = s.featurePools || {};
   s.slotsUsed = s.slotsUsed || {};
   s.equipped = s.equipped || {};
+  s.acBuffs = Array.isArray(s.acBuffs) ? s.acBuffs : [];
   s.journal = s.journal || {entries:[],npcs:[],quests:[],goals:[]};
   for(const [cat] of JOURNAL_CATS) s.journal[cat] = s.journal[cat] || [];
   return s;
@@ -1118,6 +1157,87 @@ function computeAC(){
   return base + dexMod + shieldBonus;
 }
 
+/* ---------- temporary AC buffs (Shield, Shield of Faith, cover...) ---------- */
+// Kept in play state, not charData, so players can add/remove them and they
+// clear with "Reset tracked stats" like temp HP.
+const AC_BUFF_PRESETS = [
+  ["Shield", 5], ["Shield of Faith", 2], ["Haste", 2], ["Half cover", 2], ["¾ cover", 5],
+];
+let acBuffFormOpen = false;
+
+function acBuffTotal(){
+  return (state.acBuffs || []).reduce((sum, b) => sum + (parseInt(b.value) || 0), 0);
+}
+function addAcBuff(name, value){
+  value = parseInt(value);
+  if(isNaN(value) || value === 0){ toast("Temp AC", "Enter a non-zero bonus"); return; }
+  state.acBuffs.push({id: uid("acbuff"), name: (name || "").trim() || "Temp AC", value});
+  acBuffFormOpen = false;
+  saveState();
+  renderTopStats();
+}
+function addAcBuffFromForm(){
+  const nameEl = document.getElementById("acBuffName");
+  addAcBuff(nameEl.value, document.getElementById("acBuffValue").value);
+  nameEl.value = "";
+}
+function removeAcBuff(id){
+  const idx = state.acBuffs.findIndex(b => b.id === id);
+  if(idx < 0) return;
+  removeWithUndo(state.acBuffs, idx, state.acBuffs[idx].name, () => { saveState(); renderTopStats(); });
+}
+function toggleAcBuffForm(){
+  acBuffFormOpen = !acBuffFormOpen;
+  renderAcBuffs();
+  if(acBuffFormOpen) document.getElementById("acBuffName").focus();
+}
+function fmtBonus(v){ return (v >= 0 ? "+" : "") + v; }
+
+function renderAcBuffs(){
+  const list = document.getElementById("acBuffsList");
+  list.innerHTML = "";
+  for(const b of state.acBuffs){
+    const chip = document.createElement("span");
+    chip.className = "ac-buff-chip" + (b.value < 0 ? " debuff" : "");
+    const label = document.createElement("span");
+    label.textContent = b.name + " " + fmtBonus(b.value) + " AC";
+    const rm = document.createElement("button");
+    rm.textContent = "✕";
+    rm.setAttribute("aria-label", "Remove " + b.name);
+    rm.onclick = () => removeAcBuff(b.id);
+    chip.appendChild(label);
+    chip.appendChild(rm);
+    list.appendChild(chip);
+  }
+  const add = document.createElement("button");
+  add.className = "ac-buff-add";
+  add.textContent = acBuffFormOpen ? "Cancel" : "+ Temp AC";
+  add.onclick = toggleAcBuffForm;
+  list.appendChild(add);
+  if(state.acBuffs.length > 1){
+    const clear = document.createElement("button");
+    clear.className = "ac-buff-add";
+    clear.textContent = "Clear all";
+    clear.onclick = () => {
+      const before = state.acBuffs.slice();
+      state.acBuffs = [];
+      saveState(); renderTopStats();
+      showUndo("Cleared temp AC", () => { state.acBuffs = before; saveState(); renderTopStats(); });
+    };
+    list.appendChild(clear);
+  }
+
+  document.getElementById("acBuffForm").hidden = !acBuffFormOpen;
+  const presets = document.getElementById("acBuffPresets");
+  presets.innerHTML = "";
+  for(const [name, value] of AC_BUFF_PRESETS){
+    const b = document.createElement("button");
+    b.textContent = name + " " + fmtBonus(value);
+    b.onclick = () => addAcBuff(name, value);
+    presets.appendChild(b);
+  }
+}
+
 function toast(label, result){
   const t = document.getElementById("rollToast");
   document.getElementById("toastLabel").textContent = label;
@@ -1159,8 +1279,18 @@ function removeWithUndo(arr, idx, label, afterRemove){
 /* ---------- reordering (spells & items) ---------- */
 // Compact "Reorder" view per list, toggled from the panel header in edit
 // mode - the full edit cards are too tall to shuffle around comfortably.
-const reorderMode = {spells: false, items: false};
+const reorderMode = {spells: false, items: false, features: false};
 let lastMovedEntry = null; // object reference, so the moved row can flash after re-render
+// Some lists are a filtered view of a larger array (features are split into
+// regular vs Channel Divinity) - those register a hook here that writes the
+// new order back to the real array before saving.
+const reorderCommitHooks = new WeakMap();
+function commitReorder(arr){
+  const hook = reorderCommitHooks.get(arr);
+  if(hook) hook();
+  saveCharData();
+  renderAll();
+}
 
 function toggleReorderMode(which){
   reorderMode[which] = !reorderMode[which];
@@ -1177,8 +1307,7 @@ function moveEntry(arr, from, to, listEl){
   const [entry] = arr.splice(from, 1);
   arr.splice(to, 0, entry);
   lastMovedEntry = entry;
-  saveCharData();
-  renderAll();
+  commitReorder(arr);
   const newRow = listEl && listEl.children[to];
   if(newRow && prevTop !== null) window.scrollBy(0, newRow.getBoundingClientRect().top - prevTop);
 }
@@ -1188,12 +1317,10 @@ function sortEntriesWithUndo(arr, compare, label){
   const before = arr.slice();
   arr.sort(compare);
   if(before.every((e, i) => e === arr[i])){ toast("Sort", "Already in that order"); return; }
-  saveCharData();
-  renderAll();
+  commitReorder(arr);
   showUndo(label, () => {
     arr.splice(0, arr.length, ...before);
-    saveCharData();
-    renderAll();
+    commitReorder(arr);
   });
 }
 
@@ -1271,7 +1398,6 @@ function renderReorderList(listEl, arr, which, opts){
     attachDragReorder(handle, row, rowsEl, arr);
     rowsEl.appendChild(row);
   });
-  lastMovedEntry = null;
 }
 
 // Pointer-based drag (works for mouse and touch - HTML5 drag-and-drop doesn't
@@ -1329,8 +1455,7 @@ function attachDragReorder(handle, row, rowsEl, arr){
         const [entry] = arr.splice(from, 1);
         arr.splice(to, 0, entry);
         lastMovedEntry = entry;
-        saveCharData();
-        renderAll();
+        commitReorder(arr);
       }
     };
     handle.addEventListener("pointermove", onMove);
@@ -1352,7 +1477,7 @@ function renderInspiration(){
 function toggleEditMode(){
   if(!isDM()) return;
   editMode = !editMode;
-  if(!editMode) reorderMode.spells = reorderMode.items = false;
+  if(!editMode) reorderMode.spells = reorderMode.items = reorderMode.features = false;
   document.getElementById("editBtn").classList.toggle("on", editMode);
   document.getElementById("editBanner").hidden = !editMode;
   document.getElementById("syncBtn").hidden = !editMode;
@@ -1370,7 +1495,7 @@ function applyDmVisibility(){
   document.getElementById("dmBadge").hidden = !dm;
   if(!dm && editMode){
     editMode = false;
-    reorderMode.spells = reorderMode.items = false;
+    reorderMode.spells = reorderMode.items = reorderMode.features = false;
   }
 }
 
@@ -1712,7 +1837,7 @@ function descIsMissing(desc){
 }
 
 function resetProgress(){
-  if(!confirm("Reset HP, temp HP, spell slots used, Channel Divinity charges, feature resource pools, conditions, inspiration, notes and journal back to the imported values? (This does not affect edited character data.)")) return;
+  if(!confirm("Reset HP, temp HP, temp AC, spell slots used, Channel Divinity charges, feature resource pools, conditions, inspiration, notes and journal back to the imported values? (This does not affect edited character data.)")) return;
   localStorage.removeItem(STORE_KEY);
   state = loadState();
   renderAll();
@@ -1808,9 +1933,17 @@ function renderTopStats(){
   autoSizeNumberInput(document.getElementById("hpCurrent"));
   document.getElementById("hpTempValue").textContent = state.hpTemp || 0;
   refreshTempIndicator();
-  const ac = computeAC();
-  document.getElementById("acValue").textContent = ac;
-  document.getElementById("acValuePlay").textContent = ac;
+  const baseAc = computeAC();
+  const buff = acBuffTotal();
+  const ac = baseAc + buff;
+  for(const [boxId, valId, noteId] of [["acBox","acValue","acBaseNote"], ["acBoxPlay","acValuePlay","acBaseNotePlay"]]){
+    document.getElementById(valId).textContent = ac;
+    document.getElementById(boxId).classList.toggle("has-ac-buff", buff !== 0);
+    const note = document.getElementById(noteId);
+    note.hidden = buff === 0;
+    note.textContent = buff ? (baseAc + " base " + fmtBonus(buff)) : "";
+  }
+  renderAcBuffs();
   document.getElementById("initValue").textContent = fmtMod(mod(charData.abilities.dex));
   document.getElementById("speedDisplay").hidden = editMode;
   document.getElementById("speedDisplay").textContent = charData.speed + " ft";
@@ -2168,11 +2301,21 @@ function renderFeatures(){
   panel.style.display = "";
   el.innerHTML = "";
   cdSection.hidden = !showCdSection;
+  const reorderBtn = document.getElementById("featuresReorderBtn");
+  reorderBtn.hidden = !editMode || allFeats.length === 0;
+  reorderBtn.classList.toggle("on", editMode && reorderMode.features);
 
-  if(editMode){
+  if(editMode && reorderMode.features && allFeats.length){
+    cdSlotsEl.innerHTML = "";
+    cdListEl.innerHTML = "";
+    cdSection.hidden = cdFeats.length === 0;
+    if(cdFeats.length) renderReorderList(cdListEl, featureGroup(allFeats, true), "features", FEATURE_REORDER_OPTS);
+    if(normalFeats.length) renderReorderList(el, featureGroup(allFeats, false), "features", FEATURE_REORDER_OPTS);
+  } else if(editMode){
+    const normalGroup = featureGroup(allFeats, false);
     normalFeats.forEach((f) => {
       const idx = allFeats.indexOf(f);
-      el.appendChild(buildFeatureEditCard(f, idx, allFeats));
+      el.appendChild(buildFeatureEditCard(f, idx, allFeats, normalGroup, el));
     });
     const addBtn = document.createElement("button");
     addBtn.className = "add-btn";
@@ -2198,9 +2341,10 @@ function renderFeatures(){
       };
       cdSlotsEl.appendChild(maxRow);
       cdListEl.innerHTML = "";
+      const cdGroup = featureGroup(allFeats, true);
       cdFeats.forEach((f) => {
         const idx = allFeats.indexOf(f);
-        cdListEl.appendChild(buildFeatureEditCard(f, idx, allFeats));
+        cdListEl.appendChild(buildFeatureEditCard(f, idx, allFeats, cdGroup, cdListEl));
       });
     }
   } else {
@@ -2237,10 +2381,31 @@ function renderFeatures(){
   }
 }
 
-function buildFeatureEditCard(f, idx, allFeats){
+// One of the two feature groups (regular or Channel Divinity) as its own
+// array, so it can be reordered on its own; reordering writes the group's new
+// order back into the same slots of charData.customFeatures.
+function featureGroup(allFeats, isCd){
+  const group = allFeats.filter(f => !!f.isChannelDivinity === isCd);
+  reorderCommitHooks.set(group, () => {
+    let i = 0;
+    for(let j = 0; j < allFeats.length; j++){
+      if(!!allFeats[j].isChannelDivinity === isCd) allFeats[j] = group[i++];
+    }
+  });
+  return group;
+}
+
+const FEATURE_REORDER_OPTS = {
+  name: f => f.name || "Unnamed feature",
+  meta: f => f.hasPool ? "Pool: " + (f.poolMax || 0) : "",
+  sorts: [["A–Z", (a, b) => (a.name||"").localeCompare(b.name||"")]],
+};
+
+function buildFeatureEditCard(f, idx, allFeats, group, listEl){
   const card = document.createElement("div");
   card.className = "edit-card";
   card.innerHTML = `
+    <div class="edit-card-top"></div>
     <div class="edit-field"><label>Name</label><input class="edit-input wide" data-f="name" value="${f.name||""}"></div>
     <div class="edit-field"><label>Description</label><textarea class="edit-input wide" data-f="desc" rows="3">${escapeHtml((f.desc && f.desc !== "No description.") ? f.desc : "")}</textarea></div>
   `;
@@ -2280,9 +2445,11 @@ function buildFeatureEditCard(f, idx, allFeats){
 
   const rm = document.createElement("button");
   rm.className = "remove-btn";
-  rm.textContent = "Remove feature";
+  rm.textContent = "Remove";
   rm.onclick = () => { removeWithUndo(allFeats, idx, f.name || "feature", () => { saveCharData(); renderAll(); }); };
-  card.appendChild(rm);
+  const top = card.querySelector(".edit-card-top");
+  top.appendChild(reorderButtons(group, group.indexOf(f), listEl, false));
+  top.appendChild(rm);
   card.querySelectorAll("[data-f]").forEach(inp => {
     inp.onchange = () => {
       const field = inp.dataset.f;
@@ -2595,6 +2762,7 @@ function renderAll(){
   renderConditions();
   renderNotes();
   renderJournal();
+  lastMovedEntry = null; // only flash on the render right after a move
 }
 
 if(!isDM()){
