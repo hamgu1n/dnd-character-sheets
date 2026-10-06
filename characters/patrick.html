@@ -327,6 +327,37 @@
     border-radius:8px;padding:9px;width:100%;font-size:0.8rem;margin-top:2px;}
   .checkline{display:flex;align-items:center;gap:6px;font-size:0.85rem;padding:3px 0;}
   .checkline label{display:flex;align-items:center;gap:4px;font-size:0.7rem;color:var(--text-dim);}
+
+  /* --- reorder mode (spells & items) --- */
+  .panel-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;}
+  .panel-head h2{margin-bottom:0;}
+  .reorder-toggle{background:var(--panel-2);border:1px solid var(--border);color:var(--text);
+    border-radius:6px;padding:4px 10px;font-size:0.72rem;}
+  .reorder-toggle.on{background:var(--accent);color:var(--bg);border-color:var(--accent);font-weight:700;}
+  .reorder-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:8px;
+    font-size:0.72rem;color:var(--text-dim);}
+  .reorder-toolbar .hint{margin-right:auto;}
+  .reorder-toolbar button{background:var(--panel-2);border:1px solid var(--border);color:var(--text);
+    border-radius:6px;padding:4px 9px;font-size:0.72rem;}
+  .reorder-row{display:flex;align-items:center;gap:8px;padding:6px 4px;background:var(--panel);
+    border:1px solid var(--border);border-radius:8px;margin-bottom:5px;user-select:none;-webkit-user-select:none;}
+  .reorder-row.dragging{background:var(--panel-2);border-color:var(--accent);
+    box-shadow:0 6px 18px rgba(0,0,0,.35);position:relative;z-index:5;}
+  .reorder-row.just-moved{animation:reorder-flash .9s ease-out;}
+  @keyframes reorder-flash{from{border-color:var(--accent);background:var(--panel-2);}}
+  .reorder-handle{touch-action:none;cursor:grab;color:var(--text-dim);font-size:1.1rem;
+    width:30px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    background:none;border:none;padding:0;}
+  .reorder-row.dragging .reorder-handle{cursor:grabbing;color:var(--accent);}
+  .reorder-pos{font-size:0.65rem;color:var(--text-dim);width:18px;text-align:right;flex-shrink:0;}
+  .reorder-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;}
+  .reorder-text .name{font-size:0.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .reorder-text .meta{font-size:0.66rem;color:var(--text-dim);}
+  .reorder-row .reorder-btns{display:flex;gap:3px;flex-shrink:0;}
+  .reorder-btns button{background:var(--panel);border:1px solid var(--border);
+    color:var(--text);border-radius:6px;width:28px;height:28px;font-size:0.8rem;line-height:1;padding:0;}
+  .reorder-btns button:disabled{opacity:.3;}
+  @media (max-width:420px){ .reorder-btns .edge-btn{display:none;} }
 </style>
 <script>
 // Applied here (in <head>, before the body paints) so switching themes never
@@ -501,13 +532,19 @@
   </div>
 
   <div class="panel" id="spellsPanel">
-    <h2>Spells</h2>
+    <div class="panel-head">
+      <h2>Spells</h2>
+      <button class="reorder-toggle" id="spellsReorderBtn" hidden onclick="toggleReorderMode('spells')">⇅ Reorder</button>
+    </div>
     <div id="spellsList"></div>
     <div class="spell-hint" id="spellHint">Tap a spell to cast it (uses a slot). Tap the ⓘ for its description.</div>
   </div>
 
   <div class="panel">
-    <h2>Items</h2>
+    <div class="panel-head">
+      <h2>Items</h2>
+      <button class="reorder-toggle" id="itemsReorderBtn" hidden onclick="toggleReorderMode('items')">⇅ Reorder</button>
+    </div>
     <div id="inventoryList"></div>
     <div style="margin-top:8px;font-size:0.8rem;color:var(--text-dim);" id="currencyRow"></div>
   </div>
@@ -1114,13 +1151,188 @@ function removeWithUndo(arr, idx, label, afterRemove){
   });
 }
 
-function moveInventoryItem(idx, dir){
-  const arr = charData.inventory;
-  const newIdx = idx + dir;
-  if(newIdx < 0 || newIdx >= arr.length) return;
-  [arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]];
+/* ---------- reordering (spells & items) ---------- */
+// Compact "Reorder" view per list, toggled from the panel header in edit
+// mode - the full edit cards are too tall to shuffle around comfortably.
+const reorderMode = {spells: false, items: false};
+let lastMovedEntry = null; // object reference, so the moved row can flash after re-render
+
+function toggleReorderMode(which){
+  reorderMode[which] = !reorderMode[which];
+  renderAll();
+}
+
+// Moves arr[from] to index `to`, saves, re-renders, and scrolls so the moved
+// row/card stays where it was on screen - otherwise repeated taps on ↑ chase
+// the entry up the page. `listEl` is the container the rows live in.
+function moveEntry(arr, from, to, listEl){
+  if(to < 0 || to >= arr.length || from === to) return;
+  const prevRow = listEl && listEl.children[from];
+  const prevTop = prevRow ? prevRow.getBoundingClientRect().top : null;
+  const [entry] = arr.splice(from, 1);
+  arr.splice(to, 0, entry);
+  lastMovedEntry = entry;
   saveCharData();
   renderAll();
+  const newRow = listEl && listEl.children[to];
+  if(newRow && prevTop !== null) window.scrollBy(0, newRow.getBoundingClientRect().top - prevTop);
+}
+
+// Re-sorts the whole list with an Undo, since one tap undoes a manual order.
+function sortEntriesWithUndo(arr, compare, label){
+  const before = arr.slice();
+  arr.sort(compare);
+  if(before.every((e, i) => e === arr[i])){ toast("Sort", "Already in that order"); return; }
+  saveCharData();
+  renderAll();
+  showUndo(label, () => {
+    arr.splice(0, arr.length, ...before);
+    saveCharData();
+    renderAll();
+  });
+}
+
+function reorderButtons(arr, idx, listEl, withEdges){
+  const wrap = document.createElement("div");
+  wrap.className = "reorder-btns";
+  const last = arr.length - 1;
+  const mk = (txt, title, to, disabled, edge) => {
+    const b = document.createElement("button");
+    b.textContent = txt;
+    b.title = title;
+    b.setAttribute("aria-label", title);
+    b.disabled = disabled;
+    if(edge) b.className = "edge-btn";
+    b.onclick = (e) => { e.stopPropagation(); moveEntry(arr, idx, to, listEl); };
+    wrap.appendChild(b);
+  };
+  if(withEdges) mk("⤒", "Move to top", 0, idx === 0, true);
+  mk("↑", "Move up", idx - 1, idx === 0);
+  mk("↓", "Move down", idx + 1, idx === last);
+  if(withEdges) mk("⤓", "Move to bottom", last, idx === last, true);
+  return wrap;
+}
+
+// Renders `arr` as compact draggable rows into `listEl`.
+// opts: {name(entry), meta(entry), icon(entry) -> element, sorts: [[label, compareFn], ...]}
+function renderReorderList(listEl, arr, which, opts){
+  const toolbar = document.createElement("div");
+  toolbar.className = "reorder-toolbar";
+  const hint = document.createElement("span");
+  hint.className = "hint";
+  hint.textContent = arr.length ? "Drag ⠿ or use the arrows" : "Nothing to reorder yet.";
+  toolbar.appendChild(hint);
+  if(arr.length > 1){
+    for(const [label, compare] of (opts.sorts || [])){
+      const b = document.createElement("button");
+      b.textContent = label;
+      b.onclick = () => sortEntriesWithUndo(arr, compare, "Sorted " + label.toLowerCase());
+      toolbar.appendChild(b);
+    }
+  }
+  const done = document.createElement("button");
+  done.textContent = "Done";
+  done.onclick = () => toggleReorderMode(which);
+  toolbar.appendChild(done);
+  listEl.appendChild(toolbar);
+
+  const rowsEl = document.createElement("div");
+  listEl.appendChild(rowsEl);
+  arr.forEach((entry, idx) => {
+    const row = document.createElement("div");
+    row.className = "reorder-row" + (entry === lastMovedEntry ? " just-moved" : "");
+    const handle = document.createElement("button");
+    handle.className = "reorder-handle";
+    handle.textContent = "⠿";
+    handle.setAttribute("aria-label", "Drag to reorder");
+    row.appendChild(handle);
+    const pos = document.createElement("span");
+    pos.className = "reorder-pos";
+    pos.textContent = idx + 1;
+    row.appendChild(pos);
+    if(opts.icon) row.appendChild(opts.icon(entry));
+    const text = document.createElement("div");
+    text.className = "reorder-text";
+    const name = document.createElement("span");
+    name.className = "name";
+    name.textContent = opts.name(entry);
+    const meta = document.createElement("span");
+    meta.className = "meta";
+    meta.textContent = opts.meta ? opts.meta(entry) : "";
+    text.appendChild(name);
+    text.appendChild(meta);
+    row.appendChild(text);
+    row.appendChild(reorderButtons(arr, idx, rowsEl, true));
+    attachDragReorder(handle, row, rowsEl, arr);
+    rowsEl.appendChild(row);
+  });
+  lastMovedEntry = null;
+}
+
+// Pointer-based drag (works for mouse and touch - HTML5 drag-and-drop doesn't
+// fire on iOS). The row is moved live in the DOM as the pointer crosses its
+// neighbors' midpoints; the data array is only updated on release.
+function attachDragReorder(handle, row, rowsEl, arr){
+  handle.addEventListener("pointerdown", (e) => {
+    if(e.button !== undefined && e.button !== 0) return;
+    e.preventDefault();
+    const from = Array.prototype.indexOf.call(rowsEl.children, row);
+    let lastY = e.clientY;
+    let scrollRaf = null;
+    handle.setPointerCapture(e.pointerId);
+    row.classList.add("dragging");
+
+    const reposition = () => {
+      // Always move the neighbors, never `row` itself - detaching the row
+      // (even momentarily) releases pointer capture and ends the drag.
+      let prev = row.previousElementSibling;
+      while(prev && lastY < prev.getBoundingClientRect().top + prev.offsetHeight / 2){
+        rowsEl.insertBefore(prev, row.nextElementSibling);
+        prev = row.previousElementSibling;
+      }
+      let next = row.nextElementSibling;
+      while(next && lastY > next.getBoundingClientRect().top + next.offsetHeight / 2){
+        rowsEl.insertBefore(next, row);
+        next = row.nextElementSibling;
+      }
+    };
+    // Auto-scroll when dragging near the top/bottom edge (the bottom edge
+    // leaves room for the mobile tab bar).
+    const autoScroll = () => {
+      const edge = 90;
+      let dy = 0;
+      if(lastY < edge) dy = -Math.ceil((edge - lastY) / 6);
+      else if(lastY > window.innerHeight - edge) dy = Math.ceil((lastY - (window.innerHeight - edge)) / 6);
+      if(dy){ window.scrollBy(0, dy); reposition(); }
+      scrollRaf = requestAnimationFrame(autoScroll);
+    };
+    scrollRaf = requestAnimationFrame(autoScroll);
+
+    const onMove = (ev) => { lastY = ev.clientY; reposition(); };
+    let finished = false;
+    const finish = () => {
+      if(finished) return;
+      finished = true;
+      cancelAnimationFrame(scrollRaf);
+      handle.removeEventListener("pointermove", onMove);
+      handle.removeEventListener("pointerup", finish);
+      handle.removeEventListener("pointercancel", finish);
+      handle.removeEventListener("lostpointercapture", finish);
+      row.classList.remove("dragging");
+      const to = Array.prototype.indexOf.call(rowsEl.children, row);
+      if(to !== from){
+        const [entry] = arr.splice(from, 1);
+        arr.splice(to, 0, entry);
+        lastMovedEntry = entry;
+        saveCharData();
+        renderAll();
+      }
+    };
+    handle.addEventListener("pointermove", onMove);
+    handle.addEventListener("pointerup", finish);
+    handle.addEventListener("pointercancel", finish);
+    handle.addEventListener("lostpointercapture", finish);
+  });
 }
 
 function toggleInspiration(){
@@ -1135,6 +1347,7 @@ function renderInspiration(){
 function toggleEditMode(){
   if(!isDM()) return;
   editMode = !editMode;
+  if(!editMode) reorderMode.spells = reorderMode.items = false;
   document.getElementById("editBtn").classList.toggle("on", editMode);
   document.getElementById("editBanner").hidden = !editMode;
   document.getElementById("syncBtn").hidden = !editMode;
@@ -1152,6 +1365,7 @@ function applyDmVisibility(){
   document.getElementById("dmBadge").hidden = !dm;
   if(!dm && editMode){
     editMode = false;
+    reorderMode.spells = reorderMode.items = false;
   }
 }
 
@@ -1835,11 +2049,25 @@ function renderSpells(){
   }
 
   listEl.innerHTML = "";
-  if(editMode){
+  document.getElementById("spellsReorderBtn").hidden = !editMode || !hasSpells;
+  document.getElementById("spellsReorderBtn").classList.toggle("on", editMode && reorderMode.spells);
+  if(editMode && reorderMode.spells && hasSpells){
+    renderReorderList(listEl, charData.spellsPrepared, "spells", {
+      name: sp => sp.name || "Unnamed spell",
+      meta: sp => (sp.level ? "Level " + sp.level : "Cantrip") +
+        (sp.spellType ? " · " + ((SPELL_TYPES.find(([k]) => k === sp.spellType) || [, sp.spellType])[1]) : ""),
+      icon: sp => { const k = spellIconKey(sp); return k ? typeIcon(k, 17) : typeIcon("unknown", 17, "var(--text-dim)"); },
+      sorts: [
+        ["By level", (a, b) => (a.level||0) - (b.level||0) || (a.name||"").localeCompare(b.name||"")],
+        ["A–Z", (a, b) => (a.name||"").localeCompare(b.name||"")],
+      ],
+    });
+  } else if(editMode){
     charData.spellsPrepared.forEach((sp, idx) => {
       const card = document.createElement("div");
       card.className = "edit-card";
       card.innerHTML = `
+        <div class="edit-card-top"></div>
         <div class="edit-row">
           <div class="edit-field" style="flex:2;"><label>Name</label><input class="edit-input wide" data-f="name" value="${sp.name||""}"></div>
           <div class="edit-field"><label>Level (0=cantrip)</label><input class="edit-input small" type="number" min="0" max="9" data-f="level" value="${sp.level||0}"></div>
@@ -1859,7 +2087,9 @@ function renderSpells(){
       rm.className = "remove-btn";
       rm.textContent = "Remove";
       rm.onclick = () => { removeWithUndo(charData.spellsPrepared, idx, sp.name || "spell", () => { saveCharData(); renderAll(); }); };
-      card.appendChild(rm);
+      const top = card.querySelector(".edit-card-top");
+      top.appendChild(reorderButtons(charData.spellsPrepared, idx, listEl, false));
+      top.appendChild(rm);
       card.querySelectorAll("[data-f]").forEach(inp => {
         inp.onchange = () => {
           const f = inp.dataset.f;
@@ -2115,26 +2345,28 @@ function renderInventory(){
   const el = document.getElementById("inventoryList");
   el.innerHTML = "";
   charData.inventory = charData.inventory || [];
+  const hasItems = charData.inventory.length > 0;
+  document.getElementById("itemsReorderBtn").hidden = !editMode || !hasItems;
+  document.getElementById("itemsReorderBtn").classList.toggle("on", editMode && reorderMode.items);
 
-  if(editMode){
+  if(editMode && reorderMode.items && hasItems){
+    renderReorderList(el, charData.inventory, "items", {
+      name: item => item.name || "Unnamed item",
+      meta: item => [item.kind, item.quantity > 1 ? "x" + item.quantity : "", isEquipped(item) ? "equipped" : ""]
+        .filter(Boolean).join(" · "),
+      icon: item => typeIcon(itemIconKey(item), 18, "var(--text-dim)"),
+      sorts: [
+        ["By kind", (a, b) => (KIND_SORT_ORDER[a.kind] ?? 3) - (KIND_SORT_ORDER[b.kind] ?? 3) || (a.name||"").localeCompare(b.name||"")],
+        ["A–Z", (a, b) => (a.name||"").localeCompare(b.name||"")],
+      ],
+    });
+  } else if(editMode){
     charData.inventory.forEach((item, idx) => {
       const card = document.createElement("div");
       card.className = "edit-card";
       const top = document.createElement("div");
       top.className = "edit-card-top";
-      const reorderBtns = document.createElement("div");
-      reorderBtns.className = "reorder-btns";
-      const upBtn = document.createElement("button");
-      upBtn.textContent = "↑";
-      upBtn.disabled = idx === 0;
-      upBtn.onclick = () => moveInventoryItem(idx, -1);
-      const downBtn = document.createElement("button");
-      downBtn.textContent = "↓";
-      downBtn.disabled = idx === charData.inventory.length - 1;
-      downBtn.onclick = () => moveInventoryItem(idx, 1);
-      reorderBtns.appendChild(upBtn);
-      reorderBtns.appendChild(downBtn);
-      top.appendChild(reorderBtns);
+      top.appendChild(reorderButtons(charData.inventory, idx, el, false));
       const rm = document.createElement("button");
       rm.className = "remove-btn";
       rm.textContent = "Remove";
