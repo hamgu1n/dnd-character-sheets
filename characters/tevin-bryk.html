@@ -135,6 +135,7 @@
   .statrow-auto{grid-template-columns:repeat(auto-fit,minmax(90px,1fr));}
   .statbox{background:var(--panel-2);border:1px solid var(--border);border-radius:10px;padding:8px 4px;text-align:center;}
   .feature-pool-box{width:100%;margin:10px 0;}
+  .hit-dice-box{width:100%;margin-top:8px;}
   .feature-pool-box .label{font-size:0.88rem;color:var(--text);text-transform:none;letter-spacing:0;margin-bottom:4px;}
   .feature-pool-box:last-child{margin-bottom:0;}
   .statbox .label{font-size:0.65rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;}
@@ -467,6 +468,10 @@
     </div>
     <div class="statrow statrow-auto">
       <div class="statbox">
+        <div class="label">Hit Dice</div>
+        <div class="value" id="hitDiceValue">—</div>
+      </div>
+      <div class="statbox">
         <div class="label">Passive Perception</div>
         <div class="value" id="passivePerc">—</div>
       </div>
@@ -517,6 +522,7 @@
         <button onclick="adjustTemp(1)">+</button>
       </div>
     </div>
+    <div id="hitDiceList"></div>
   </div>
 
   <div class="panel">
@@ -649,7 +655,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script>
-const DATA = {"id": "char-mtkmgh7zo44r5", "name": "Tevin Bryk", "species": "Human", "classes": [{"id": "class1", "name": "Fighter", "level": 3, "hitDie": 8, "subclass": "Battle Master"}], "abilities": {"str": 18, "dex": 12, "con": 14, "int": 10, "wis": 8, "cha": 6}, "proficientSaves": ["str", "dex"], "skillProficiencies": ["insight", "survival", "perception", "athletics", "investigation"], "skillExpertise": [], "hp": {"max": 28, "current": 10, "temp": 0}, "speed": 30, "conditions": [], "exhaustion": 0, "deathSaves": {"successes": 0, "failures": 0}, "inspiration": false, "spellSlots": {}, "spellsPrepared": [], "currency": {"cp": 0, "sp": 0, "ep": 0, "gp": 0, "pp": 0}, "inventory": [{"id": "item-mtkn8m7rnvc2n", "name": "Plate Armor", "quantity": 1, "kind": "armor", "equipped": true, "skillEffects": [{"skill": "stealth", "mode": "disadvantage"}], "acBase": 18, "desc": "Plate consists of shaped, interlocking metal plates to cover the entire body. A suit of plate includes gauntlets, heavy leather boots, a visored helmet, and thick layers of padding underneath the armor. Buckles and straps distribute the weight over the body."}, {"id": "item-mtknca5cs92ol", "name": "Shield", "quantity": 1, "kind": "shield", "icon": "shield", "skillEffects": [], "equipped": true, "desc": "A shield is made from wood or metal and is carried in one hand. Wielding a shield increases your Armor Class by 2. You can benefit from only one shield at a time.", "acBonus": 2}, {"id": "item-mtkncmtdhlg8t", "name": "Arm of Justice", "quantity": 1, "kind": "weapon", "icon": "sword", "skillEffects": [], "dmg": "2d6", "equipped": true, "desc": "Arm of Justice is less a sword than a verdict given form \u2014 a slab of blackened steel nearly as tall as the one who wields it, its blade broad enough to eclipse a shield and thick enough to turn parries into shattered bones. The crossguard is cast in the shape of two clasped hands, worn smooth where countless palms have rested before a swing, and the fuller running down its length is etched with a line of old judicial script, half-illegible now, that once listed the crimes it was forged to answer.\n\nIt's not a fast weapon. It doesn't need to be. Every swing carries the weight of finality \u2014 the kind of blow meant to end an argument, not start one. Those who've faced it rarely need to be told twice what it's called.", "props": ["Two-Handed"]}], "notes": "", "journal": {"entries": [], "npcs": [], "quests": [], "goals": []}, "background": "", "customFeatures": [{"id": "cf-mtkn60qef8wyx", "name": "Fighting Style (Heavy)", "desc": "You adopt a particular style of fighting as your specialty. Choose a fighting style from the list of optional features. You can't take the same Fighting Style option more than once, even if you get to choose again.", "isChannelDivinity": false}, {"id": "cf-mtkn6c8alvc5l", "name": "Second Wind", "desc": "You have a limited well of stamina that you can draw on to protect yourself from harm. On your turn, you can use a bonus action to regain hit points equal to 1d10 + your fighter level.\n\nOnce you use this feature, you must finish a short or long rest before you can use it again.", "isChannelDivinity": false}, {"id": "cf-mtkn6gr9k477b", "name": "Action Surge", "desc": "Starting at 2nd level, you can push yourself beyond your normal limits for a moment. On your turn, you can take one additional action on top of your regular action and a possible bonus action.\n\nOnce you use this feature, you must finish a short or long rest before you can use it again. Starting at 17th level, you can use it twice before a rest, but only once on the same turn.", "isChannelDivinity": false}, {"id": "cf-bm1", "name": "Combat Superiority", "desc": "You learn maneuvers that are fueled by special dice called superiority dice.\n\n**Superiority Dice**\nYou have four superiority dice, which are d8s. A superiority die is expended when you use it. You regain all of your expended superiority dice when you finish a short or long rest.\n\n**Maneuvers**\nYou know three maneuvers: Trip Attack, Riposte, and Precision Attack. You can use only one maneuver per attack.\n\n**Saving Throws**\nManeuver save DC = 8 + your proficiency bonus + your Strength or Dexterity modifier (your choice). With Strength: DC 14.", "isChannelDivinity": false, "hasPool": true, "poolMax": 4}, {"id": "cf-bm2", "name": "Maneuver: Trip Attack", "desc": "When you hit a creature with a weapon attack, you can expend one superiority die to attempt to knock the target down. You add the superiority die to the attack's damage roll, and if the target is Large or smaller, it must make a Strength saving throw. On a failed save, you knock the target prone.", "isChannelDivinity": false, "hasPool": false}, {"id": "cf-bm3", "name": "Maneuver: Riposte", "desc": "When a creature misses you with a melee attack, you can use your reaction and expend one superiority die to make a melee weapon attack against the creature. If you hit, you add the superiority die to the attack's damage roll.", "isChannelDivinity": false, "hasPool": false}, {"id": "cf-bm4", "name": "Maneuver: Precision Attack", "desc": "When you make a weapon attack roll against a creature, you can expend one superiority die to add it to the roll. You can use this maneuver before or after making the attack roll, but before any effects of the attack are applied.", "isChannelDivinity": false, "hasPool": false}, {"id": "cf-bm5", "name": "Student of War", "desc": "You gain proficiency with one type of artisan's tools of your choice.\n\nTool: (not chosen yet)", "isChannelDivinity": false, "hasPool": false}, {"id": "cf-bm6", "name": "Feat: Dual Wielder", "desc": "You master fighting with two weapons, gaining the following benefits:\n\n- You gain a +1 bonus to AC while you are wielding a separate melee weapon in each hand.\n- You can use two-weapon fighting even when the one-handed melee weapons you are wielding aren't light.\n- You can draw or stow two one-handed weapons when you would normally be able to draw or stow only one.", "isChannelDivinity": false, "hasPool": false}], "channelDivinity": {"max": 0}};
+const DATA = {"id": "char-mtkmgh7zo44r5", "name": "Tevin Bryk", "species": "Human", "classes": [{"id": "class1", "name": "Fighter", "level": 3, "hitDie": 10, "subclass": "Battle Master"}], "abilities": {"str": 18, "dex": 12, "con": 14, "int": 10, "wis": 8, "cha": 6}, "proficientSaves": ["str", "dex"], "skillProficiencies": ["insight", "survival", "perception", "athletics", "investigation"], "skillExpertise": [], "hp": {"max": 28, "current": 10, "temp": 0}, "speed": 30, "conditions": [], "exhaustion": 0, "deathSaves": {"successes": 0, "failures": 0}, "inspiration": false, "spellSlots": {}, "spellsPrepared": [], "currency": {"cp": 0, "sp": 0, "ep": 0, "gp": 0, "pp": 0}, "inventory": [{"id": "item-mtkn8m7rnvc2n", "name": "Plate Armor", "quantity": 1, "kind": "armor", "equipped": true, "skillEffects": [{"skill": "stealth", "mode": "disadvantage"}], "acBase": 18, "desc": "Plate consists of shaped, interlocking metal plates to cover the entire body. A suit of plate includes gauntlets, heavy leather boots, a visored helmet, and thick layers of padding underneath the armor. Buckles and straps distribute the weight over the body."}, {"id": "item-mtknca5cs92ol", "name": "Shield", "quantity": 1, "kind": "shield", "icon": "shield", "skillEffects": [], "equipped": true, "desc": "A shield is made from wood or metal and is carried in one hand. Wielding a shield increases your Armor Class by 2. You can benefit from only one shield at a time.", "acBonus": 2}, {"id": "item-mtkncmtdhlg8t", "name": "Arm of Justice", "quantity": 1, "kind": "weapon", "icon": "sword", "skillEffects": [], "dmg": "2d6", "equipped": true, "desc": "Arm of Justice is less a sword than a verdict given form \u2014 a slab of blackened steel nearly as tall as the one who wields it, its blade broad enough to eclipse a shield and thick enough to turn parries into shattered bones. The crossguard is cast in the shape of two clasped hands, worn smooth where countless palms have rested before a swing, and the fuller running down its length is etched with a line of old judicial script, half-illegible now, that once listed the crimes it was forged to answer.\n\nIt's not a fast weapon. It doesn't need to be. Every swing carries the weight of finality \u2014 the kind of blow meant to end an argument, not start one. Those who've faced it rarely need to be told twice what it's called.", "props": ["Two-Handed"]}], "notes": "", "journal": {"entries": [], "npcs": [], "quests": [], "goals": []}, "background": "", "customFeatures": [{"id": "cf-mtkn60qef8wyx", "name": "Fighting Style (Heavy)", "desc": "You adopt a particular style of fighting as your specialty. Choose a fighting style from the list of optional features. You can't take the same Fighting Style option more than once, even if you get to choose again.", "isChannelDivinity": false}, {"id": "cf-mtkn6c8alvc5l", "name": "Second Wind", "desc": "You have a limited well of stamina that you can draw on to protect yourself from harm. On your turn, you can use a bonus action to regain hit points equal to 1d10 + your fighter level.\n\nOnce you use this feature, you must finish a short or long rest before you can use it again.", "isChannelDivinity": false}, {"id": "cf-mtkn6gr9k477b", "name": "Action Surge", "desc": "Starting at 2nd level, you can push yourself beyond your normal limits for a moment. On your turn, you can take one additional action on top of your regular action and a possible bonus action.\n\nOnce you use this feature, you must finish a short or long rest before you can use it again. Starting at 17th level, you can use it twice before a rest, but only once on the same turn.", "isChannelDivinity": false}, {"id": "cf-bm1", "name": "Combat Superiority", "desc": "You learn maneuvers that are fueled by special dice called superiority dice.\n\n**Superiority Dice**\nYou have four superiority dice, which are d8s. A superiority die is expended when you use it. You regain all of your expended superiority dice when you finish a short or long rest.\n\n**Maneuvers**\nYou know three maneuvers: Trip Attack, Riposte, and Precision Attack. You can use only one maneuver per attack.\n\n**Saving Throws**\nManeuver save DC = 8 + your proficiency bonus + your Strength or Dexterity modifier (your choice). With Strength: DC 14.", "isChannelDivinity": false, "hasPool": true, "poolMax": 4}, {"id": "cf-bm2", "name": "Maneuver: Trip Attack", "desc": "When you hit a creature with a weapon attack, you can expend one superiority die to attempt to knock the target down. You add the superiority die to the attack's damage roll, and if the target is Large or smaller, it must make a Strength saving throw. On a failed save, you knock the target prone.", "isChannelDivinity": false, "hasPool": false}, {"id": "cf-bm3", "name": "Maneuver: Riposte", "desc": "When a creature misses you with a melee attack, you can use your reaction and expend one superiority die to make a melee weapon attack against the creature. If you hit, you add the superiority die to the attack's damage roll.", "isChannelDivinity": false, "hasPool": false}, {"id": "cf-bm4", "name": "Maneuver: Precision Attack", "desc": "When you make a weapon attack roll against a creature, you can expend one superiority die to add it to the roll. You can use this maneuver before or after making the attack roll, but before any effects of the attack are applied.", "isChannelDivinity": false, "hasPool": false}, {"id": "cf-bm5", "name": "Student of War", "desc": "You gain proficiency with one type of artisan's tools of your choice.\n\nTool: (not chosen yet)", "isChannelDivinity": false, "hasPool": false}, {"id": "cf-bm6", "name": "Dual Wielder", "desc": "You master fighting with two weapons, gaining the following benefits:\n\n- You gain a +1 bonus to AC while you are wielding a separate melee weapon in each hand.\n- You can use two-weapon fighting even when the one-handed melee weapons you are wielding aren't light.\n- You can draw or stow two one-handed weapons when you would normally be able to draw or stow only one.", "isChannelDivinity": false, "hasPool": false}, {"id": "cf-fissure1", "name": "Fissure", "desc": "You can split any heavy weapon you wield into a ghostly copy of itself, letting you fight with one in each hand. The copy deals the same damage and has the same properties and abilities as the original.", "isChannelDivinity": false, "hasPool": false}], "channelDivinity": {"max": 0}};
 const STORE_KEY = "dnd-sheet-" + DATA.id;
 const EDIT_KEY = "dnd-sheet-edits-" + DATA.id;
 const TAB_KEY = "dnd-sheet-tab";
@@ -1092,6 +1098,7 @@ function normalizeState(s){
   s.conditions = s.conditions || [];
   s.channelDivinityUsed = s.channelDivinityUsed || 0;
   s.featurePools = s.featurePools || {};
+  s.hitDiceUsed = s.hitDiceUsed || {};
   s.slotsUsed = s.slotsUsed || {};
   s.equipped = s.equipped || {};
   s.acBuffs = Array.isArray(s.acBuffs) ? s.acBuffs : [];
@@ -1833,7 +1840,7 @@ function descIsMissing(desc){
 }
 
 function resetProgress(){
-  if(!confirm("Reset HP, temp HP, temp AC, spell slots used, Channel Divinity charges, feature resource pools, conditions, inspiration, notes and journal back to the imported values? (This does not affect edited character data.)")) return;
+  if(!confirm("Reset HP, temp HP, hit dice, temp AC, spell slots used, Channel Divinity charges, feature resource pools, conditions, inspiration, notes and journal back to the imported values? (This does not affect edited character data.)")) return;
   localStorage.removeItem(STORE_KEY);
   state = loadState();
   renderAll();
@@ -1892,6 +1899,7 @@ function renderHeader(){
     row.innerHTML = `
       <div class="edit-field"><label>Class</label><input class="edit-input wide" data-f="name" value="${c.name||""}"></div>
       <div class="edit-field"><label>Level</label><input class="edit-input small" type="number" min="1" max="20" data-f="level" value="${c.level||1}"></div>
+      <div class="edit-field"><label>Hit Die</label><select class="edit-input small" data-f="hitDie">${[6,8,10,12].map(d => `<option value="${d}" ${(c.hitDie||8)===d?"selected":""}>d${d}</option>`).join("")}</select></div>
     `;
     const sub = document.createElement("div");
     sub.className = "edit-field";
@@ -1901,7 +1909,7 @@ function renderHeader(){
     card.querySelectorAll("[data-f]").forEach(inp => {
       inp.onchange = () => {
         const f = inp.dataset.f;
-        c[f] = f === "level" ? (parseInt(inp.value)||1) : inp.value;
+        c[f] = f === "level" ? (parseInt(inp.value)||1) : f === "hitDie" ? (parseInt(inp.value)||8) : inp.value;
         saveCharData();
         renderAll();
       };
@@ -1919,7 +1927,49 @@ function renderHeader(){
   el.appendChild(addClassBtn);
 }
 
+// Hit dice: one per class level, sized by that class's hit die. How many are
+// spent lives in play state (keyed by class id) so players can track it
+// themselves, like HP.
+function hitDiceRemaining(c){
+  const lvl = c.level || 0;
+  return Math.max(0, Math.min(lvl, lvl - (state.hitDiceUsed[c.id] || 0)));
+}
+function adjustHitDice(c, delta){
+  const lvl = c.level || 0;
+  const rem = Math.max(0, Math.min(lvl, hitDiceRemaining(c) + delta));
+  state.hitDiceUsed[c.id] = lvl - rem;
+  saveState();
+  renderHitDice();
+}
+function renderHitDice(){
+  const classes = (charData.classes || []).filter(c => (c.level || 0) > 0);
+  const sv = document.getElementById("hitDiceValue");
+  if(sv) sv.textContent = classes.map(c => c.level + "d" + (c.hitDie || 8)).join(" + ") || "—";
+  const el = document.getElementById("hitDiceList");
+  if(!el) return;
+  el.innerHTML = "";
+  for(const c of classes){
+    const box = document.createElement("div");
+    box.className = "statbox hit-dice-box";
+    const who = classes.length > 1 ? " — " + escapeHtml(c.name || "") : "";
+    box.innerHTML = `
+      <div class="label">Hit Dice (d${c.hitDie || 8})${who}</div>
+      <div class="hp-controls">
+        <button>−</button>
+        <span class="hp-input" style="font-size:1.1rem;">${hitDiceRemaining(c)}</span>
+        <span class="hp-max">/ ${c.level}</span>
+        <button>+</button>
+      </div>
+    `;
+    const [minusBtn, plusBtn] = box.querySelectorAll(".hp-controls button");
+    minusBtn.onclick = () => adjustHitDice(c, -1);
+    plusBtn.onclick = () => adjustHitDice(c, 1);
+    el.appendChild(box);
+  }
+}
+
 function renderTopStats(){
+  renderHitDice();
   document.getElementById("hpMaxDisplay").hidden = editMode;
   document.getElementById("hpMaxDisplay").textContent = charData.hp.max;
   document.getElementById("hpMaxEdit").hidden = !editMode;

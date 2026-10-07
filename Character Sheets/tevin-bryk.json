@@ -7,7 +7,7 @@
       "id": "class1",
       "name": "Fighter",
       "level": 3,
-      "hitDie": 8,
+      "hitDie": 10,
       "subclass": "Battle Master"
     }
   ],
@@ -160,8 +160,15 @@
     },
     {
       "id": "cf-bm6",
-      "name": "Feat: Dual Wielder",
+      "name": "Dual Wielder",
       "desc": "You master fighting with two weapons, gaining the following benefits:\n\n- You gain a +1 bonus to AC while you are wielding a separate melee weapon in each hand.\n- You can use two-weapon fighting even when the one-handed melee weapons you are wielding aren't light.\n- You can draw or stow two one-handed weapons when you would normally be able to draw or stow only one.",
+      "isChannelDivinity": false,
+      "hasPool": false
+    },
+    {
+      "id": "cf-fissure1",
+      "name": "Fissure",
+      "desc": "You can split any heavy weapon you wield into a ghostly copy of itself, letting you fight with one in each hand. The copy deals the same damage and has the same properties and abilities as the original.",
       "isChannelDivinity": false,
       "hasPool": false
     }

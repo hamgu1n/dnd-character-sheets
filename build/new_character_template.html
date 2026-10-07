@@ -135,6 +135,7 @@
   .statrow-auto{grid-template-columns:repeat(auto-fit,minmax(90px,1fr));}
   .statbox{background:var(--panel-2);border:1px solid var(--border);border-radius:10px;padding:8px 4px;text-align:center;}
   .feature-pool-box{width:100%;margin:10px 0;}
+  .hit-dice-box{width:100%;margin-top:8px;}
   .feature-pool-box .label{font-size:0.88rem;color:var(--text);text-transform:none;letter-spacing:0;margin-bottom:4px;}
   .feature-pool-box:last-child{margin-bottom:0;}
   .statbox .label{font-size:0.65rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;}
@@ -488,6 +489,10 @@
     </div>
     <div class="statrow statrow-auto">
       <div class="statbox">
+        <div class="label">Hit Dice</div>
+        <div class="value" id="hitDiceValue">—</div>
+      </div>
+      <div class="statbox">
         <div class="label">Passive Perception</div>
         <div class="value" id="passivePerc">—</div>
       </div>
@@ -538,6 +543,7 @@
         <button onclick="adjustTemp(1)">+</button>
       </div>
     </div>
+    <div id="hitDiceList"></div>
   </div>
 
   <div class="panel">
@@ -1152,6 +1158,7 @@ function normalizeState(s){
   s.conditions = s.conditions || [];
   s.channelDivinityUsed = s.channelDivinityUsed || 0;
   s.featurePools = s.featurePools || {};
+  s.hitDiceUsed = s.hitDiceUsed || {};
   s.slotsUsed = s.slotsUsed || {};
   s.equipped = s.equipped || {};
   s.acBuffs = Array.isArray(s.acBuffs) ? s.acBuffs : [];
@@ -1893,7 +1900,7 @@ function descIsMissing(desc){
 }
 
 function resetProgress(){
-  if(!confirm("Reset HP, temp HP, temp AC, spell slots used, Channel Divinity charges, feature resource pools, conditions, inspiration, notes and journal back to the imported values? (This does not affect edited character data.)")) return;
+  if(!confirm("Reset HP, temp HP, hit dice, temp AC, spell slots used, Channel Divinity charges, feature resource pools, conditions, inspiration, notes and journal back to the imported values? (This does not affect edited character data.)")) return;
   localStorage.removeItem(STORE_KEY);
   state = loadState();
   renderAll();
@@ -1952,6 +1959,7 @@ function renderHeader(){
     row.innerHTML = `
       <div class="edit-field"><label>Class</label><input class="edit-input wide" data-f="name" value="${c.name||""}"></div>
       <div class="edit-field"><label>Level</label><input class="edit-input small" type="number" min="1" max="20" data-f="level" value="${c.level||1}"></div>
+      <div class="edit-field"><label>Hit Die</label><select class="edit-input small" data-f="hitDie">${[6,8,10,12].map(d => `<option value="${d}" ${(c.hitDie||8)===d?"selected":""}>d${d}</option>`).join("")}</select></div>
     `;
     const sub = document.createElement("div");
     sub.className = "edit-field";
@@ -1961,7 +1969,7 @@ function renderHeader(){
     card.querySelectorAll("[data-f]").forEach(inp => {
       inp.onchange = () => {
         const f = inp.dataset.f;
-        c[f] = f === "level" ? (parseInt(inp.value)||1) : inp.value;
+        c[f] = f === "level" ? (parseInt(inp.value)||1) : f === "hitDie" ? (parseInt(inp.value)||8) : inp.value;
         saveCharData();
         renderAll();
       };
@@ -1979,7 +1987,49 @@ function renderHeader(){
   el.appendChild(addClassBtn);
 }
 
+// Hit dice: one per class level, sized by that class's hit die. How many are
+// spent lives in play state (keyed by class id) so players can track it
+// themselves, like HP.
+function hitDiceRemaining(c){
+  const lvl = c.level || 0;
+  return Math.max(0, Math.min(lvl, lvl - (state.hitDiceUsed[c.id] || 0)));
+}
+function adjustHitDice(c, delta){
+  const lvl = c.level || 0;
+  const rem = Math.max(0, Math.min(lvl, hitDiceRemaining(c) + delta));
+  state.hitDiceUsed[c.id] = lvl - rem;
+  saveState();
+  renderHitDice();
+}
+function renderHitDice(){
+  const classes = (charData.classes || []).filter(c => (c.level || 0) > 0);
+  const sv = document.getElementById("hitDiceValue");
+  if(sv) sv.textContent = classes.map(c => c.level + "d" + (c.hitDie || 8)).join(" + ") || "—";
+  const el = document.getElementById("hitDiceList");
+  if(!el) return;
+  el.innerHTML = "";
+  for(const c of classes){
+    const box = document.createElement("div");
+    box.className = "statbox hit-dice-box";
+    const who = classes.length > 1 ? " — " + escapeHtml(c.name || "") : "";
+    box.innerHTML = `
+      <div class="label">Hit Dice (d${c.hitDie || 8})${who}</div>
+      <div class="hp-controls">
+        <button>−</button>
+        <span class="hp-input" style="font-size:1.1rem;">${hitDiceRemaining(c)}</span>
+        <span class="hp-max">/ ${c.level}</span>
+        <button>+</button>
+      </div>
+    `;
+    const [minusBtn, plusBtn] = box.querySelectorAll(".hp-controls button");
+    minusBtn.onclick = () => adjustHitDice(c, -1);
+    plusBtn.onclick = () => adjustHitDice(c, 1);
+    el.appendChild(box);
+  }
+}
+
 function renderTopStats(){
+  renderHitDice();
   document.getElementById("hpMaxDisplay").hidden = editMode;
   document.getElementById("hpMaxDisplay").textContent = charData.hp.max;
   document.getElementById("hpMaxEdit").hidden = !editMode;
