@@ -466,11 +466,8 @@
         <div class="value" id="profValue">—</div>
       </div>
     </div>
+    <div id="hitDiceSheet" style="margin-bottom:8px;"></div>
     <div class="statrow statrow-auto">
-      <div class="statbox">
-        <div class="label">Hit Dice</div>
-        <div class="value" id="hitDiceValue">—</div>
-      </div>
       <div class="statbox">
         <div class="label">Passive Perception</div>
         <div class="value" id="passivePerc">—</div>
@@ -1943,10 +1940,9 @@ function adjustHitDice(c, delta){
 }
 function renderHitDice(){
   const classes = (charData.classes || []).filter(c => (c.level || 0) > 0);
-  const sv = document.getElementById("hitDiceValue");
-  if(sv) sv.textContent = classes.map(c => c.level + "d" + (c.hitDie || 8)).join(" + ") || "—";
-  const el = document.getElementById("hitDiceList");
-  if(!el) return;
+  // Same counter on both tabs (Sheet and Play), driven by the same state.
+  for(const el of [document.getElementById("hitDiceSheet"), document.getElementById("hitDiceList")]){
+  if(!el) continue;
   el.innerHTML = "";
   for(const c of classes){
     const box = document.createElement("div");
@@ -1965,6 +1961,7 @@ function renderHitDice(){
     minusBtn.onclick = () => adjustHitDice(c, -1);
     plusBtn.onclick = () => adjustHitDice(c, 1);
     el.appendChild(box);
+  }
   }
 }
 
