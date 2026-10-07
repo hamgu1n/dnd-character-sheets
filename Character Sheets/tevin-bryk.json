@@ -6,7 +6,7 @@
     {
       "id": "class1",
       "name": "Fighter",
-      "level": 3,
+      "level": 4,
       "hitDie": 10,
       "subclass": "Battle Master"
     }
