@@ -8,7 +8,7 @@
       "name": "Fighter",
       "level": 3,
       "hitDie": 8,
-      "subclass": "Commander"
+      "subclass": "Battle Master"
     }
   ],
   "abilities": {
@@ -123,16 +123,47 @@
       "isChannelDivinity": false
     },
     {
-      "id": "cf-mtkn6n23l89ri",
-      "name": "Art of War",
-      "desc": "You have spent time studying not only the strategy and tactics of war but also the theory of politics. You gain proficiency in one of the following skills: History, Insight, Investigation, or Persuasion. Moreover, whenever you make an ability check with that skill, you treat a d20 roll of 7 or lower as an 8.",
-      "isChannelDivinity": false
+      "id": "cf-bm1",
+      "name": "Combat Superiority",
+      "desc": "You learn maneuvers that are fueled by special dice called superiority dice.\n\n**Superiority Dice**\nYou have four superiority dice, which are d8s. A superiority die is expended when you use it. You regain all of your expended superiority dice when you finish a short or long rest.\n\n**Maneuvers**\nYou know three maneuvers: Trip Attack, Riposte, and Precision Attack. You can use only one maneuver per attack.\n\n**Saving Throws**\nManeuver save DC = 8 + your proficiency bonus + your Strength or Dexterity modifier (your choice). With Strength: DC 14.",
+      "isChannelDivinity": false,
+      "hasPool": true,
+      "poolMax": 4
     },
     {
-      "id": "cf-mtkn7y2966wrv",
-      "name": "Tactical Orders",
-      "desc": "When you take the Attack action on your turn, you can issue one of the Orders from the list below in place of one attack. You can issue an Order to a willing creature within 30 feet, other than yourself, that can hear and understand you: \n\n**Attack Order **\nThe next time the target of this Order takes the Attack action before the start of your next turn, it can make one additional weapon attack as part of its Attack action. \n\n\n**Defensive Order **\nThe target of this Order can use its reaction to immediately take the Dodge action. \n\n\n**Maneuvering Order **\nThe target of this Order can use its reaction to move up to its speed without provoking opportunity attacks. \n\n\n**Support Order **\nThe target of this Order can use its reaction to immediately take the Help, Hide, Search, or Use an Object action.",
-      "isChannelDivinity": false
+      "id": "cf-bm2",
+      "name": "Maneuver: Trip Attack",
+      "desc": "When you hit a creature with a weapon attack, you can expend one superiority die to attempt to knock the target down. You add the superiority die to the attack's damage roll, and if the target is Large or smaller, it must make a Strength saving throw. On a failed save, you knock the target prone.",
+      "isChannelDivinity": false,
+      "hasPool": false
+    },
+    {
+      "id": "cf-bm3",
+      "name": "Maneuver: Riposte",
+      "desc": "When a creature misses you with a melee attack, you can use your reaction and expend one superiority die to make a melee weapon attack against the creature. If you hit, you add the superiority die to the attack's damage roll.",
+      "isChannelDivinity": false,
+      "hasPool": false
+    },
+    {
+      "id": "cf-bm4",
+      "name": "Maneuver: Precision Attack",
+      "desc": "When you make a weapon attack roll against a creature, you can expend one superiority die to add it to the roll. You can use this maneuver before or after making the attack roll, but before any effects of the attack are applied.",
+      "isChannelDivinity": false,
+      "hasPool": false
+    },
+    {
+      "id": "cf-bm5",
+      "name": "Student of War",
+      "desc": "You gain proficiency with one type of artisan's tools of your choice.\n\nTool: (not chosen yet)",
+      "isChannelDivinity": false,
+      "hasPool": false
+    },
+    {
+      "id": "cf-bm6",
+      "name": "Feat: Dual Wielder",
+      "desc": "You master fighting with two weapons, gaining the following benefits:\n\n- You gain a +1 bonus to AC while you are wielding a separate melee weapon in each hand.\n- You can use two-weapon fighting even when the one-handed melee weapons you are wielding aren't light.\n- You can draw or stow two one-handed weapons when you would normally be able to draw or stow only one.",
+      "isChannelDivinity": false,
+      "hasPool": false
     }
   ],
   "channelDivinity": {
