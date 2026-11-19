@@ -1,0 +1,100 @@
+{
+  "name": "Zahret Soldier 3",
+  "species": "Humanoid (Human), Medium",
+  "background": "CR 1/2 minion (100 XP), a Zahret soldier under Gryvka's charm, fighting for the official they think is their superior",
+  "classes": [
+    {
+      "id": "role",
+      "name": "Zahret Soldier",
+      "level": 3,
+      "hitDie": 8,
+      "subclass": ""
+    }
+  ],
+  "abilities": {
+    "str": 15,
+    "dex": 11,
+    "con": 14,
+    "int": 10,
+    "wis": 10,
+    "cha": 11
+  },
+  "proficientSaves": [],
+  "skillProficiencies": [
+    "intimidation"
+  ],
+  "skillExpertise": [],
+  "hp": {
+    "max": 32,
+    "current": 32,
+    "temp": 0
+  },
+  "speed": 30,
+  "conditions": [
+    "Charmed"
+  ],
+  "inspiration": false,
+  "spellSlots": {},
+  "spellsPrepared": [],
+  "currency": {
+    "cp": 0,
+    "sp": 0,
+    "ep": 0,
+    "gp": 0,
+    "pp": 0
+  },
+  "inventory": [
+    {
+      "id": "i1",
+      "name": "Mace",
+      "kind": "weapon",
+      "quantity": 1,
+      "dmg": "1d6",
+      "dmgType": "Bludgeoning",
+      "rangeType": "Melee",
+      "props": [],
+      "equipped": true,
+      "desc": "*Melee Weapon Attack:* +4 to hit, reach 5 ft. *Hit:* 5 (1d6 + 2) bludgeoning damage.\n\n**Multiattack:** two Mace attacks."
+    },
+    {
+      "id": "i2",
+      "name": "Heavy Crossbow",
+      "kind": "weapon",
+      "quantity": 1,
+      "dmg": "1d10",
+      "dmgType": "Piercing",
+      "rangeType": "Ranged",
+      "props": [
+        "Ammunition",
+        "Heavy",
+        "Loading",
+        "Two-Handed"
+      ],
+      "equipped": false,
+      "desc": "*Ranged Weapon Attack:* +2 to hit, range 100/400 ft. *Hit:* 5 (1d10) piercing damage."
+    },
+    {
+      "id": "i3",
+      "name": "Zahret Leather Armor",
+      "kind": "armor",
+      "quantity": 1,
+      "acBase": 11,
+      "equipped": true,
+      "desc": "Standard-issue Zahret armor."
+    }
+  ],
+  "notes": "One of the Zahret soldiers Gryvka commanded while she posed as an official. They're **charmed**: they believe the party are enemies of the state and Gryvka is their superior.\n\n**Breaking the charm:** a successful DC 13 Charisma (Persuasion or Intimidation) check as an action, or seeing Gryvka's true form in Phase 2 (DC 13 Wisdom save to snap out of it), makes a soldier stop fighting. Dropping one to 0 HP knocks it out by default, since these are victims, not villains.",
+  "customFeatures": [
+    {
+      "id": "f1",
+      "name": "Pack Tactics",
+      "desc": "The soldier has advantage on an attack roll against a creature if at least one of its allies is within 5 feet of that creature and isn't incapacitated."
+    },
+    {
+      "id": "f2",
+      "name": "Charmed by Gryvka",
+      "desc": "Can't attack Gryvka or target her with harmful effects. Ends if Gryvka drops to 0 HP."
+    }
+  ],
+  "id": "npc-zahret-soldier-3-96933658"
+}

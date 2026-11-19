@@ -1,7 +1,7 @@
 {
   "name": "Gryvka, the Chain-Bound Witch",
   "species": "Fiend (Shapechanger), Medium",
-  "background": "CR 7 boss (2,900 XP), a succubus witch who posed as a Zahret military/government official sent to watch the party. Neutral evil.",
+  "background": "CR 8 boss (3,900 XP), a succubus witch who posed as a Zahret military/government official sent to watch the party. Neutral evil.",
   "classes": [
     {
       "id": "role",
@@ -34,8 +34,8 @@
     "insight"
   ],
   "hp": {
-    "max": 136,
-    "current": 136,
+    "max": 212,
+    "current": 212,
     "temp": 0
   },
   "speed": 30,
@@ -49,7 +49,7 @@
       "spellType": "enchantment",
       "castingTime": "1 Action",
       "range": "60 feet",
-      "desc": "**Signature spell. No concentration.** Glowing chains of thought shoot out to up to **three creatures** Gryvka can see. Each makes a **DC 16 Wisdom save**; on a failure it is **Linked** for 1 minute.\n\n**The link ends only if:** Gryvka drops to 0 HP; the Linked creature uses its action on a **DC 16 Int or Wis check** and succeeds; or it succeeds on the Wis save it repeats at the end of each of its turns.\n\n**While Linked:**\n- **Gryvka reads its mind.** At the start of each round, players with Linked characters say their plan out loud, and Gryvka hears it.\n- Gryvka has advantage on attack rolls against it.\n- When it takes psychic damage, every other Linked creature takes half that amount.\n- **Counterplay (Mental Noise):** once per fight, a Linked creature can make a Cha (Deception) check contested by Gryvka's Wis (Insight). On a success, Gryvka believes the false plan it announced."
+      "desc": "**Signature spell. No concentration.** Glowing chains of thought shoot out to up to **four creatures** Gryvka can see. Each makes a **DC 16 Wisdom save**; on a failure it is **Linked** for 1 minute.\n\n**The link ends only if:** Gryvka drops to 0 HP; the Linked creature uses its action on a **DC 16 Int or Wis check** and succeeds; or it succeeds on the Wis save it repeats at the end of each of its turns.\n\n**While Linked:**\n- **Gryvka reads its mind.** At the start of each round, players with Linked characters say their plan out loud, and Gryvka hears it.\n- Gryvka has advantage on attack rolls against it.\n- When it takes psychic damage, every other Linked creature takes half that amount.\n- **Counterplay (Mental Noise):** once per fight, a Linked creature can make a Cha (Deception) check contested by Gryvka's Wis (Insight). On a success, Gryvka believes the false plan it announced."
     },
     {
       "name": "Thought Lash",
@@ -141,7 +141,7 @@
       "desc": "Natural armor, AC 15."
     }
   ],
-  "notes": "Gryvka is a succubus witch who posed as a Zahret military/government official assigned to watch the party. **Suhayla**, goddess of knowledge and magic, grants her mind-reading power. She has possessed one of the party's friends.\n\n**House rule:** no concentration on spells. Every duration ends only under the conditions written.\n\n**Defenses:** resists cold, fire, lightning, poison, and bludgeoning/piercing/slashing from nonmagical attacks. Fly speed 60 ft. Darkvision 60 ft., passive Perception 12. Speaks Common and Abyssal, with telepathy 120 ft. Spell save DC 16, spell attack +8.\n\nBalanced as a deadly boss for about six level-4 PCs.\n\n**DM tuning:** if the fight is too swingy, cut Chain Link to two targets or drop Tighten the Chains. Make Linked status clearly visible at the table, for example with a chain token by each Linked mini.",
+  "notes": "Gryvka is a succubus witch who posed as a Zahret military/government official assigned to watch the party. **Suhayla**, goddess of knowledge and magic, grants her mind-reading power. She has possessed one of the party's friends.\n\n**House rule:** no concentration on spells. Every duration ends only under the conditions written.\n\n**Defenses:** resists cold, fire, lightning, poison, and bludgeoning/piercing/slashing from nonmagical attacks. Fly speed 60 ft. Darkvision 60 ft., passive Perception 12. Speaks Common and Abyssal, with telepathy 120 ft. Spell save DC 16, spell attack +8.\n\n**Balance:** tuned as a deadly fight for **7 level-4 PCs** together with her three charmed Zahret Soldiers (separate NPC sheets). HP 212 (25d8 + 100), so Phase 2 starts at 106.\n\n**DM tuning:** if it's too swingy, cut Chain Link to three targets, drop Tighten the Chains, or leave out one soldier. If it's too easy, Pull the Chain the possessed friend early in Phase 2. Make Linked status clearly visible at the table, for example with a chain token by each Linked mini.",
   "customFeatures": [
     {
       "id": "f1",
@@ -150,10 +150,10 @@
     },
     {
       "id": "f2",
-      "name": "Legendary Resistance (2/Day)",
+      "name": "Legendary Resistance (3/Day)",
       "desc": "When Gryvka fails a saving throw, she can choose to succeed instead.",
       "hasPool": true,
-      "poolMax": 2
+      "poolMax": 3
     },
     {
       "id": "f3",
@@ -183,9 +183,14 @@
       "poolMax": 3
     },
     {
+      "id": "f9",
+      "name": "Lair Action (Initiative 20)",
+      "desc": "On initiative count 20 (losing ties), Gryvka uses one of these. She can't use the same one two rounds in a row.\n- **Echoing Chains:** every Linked creature takes 7 (2d6) psychic damage.\n- **Reach for a Mind:** one creature that isn't Linked, within 60 feet of Gryvka, makes a DC 16 Wisdom save. On a failure it becomes **Linked** (same rules as Chain Link)."
+    },
+    {
       "id": "f8",
-      "name": "Phase 2: Mask Off (at 68 HP or lower)",
-      "desc": "The first time Gryvka drops to 68 HP or fewer:\n- **Chain Link recharges** immediately.\n- Her Zahret disguise peels away and shows the chains running back to the party friend she possessed.\n- That friend counts as **permanently Linked** until Gryvka dies. She can use **Pull the Chain** on them to make them take one weapon attack instead of moving."
+      "name": "Phase 2: Mask Off (at 106 HP or lower)",
+      "desc": "The first time Gryvka drops to 106 HP or fewer:\n- **Chain Link recharges** immediately.\n- Her Zahret disguise peels away and shows the chains running back to the party friend she possessed.\n- That friend counts as **permanently Linked** until Gryvka dies. She can use **Pull the Chain** on them to make them take one weapon attack instead of moving."
     }
   ],
   "id": "npc-gryvka-c4a1b7e2"
