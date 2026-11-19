@@ -20,8 +20,17 @@ OUT = os.path.join(os.path.dirname(__file__), "npc_page_template.html")
 
 html = open(SRC).read()
 
-html = html.replace(
-    '<body>\n\n<nav class="tabnav" id="tabNav">',
+def sub(old, new):
+    """Replace exactly one occurrence, or fail the build - a silently skipped
+    patch once left every pushed NPC page without its lock screen/data."""
+    global html
+    n = html.count(old)
+    if n != 1:
+        raise SystemExit(f"build_npc_page_template: expected 1 match, found {n}:\n{old[:120]}")
+    html = html.replace(old, new)
+
+sub(
+    '<body>\n',
     '''<body>
 
 <div id="lockScreen" class="lock-screen">
@@ -33,10 +42,10 @@ html = html.replace(
 </div>
 
 <div id="appRoot" hidden>
-<nav class="tabnav" id="tabNav">'''
+'''
 )
 
-html = html.replace(
+sub(
     '''<div class="toplinks">
   <a class="backlink" href="../index.html" style="margin-bottom:0;">&larr; All characters</a>
   <a class="comparelink" href="../compare.html" id="compareLink" hidden>⇄ Compare players</a>
@@ -47,7 +56,7 @@ html = html.replace(
 </div>'''
 )
 
-html = html.replace(
+sub(
     '''<button class="reset-btn" onclick="resetProgress()">Reset tracked stats (HP, spell slots, notes…)</button>
 <div class="footer-note">Progress and edits are saved on this device only.</div>
 
@@ -58,7 +67,7 @@ html = html.replace(
 </div>'''
 )
 
-html = html.replace(
+sub(
     "  .backlink{display:inline-block;margin-bottom:10px;color:var(--text-dim);font-size:0.8rem;text-decoration:none;}",
     """  .backlink{display:inline-block;margin-bottom:10px;color:var(--text-dim);font-size:0.8rem;text-decoration:none;}
   .lock-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
@@ -68,36 +77,59 @@ html = html.replace(
   .lock-card p{margin:10px 0 16px;}"""
 )
 
-# Gate the entire render behind isDM() - real data is baked into DATA below (like a
-# player page), but nothing gets processed/shown unless the DM is authed.
-html = html.replace(
+# Gate the render behind DM auth. Firebase resolves the login asynchronously,
+# so the gate re-runs from onAuthStateChanged - checking only at page load always
+# saw "not DM" and never loaded the baked-in data. Firestore listeners (npcs/ is
+# DM-only read) start only once authed, or the snapshot is permission-denied and
+# the listener dies for good.
+sub(
+    """  document.getElementById("dmLogoutBtn").hidden = !dmAuthed;
+  renderAll();
+});""",
+    """  document.getElementById("dmLogoutBtn").hidden = !dmAuthed;
+  applyDMGate();
+});"""
+)
+sub(
+    """if(FS_SYNC_ENABLED){
+  charRef.onSnapshot(doc => {""",
+    """let fsListening = false;
+function startFsSync(){
+  if(fsListening || !FS_SYNC_ENABLED) return;
+  fsListening = true;
+  charRef.onSnapshot(doc => {"""
+)
+sub(
     '''charData = loadCharData();
 try{ activeTab = localStorage.getItem(TAB_KEY) || "play"; }catch(e){}
 setTab(activeTab);
 renderAll();''',
-    '''if(!isDM()){
-  document.getElementById("lockScreen").hidden = false;
-  document.getElementById("appRoot").hidden = true;
-} else {
-  document.getElementById("lockScreen").hidden = true;
-  document.getElementById("appRoot").hidden = false;
-  charData = loadCharData();
-  try{ activeTab = localStorage.getItem(TAB_KEY) || "play"; }catch(e){}
-  setTab(activeTab);
+    '''function applyDMGate(){
+  const dm = isDM();
+  document.getElementById("lockScreen").hidden = dm;
+  document.getElementById("appRoot").hidden = !dm;
+  if(!dm) return;
+  if(!charData){
+    charData = loadCharData();
+    try{ activeTab = localStorage.getItem(TAB_KEY) || "play"; }catch(e){}
+    setTab(activeTab);
+  }
+  startFsSync();
   renderAll();
-}'''
+}
+applyDMGate();'''
 )
 
 # Pushed NPCs save to NPCs/, not Character Sheets/ - use a separate cached
 # folder-picker handle so this doesn't silently reuse (or clobber) whatever
 # folder the DM already picked for player saves.
-html = html.replace(
+sub(
     'const DIR_HANDLE_KEY = "characterSheetsDir"; // which cached folder-picker handle this page\'s saves use\nconst FOLDER_LABEL = "Character Sheets"; // just for the "Saved to ..." status text',
     'const DIR_HANDLE_KEY = "npcsDir";\nconst FOLDER_LABEL = "NPCs";'
 )
 
 # close the appRoot wrapper div right before </body>
-html = html.replace("</body>", "</div>\n</body>")
+sub("</body>", "</div>\n</body>")
 
 open(OUT, "w").write(html)
 print("wrote", OUT)
