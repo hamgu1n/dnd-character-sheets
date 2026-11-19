@@ -1,0 +1,192 @@
+{
+  "name": "Gryvka, the Chain-Bound Witch",
+  "species": "Fiend (Shapechanger), Medium",
+  "background": "CR 7 boss (2,900 XP), a succubus witch who posed as a Zahret military/government official sent to watch the party. Neutral evil.",
+  "classes": [
+    {
+      "id": "role",
+      "name": "Chain-Bound Witch",
+      "level": 7,
+      "hitDie": 8,
+      "subclass": ""
+    }
+  ],
+  "abilities": {
+    "str": 8,
+    "dex": 16,
+    "con": 18,
+    "int": 17,
+    "wis": 15,
+    "cha": 20
+  },
+  "proficientSaves": [
+    "dex",
+    "wis",
+    "cha"
+  ],
+  "skillProficiencies": [
+    "deception",
+    "insight",
+    "arcana",
+    "persuasion"
+  ],
+  "skillExpertise": [
+    "insight"
+  ],
+  "hp": {
+    "max": 136,
+    "current": 136,
+    "temp": 0
+  },
+  "speed": 30,
+  "conditions": [],
+  "inspiration": false,
+  "spellSlots": {},
+  "spellsPrepared": [
+    {
+      "name": "Chain Link (Recharge 5\u20136)",
+      "level": 3,
+      "spellType": "enchantment",
+      "castingTime": "1 Action",
+      "range": "60 feet",
+      "desc": "**Signature spell. No concentration.** Glowing chains of thought shoot out to up to **three creatures** Gryvka can see. Each makes a **DC 16 Wisdom save**; on a failure it is **Linked** for 1 minute.\n\n**The link ends only if:** Gryvka drops to 0 HP; the Linked creature uses its action on a **DC 16 Int or Wis check** and succeeds; or it succeeds on the Wis save it repeats at the end of each of its turns.\n\n**While Linked:**\n- **Gryvka reads its mind.** At the start of each round, players with Linked characters say their plan out loud, and Gryvka hears it.\n- Gryvka has advantage on attack rolls against it.\n- When it takes psychic damage, every other Linked creature takes half that amount.\n- **Counterplay (Mental Noise):** once per fight, a Linked creature can make a Cha (Deception) check contested by Gryvka's Wis (Insight). On a success, Gryvka believes the false plan it announced."
+    },
+    {
+      "name": "Thought Lash",
+      "level": 0,
+      "spellType": "enchantment",
+      "castingTime": "1 Action",
+      "range": "120 feet",
+      "desc": "*Ranged Spell Attack:* +8 to hit, one target. *Hit:* 13 (3d8) psychic damage."
+    },
+    {
+      "name": "Detect Thoughts",
+      "level": 0,
+      "spellType": "divination",
+      "castingTime": "1 Action",
+      "range": "Self",
+      "desc": "At will. No concentration."
+    },
+    {
+      "name": "Minor Illusion",
+      "level": 0,
+      "spellType": "illusion",
+      "castingTime": "1 Action",
+      "range": "30 feet",
+      "desc": "At will."
+    },
+    {
+      "name": "Message",
+      "level": 0,
+      "spellType": "transmutation",
+      "castingTime": "1 Action",
+      "range": "120 feet",
+      "desc": "At will."
+    },
+    {
+      "name": "Charm Person (2/day)",
+      "level": 1,
+      "spellType": "enchantment",
+      "castingTime": "1 Action",
+      "range": "30 feet",
+      "desc": "2/day. DC 16 Wisdom save."
+    },
+    {
+      "name": "Dissonant Whispers (2/day)",
+      "level": 1,
+      "spellType": "enchantment",
+      "castingTime": "1 Action",
+      "range": "60 feet",
+      "desc": "2/day. DC 16 Wisdom save, 3d6 psychic and the target must use its reaction to move away; half damage on a success."
+    },
+    {
+      "name": "Misty Step (2/day)",
+      "level": 2,
+      "spellType": "conjuration",
+      "castingTime": "1 Bonus Action",
+      "range": "Self",
+      "desc": "2/day. Teleport up to 30 feet to a space she can see."
+    }
+  ],
+  "currency": {
+    "cp": 0,
+    "sp": 0,
+    "ep": 0,
+    "gp": 0,
+    "pp": 0
+  },
+  "inventory": [
+    {
+      "id": "i1",
+      "name": "Hexclaw",
+      "kind": "weapon",
+      "quantity": 1,
+      "dmg": "1d6",
+      "dmgType": "Slashing",
+      "rangeType": "Melee",
+      "props": [
+        "Finesse"
+      ],
+      "equipped": true,
+      "desc": "*Melee Weapon Attack:* +6 to hit, reach 5 ft., one target. *Hit:* 6 (1d6 + 3) slashing plus 9 (2d8) psychic damage.\n\n**Multiattack:** two Hexclaw attacks, or one Hexclaw and cast a spell."
+    },
+    {
+      "id": "i2",
+      "name": "Fiendish Hide",
+      "kind": "armor",
+      "quantity": 1,
+      "acBase": 15,
+      "dexMax": 0,
+      "equipped": true,
+      "desc": "Natural armor, AC 15."
+    }
+  ],
+  "notes": "Gryvka is a succubus witch who posed as a Zahret military/government official assigned to watch the party. **Suhayla**, goddess of knowledge and magic, grants her mind-reading power. She has possessed one of the party's friends.\n\n**House rule:** no concentration on spells. Every duration ends only under the conditions written.\n\n**Defenses:** resists cold, fire, lightning, poison, and bludgeoning/piercing/slashing from nonmagical attacks. Fly speed 60 ft. Darkvision 60 ft., passive Perception 12. Speaks Common and Abyssal, with telepathy 120 ft. Spell save DC 16, spell attack +8.\n\nBalanced as a deadly boss for about six level-4 PCs.\n\n**DM tuning:** if the fight is too swingy, cut Chain Link to two targets or drop Tighten the Chains. Make Linked status clearly visible at the table, for example with a chain token by each Linked mini.",
+  "customFeatures": [
+    {
+      "id": "f1",
+      "name": "Shapechanger",
+      "desc": "Gryvka can turn into any Small or Medium humanoid, or back into her true form. This is how she passed as a Zahret official."
+    },
+    {
+      "id": "f2",
+      "name": "Legendary Resistance (2/Day)",
+      "desc": "When Gryvka fails a saving throw, she can choose to succeed instead.",
+      "hasPool": true,
+      "poolMax": 2
+    },
+    {
+      "id": "f3",
+      "name": "Suhayla's Ledger",
+      "desc": "Gryvka can't be surprised. She knows the name and surface emotion of every creature within 60 feet of her."
+    },
+    {
+      "id": "f4",
+      "name": "Draining Kiss (Action)",
+      "desc": "Gryvka targets one **Linked** creature within 5 feet, which makes a **DC 16 Con save**. It takes 27 (5d10) psychic damage on a failure, or half as much on a success. Its HP maximum drops by the damage taken until it finishes a long rest. Gryvka regains HP equal to half the damage dealt."
+    },
+    {
+      "id": "f5",
+      "name": "Pull the Chain (Bonus Action)",
+      "desc": "One Linked creature uses its reaction to move up to half its speed in a direction Gryvka chooses. **Or** Gryvka pulls one secret from its mind and says it aloud."
+    },
+    {
+      "id": "f6",
+      "name": "\"I Knew You'd Do That.\" (Reaction)",
+      "desc": "When a Linked creature attacks Gryvka or targets her with a spell, she gains +4 AC against that attack or spell, **or** she moves up to half her speed without provoking opportunity attacks."
+    },
+    {
+      "id": "f7",
+      "name": "Legendary Actions (3/round)",
+      "desc": "One at a time, only at the end of another creature's turn. She regains them at the start of her turn.\n- **Whisper:** one Linked creature takes 7 (2d6) psychic damage.\n- **Glide:** she flies up to half her fly speed (30 ft.) without provoking opportunity attacks.\n- **Tighten the Chains (Costs 2):** each Linked creature makes a DC 16 Wis save. On a failure, it uses its next action to make one attack against an ally of Gryvka's choice.",
+      "hasPool": true,
+      "poolMax": 3
+    },
+    {
+      "id": "f8",
+      "name": "Phase 2: Mask Off (at 68 HP or lower)",
+      "desc": "The first time Gryvka drops to 68 HP or fewer:\n- **Chain Link recharges** immediately.\n- Her Zahret disguise peels away and shows the chains running back to the party friend she possessed.\n- That friend counts as **permanently Linked** until Gryvka dies. She can use **Pull the Chain** on them to make them take one weapon attack instead of moving."
+    }
+  ],
+  "id": "npc-gryvka-c4a1b7e2"
+}
